@@ -120,9 +120,16 @@ jobs:
         run: dotnet build Broiler.Code.Phase0.slnx -c Release
 
   # The payload probes are the measurement behind keeping Roslyn out of
-  # Broiler.Code.Core's closure, so this job publishes rather than builds: the
-  # question they answer is how large a browser download each composition is, and
-  # only a publish produces one.
+  # Broiler.Code.Core's closure. Built, not published, for the same reason as the
+  # Phase 0 harnesses: the number they exist to produce is a trimmed browser
+  # payload size, and one taken on a shared runner is not comparable to the
+  # recorded baseline. What CI protects is that both compositions still compile.
+  # Run tests/broiler-code-phase0/payload-probes/measure-payloads.ps1 to take the
+  # measurement deliberately.
+  #
+  # The wasm-tools workload is installed even though this is only a build: both
+  # probes use Microsoft.NET.Sdk.WebAssembly, and a runner without the workload
+  # has none of its targets.
   payload-probes:
     name: Payload probes
     runs-on: ubuntu-latest

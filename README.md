@@ -137,8 +137,10 @@ including it would break build verification.
 - **Build** — the Windows head on `windows-latest`, the Linux head on `ubuntu-latest`.
 - **Tests** — the suite on both hosts, because the shell does clipboard, file-dialog and
   input-routing work that is easy to make accidentally platform-specific.
-- **Phase 0 harnesses** — built, not run: the prototype and the Roslyn measurement are
-  benchmarks whose numbers belong to a recorded baseline, not to a pull request.
+- **Phase 0 harnesses** and **payload probes** — built, not run: the prototype, the
+  Roslyn measurement and the two browser payloads are benchmarks whose numbers belong
+  to a recorded baseline taken on a known machine, not to a shared runner. What CI
+  protects is that they still compile.
 - **Human review** — coverage over this repository, reported to the run summary.
 
 The nested-submodule set is defined once, in
