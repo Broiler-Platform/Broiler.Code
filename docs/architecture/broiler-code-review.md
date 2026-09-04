@@ -44,6 +44,20 @@ file somebody has recorded something about; a file nobody has touched is left
 unmarked rather than labelled, because most of a codebase is in that state and
 badging all of it would say nothing.
 
+**File ▸ Open Folder…** is how a directory gets into that pane. The chosen
+directory becomes the workspace's storage grant, and the explorer shows what is
+under it — folders, then files, each alphabetical — beneath a row named after the
+directory itself. It is not the same list as the solution's, and both are shown:
+an SDK-style project declares no compile items, so the projects a solution
+contributes are empty rows, and the files a reviewer has to read are exactly the
+ones only the folder tree knows about. A row opens the file it stands for, which
+is what makes working down a component file by file a matter of pressing Enter.
+
+Opening a folder repoints the revision provider at it as well. A review recorded
+after switching directories would otherwise carry the previous repository's
+commit — provenance nobody would think to check, and therefore the field that has
+to be right without being looked at.
+
 The middle is the existing editor. The right is new: it shows what is recorded
 about the file on screen and what is still open on it, and carries the field a
 note is typed into.

@@ -15,8 +15,14 @@ namespace Broiler.Code.Core.Shell;
 /// split is why the tree could be tested against fifty thousand rows without a
 /// workspace, and why this can be tested without a UI.
 ///
+/// Two things are shown, in this order: the declared solutions, and the granted
+/// directory's own source files as folders and files. Both are needed because
+/// neither is the whole truth — a solution says what the build compiles, and the
+/// folder tree says what is actually there to be read.
+///
 /// Node IDs are derived from workspace identity rather than from paths, so a
-/// rename keeps a node's expansion and selection.
+/// rename keeps a node's expansion and selection. Folder rows have no identity
+/// of their own and are keyed by path, which is the only thing they are.
 /// </summary>
 public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposable
 {
@@ -228,7 +234,125 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
             }
         }
 
+        AddFolderTree(root);
         _valid = true;
+    }
+
+    /// <summary>
+    /// Adds the granted directory's own source files, as folders and files.
+    ///
+    /// This is what a picked directory looks like in the tree, and it is not a
+    /// second view of what the solution already showed. A project declares its
+    /// compile items explicitly or not at all — the SDK's implicit globs are
+    /// evaluated-only, so <see cref="WorkspaceLoader"/> deliberately does not
+    /// enumerate them — which means an ordinary SDK-style project contributes no
+    /// file rows above. <see cref="WorkspaceBootstrap"/> registers every source
+    /// under the grant regardless, so without this they were registered and
+    /// invisible: opening a component directory produced a tree with nothing in
+    /// it to review.
+    /// </summary>
+    private void AddFolderTree(Node root)
+    {
+        var files = new List<WorkspaceItem>();
+        foreach (WorkspaceItem item in _workspace.Items)
+        {
+            if (item.Kind != WorkspaceItemKind.SourceDocument || !item.OwningProject.IsNone)
+                continue;
+
+            // An untitled buffer is nowhere on disk, and a document reached
+            // through a file dialog is somewhere else entirely — its path is
+            // relative to its own grant, so placing it under these folders would
+            // show it where it is not.
+            if (item.IsUntitled ||
+                !ReferenceEquals(_workspace.StorageFor(item.Id), _workspace.Storage))
+            {
+                continue;
+            }
+
+            files.Add(item);
+        }
+
+        if (files.Count == 0)
+            return;
+
+        var group = new Node(
+            FolderKey(string.Empty), root.Key, RootLabel(),
+            files.Count == 1 ? "1 file" : $"{files.Count} files",
+            "folder", WorkspaceItemId.None);
+        _nodes[group.Key] = group;
+        root.Children.Add(group.Key);
+
+        foreach (WorkspaceItem file in files)
+        {
+            Node parent = group;
+            for (int start = 0; ;)
+            {
+                int slash = file.RelativePath.IndexOf('/', start);
+                if (slash < 0)
+                    break;
+
+                string key = FolderKey(file.RelativePath[..slash]);
+                if (!_nodes.TryGetValue(key, out Node? directory))
+                {
+                    directory = new Node(
+                        key, parent.Key, file.RelativePath[start..slash], null,
+                        "folder", WorkspaceItemId.None);
+                    _nodes[key] = directory;
+                    parent.Children.Add(key);
+                }
+
+                parent = directory;
+                start = slash + 1;
+            }
+
+            string itemKey = $"item:{file.Id}";
+            _nodes[itemKey] = new Node(itemKey, parent.Key, file.Name, null, "source", file.Id);
+            parent.Children.Add(itemKey);
+        }
+
+        // Ordered here rather than by sorting the paths first, because a path
+        // sort interleaves a folder with the files beside it. A reviewer working
+        // down the tree needs the order to be the one every file manager uses:
+        // folders, then files, each alphabetical. The solution rows above keep
+        // their declared order instead, which is the order the solution file
+        // chose to display them in.
+        foreach (Node node in _nodes.Values)
+        {
+            if (node.IconKey == "folder")
+                node.Children.Sort(CompareRows);
+        }
+
+        int CompareRows(string left, string right)
+        {
+            Node first = _nodes[left];
+            Node second = _nodes[right];
+            bool firstIsFolder = first.IconKey == "folder";
+            if (firstIsFolder != (second.IconKey == "folder"))
+                return firstIsFolder ? -1 : 1;
+
+            return string.Compare(first.Label, second.Label, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    private static string FolderKey(string relativeDirectory) => $"folder:{relativeDirectory}";
+
+    /// <summary>
+    /// What to call the granted directory.
+    ///
+    /// Its last path segment, when the provider's root reads like a path — which
+    /// the desktop provider's does. "Files" when it does not: a browser handle
+    /// or an Android document tree is an opaque token, and inventing a folder
+    /// name out of one would be a guess shown to the user as a fact.
+    /// </summary>
+    private string RootLabel()
+    {
+        if (_workspace.Storage.GrantedRoots.Count == 0)
+            return "Files";
+
+        string granted = _workspace.Storage.GrantedRoots[0].TrimEnd('/', '\\');
+        int slash = granted.LastIndexOfAny(['/', '\\']);
+        string name = slash < 0 ? granted : granted[(slash + 1)..];
+        return name.Length == 0 ? "Files" : name;
     }
 
     private sealed record Node(

@@ -77,8 +77,8 @@ internal static class CodeHost
             ? new HostService(
                 HostServiceReport.FileDialogs,
                 HostServiceQuality.Unavailable,
-                "neither zenity nor kdialog is installed, so Open and Save As " +
-                "report themselves unavailable")
+                "neither zenity nor kdialog is installed, so Open, Open Folder " +
+                "and Save As report themselves unavailable")
             : new HostService(
                 HostServiceReport.FileDialogs,
                 HostServiceQuality.Native,
@@ -104,6 +104,7 @@ internal static class CodeHost
         if (report.QualityOf(HostServiceReport.FileDialogs) != HostServiceQuality.Native)
         {
             unavailable.Add("Open");
+            unavailable.Add("Open Folder");
             unavailable.Add("Save As");
             unavailable.Add("New Project");
         }
@@ -148,8 +149,9 @@ internal static class CodeHost
         // would apply the result there too, racing the paint that reads it.
         shell.Dispatcher = window.Dispatcher;
 
-        // Null when no helper is installed, which is what makes Open and Save
-        // As report Unavailable with a reason instead of doing nothing.
+        // Null when no helper is installed, which is what makes Open, Open
+        // Folder and Save As report Unavailable with a reason instead of doing
+        // nothing.
         shell.FileDialogs = dialogs.IsAvailable ? dialogs : null;
 
         // Cancel on a dirty close, until the head has a dialog to ask with.

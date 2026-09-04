@@ -20,8 +20,8 @@ namespace Broiler.Code.Linux;
 /// recent files, not an imitation drawn by us.
 ///
 /// When neither helper is installed there is no dialog, and
-/// <see cref="IsAvailable"/> is false so the head reports Open and Save As as
-/// unavailable rather than opening nothing.
+/// <see cref="IsAvailable"/> is false so the head reports Open, Open Folder and
+/// Save As as unavailable rather than opening nothing.
 /// </summary>
 internal sealed class LinuxFileDialogs : IFileDialogService
 {
@@ -34,22 +34,37 @@ internal sealed class LinuxFileDialogs : IFileDialogService
 
     public bool IsAvailable => _helper is not null;
 
+    /// <summary>
+    /// Both helpers choose a directory as readily as a file — one flag on
+    /// zenity, one verb on kdialog — so this is exactly the claim that a helper
+    /// was found at all.
+    /// </summary>
+    public bool CanRequestFolder => IsAvailable;
+
     public async ValueTask<FileGrant?> RequestOpenAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return Grant(await RunAsync(request, save: false, cancellationToken).ConfigureAwait(false));
+        return Grant(await RunAsync(request, DialogMode.Open, cancellationToken).ConfigureAwait(false));
     }
 
     public async ValueTask<FileGrant?> RequestSaveAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return Grant(await RunAsync(request, save: true, cancellationToken).ConfigureAwait(false));
+        return Grant(await RunAsync(request, DialogMode.Save, cancellationToken).ConfigureAwait(false));
+    }
+
+    public async ValueTask<FileGrant?> RequestFolderAsync(
+        FileDialogRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return FolderGrant(
+            await RunAsync(request, DialogMode.Folder, cancellationToken).ConfigureAwait(false));
     }
 
     private async ValueTask<string?> RunAsync(
-        FileDialogRequest request, bool save, CancellationToken cancellationToken)
+        FileDialogRequest request, DialogMode mode, CancellationToken cancellationToken)
     {
         if (_helper is null)
             return null;
@@ -61,7 +76,7 @@ internal sealed class LinuxFileDialogs : IFileDialogService
             UseShellExecute = false,
         };
 
-        foreach (string argument in Arguments(_helper, request, save))
+        foreach (string argument in Arguments(_helper, request, mode))
             start.ArgumentList.Add(argument);
 
         using Process? process = Process.Start(start);
@@ -81,15 +96,25 @@ internal sealed class LinuxFileDialogs : IFileDialogService
     }
 
     private static IEnumerable<string> Arguments(
-        string helper, FileDialogRequest request, bool save)
+        string helper, FileDialogRequest request, DialogMode mode)
     {
         bool isKde = helper.EndsWith("kdialog", StringComparison.Ordinal);
         if (isKde)
         {
             // kdialog takes a start path and one space-separated filter string.
-            yield return save ? "--getsavefilename" : "--getopenfilename";
+            // The directory verb takes the start path and no filter at all: a
+            // file filter applied to a folder chooser hides every folder.
+            yield return mode switch
+            {
+                DialogMode.Save => "--getsavefilename",
+                DialogMode.Folder => "--getexistingdirectory",
+                _ => "--getopenfilename",
+            };
+
             yield return request.SuggestedName is { Length: > 0 } suggested ? suggested : ".";
-            yield return KdialogFilter(request.Filters);
+            if (mode != DialogMode.Folder)
+                yield return KdialogFilter(request.Filters);
+
             if (request.Title is { Length: > 0 })
             {
                 yield return "--title";
@@ -100,7 +125,10 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         }
 
         yield return "--file-selection";
-        if (save)
+        if (mode == DialogMode.Folder)
+            yield return "--directory";
+
+        if (mode == DialogMode.Save)
         {
             yield return "--save";
 
@@ -113,6 +141,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
             yield return "--title=" + request.Title;
         if (request.SuggestedName is { Length: > 0 } name)
             yield return "--filename=" + name;
+
+        if (mode == DialogMode.Folder)
+            yield break;
 
         foreach (FileDialogFilter filter in request.Filters)
             yield return "--file-filter=" + ZenityFilter(filter);
@@ -140,6 +171,19 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         }
 
         return groups.Count == 0 ? "*|All files" : string.Join('\n', groups);
+    }
+
+    /// <summary>
+    /// A directory the user picked. The directory itself is the grant, so
+    /// storage is rooted at it and nothing was chosen inside it.
+    /// </summary>
+    private static FileGrant? FolderGrant(string? absolutePath)
+    {
+        if (absolutePath is null)
+            return null;
+
+        string full = Path.GetFullPath(absolutePath);
+        return new FileGrant(new FileSystemWorkspaceStorage(full), string.Empty, full);
     }
 
     private static FileGrant? Grant(string? absolutePath)
@@ -183,5 +227,12 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         }
 
         return null;
+    }
+
+    private enum DialogMode
+    {
+        Open,
+        Save,
+        Folder,
     }
 }
