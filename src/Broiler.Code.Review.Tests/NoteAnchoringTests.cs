@@ -13,15 +13,24 @@ namespace Broiler.Code.Review.Tests;
 /// </summary>
 public sealed class NoteAnchoringTests
 {
-    private const string Source =
-        """
-        class A
-        {
-            void First() { }
-
-            void Second() { }
-        }
-        """;
+    /// <summary>
+    /// The file under test, joined with an explicit LF.
+    ///
+    /// Not a raw string literal, which would take the line endings of the source
+    /// file it is written in: on a CRLF checkout this fixture would carry CRLF,
+    /// and the anchor text cut from it — which anchoring normalizes to LF —
+    /// would then match none of the lines the tests hand back. Spelling the
+    /// endings out is what makes the fixture mean the same thing however the
+    /// repository was cloned, which is the whole subject of these tests.
+    /// </summary>
+    private static readonly string Source = string.Join(
+        '\n',
+        "class A",
+        "{",
+        "    void First() { }",
+        "",
+        "    void Second() { }",
+        "}");
 
     [Fact(Timeout = 600000)]
     public void A_Note_On_Unchanged_Code_Stays_Where_It_Was()
