@@ -22,10 +22,16 @@
     script documents the trap in full, and reports a component that ships this file as
     deliberately not redirected rather than silently emitting redirects that do nothing.
 
-    Do NOT "fix" this by chaining upward with GetPathOfFileAbove. Collapsing this repository
+    Do NOT "fix" this by importing the targets file above it. Collapsing this repository
     onto the monorepo's checkouts needs its solutions rewritten as well, which cannot be
     done without breaking the standalone build. It is a real piece of design work, not a
     one-line import.
+
+    That warning deliberately does not spell out the MSBuild function that would perform
+    such an import. The monorepo's generator decides whether a component's targets file
+    breaks the chain by searching it for that function's NAME, so writing the name here —
+    even to forbid it — makes this file look like one that chains upward, and the generator
+    then emits the redirects this file exists to prevent. Keep it unnamed.
 
     Nothing else belongs here. Component-wide build settings go in Directory.Build.props.
   -->
