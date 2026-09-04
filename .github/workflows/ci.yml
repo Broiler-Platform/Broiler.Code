@@ -1,0 +1,197 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  # The .slnx files are generated from eng/solutions.json. A hand-edit to one is
+  # silently reverted by the next generator run, so the only thing keeping them
+  # true is failing here when a checked-in solution no longer matches the real
+  # reference graph. This also catches the subtler case: adding a ProjectReference
+  # without regenerating leaves the new project out of every solution.
+  solutions:
+    name: Solution manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Set up
+        uses: ./.github/actions/setup-broiler
+
+      - name: Verify the generated solutions
+        shell: pwsh
+        run: ./scripts/update-solutions.ps1 -Verify
+
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The Windows head targets net10.0-windows and renders through Direct2D,
+          # so it only builds on Windows.
+          - name: Windows head
+            os: windows-latest
+            solution: Broiler.Windows.Code.slnx
+            test: false
+          # The Linux head is plain net10.0 with P/Invoke into X11 and evdev, so it
+          # compiles anywhere; building it on Linux keeps that honest.
+          - name: Linux head
+            os: ubuntu-latest
+            solution: Broiler.Linux.Code.slnx
+            test: false
+          # The suite is all net10.0. Running it on both hosts is deliberate: the
+          # shell does clipboard, file-dialog and input-routing work that is easy to
+          # make accidentally platform-specific.
+          - name: Tests (Linux)
+            os: ubuntu-latest
+            solution: Broiler.Code.Tests.slnx
+            test: true
+          - name: Tests (Windows)
+            os: windows-latest
+            solution: Broiler.Code.Tests.slnx
+            test: true
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Set up
+        uses: ./.github/actions/setup-broiler
+
+      - name: Build
+        run: dotnet build ${{ matrix.solution }} -c Release
+
+      - name: Test
+        if: matrix.test
+        run: dotnet test ${{ matrix.solution }} -c Release --no-build
+
+  # Built, not run. The prototype and the Roslyn footprint measurement are
+  # benchmarks whose numbers belong to the recorded baselines under
+  # tests/broiler-code-phase0/baselines, taken on a known machine; a number from a
+  # shared runner would not be comparable to them. What CI can usefully protect is
+  # that the harnesses still compile.
+  #
+  # The SampleReports fixture is deliberately outside every solution: it fails to
+  # compile by design, which is the input the build worker harness measures.
+  phase0:
+    name: Phase 0 harnesses
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Set up
+        uses: ./.github/actions/setup-broiler
+
+      - name: Build
+        run: dotnet build Broiler.Code.Phase0.slnx -c Release
+
+  # The payload probes are the measurement behind keeping Roslyn out of
+  # Broiler.Code.Core's closure. Built, not published, for the same reason as the
+  # Phase 0 harnesses: the number they exist to produce is a trimmed browser
+  # payload size, and one taken on a shared runner is not comparable to the
+  # recorded baseline. What CI protects is that both compositions still compile.
+  # Run tests/broiler-code-phase0/payload-probes/measure-payloads.ps1 to take the
+  # measurement deliberately.
+  #
+  # The wasm-tools workload is installed even though this is only a build: both
+  # probes use Microsoft.NET.Sdk.WebAssembly, and a runner without the workload
+  # has none of its targets.
+  payload-probes:
+    name: Payload probes
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Set up
+        uses: ./.github/actions/setup-broiler
+
+      - name: Install the wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Build
+        run: dotnet build Broiler.WebAssembly.Code.slnx -c Release
+
+  # Broiler Code owns the review tool, so this repository measures its own review
+  # coverage with it. It reports; it does not gate. See
+  # docs/architecture/broiler-code-review.md for why.
+  review:
+    name: Human review coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          # Recursive: most of the source a checkout of this repository contains
+          # lives in the components, and a coverage number computed without them
+          # would describe the shell alone and claim to describe Broiler Code.
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # Its own project rather than a solution: this job needs the evaluator, not
+      # the editor, and building the shell here would make a review report depend
+      # on a UI compile.
+      - name: Build the review tool
+        run: dotnet build src/Broiler.Code.Review.Cli/Broiler.Code.Review.Cli.csproj -c Release
+
+      - name: Measure review coverage
+        run: >
+          dotnet run --project src/Broiler.Code.Review.Cli -c Release --no-build --
+          coverage --root .
+          --markdown artifacts/human-review/coverage.md
+          --json artifacts/human-review/coverage.json
+
+      - name: Publish the coverage report to the run summary
+        shell: bash
+        run: cat artifacts/human-review/coverage.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: human-review-coverage
+          path: artifacts/human-review/
+          if-no-files-found: error

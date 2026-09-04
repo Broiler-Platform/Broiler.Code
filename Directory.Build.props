@@ -1,0 +1,62 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Broiler.Graphics.Direct2D and the Windows head target net10.0-windows. Restoring
+         them from a non-Windows host (a `dotnet restore` on the Linux runner that walks the
+         whole graph) needs this, and it is inert on Windows. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <!-- The desktop heads declare four configurations each: Debug/Release build
+         framework-dependent, and the -Windows / -Linux variants pin a runtime identifier
+         (see the Configurations property in Broiler.Code.Windows and .Linux). MSBuild only
+         understands Debug and Release on its own, so the compound names are decomposed here
+         into a base configuration and a target OS. Without this, `-c Release-Linux` would
+         build unoptimized and with neither RELEASE nor LINUX defined.
+
+         The component submodules carry the same decomposition in their own
+         Directory.Build.props, which chains to this file in an in-tree build. -->
+    <BroilerBaseConfiguration Condition="'$(Configuration)' == 'Debug-Linux' Or '$(Configuration)' == 'Debug-Windows'">Debug</BroilerBaseConfiguration>
+    <BroilerBaseConfiguration Condition="'$(Configuration)' == 'Release-Linux' Or '$(Configuration)' == 'Release-Windows'">Release</BroilerBaseConfiguration>
+    <BroilerTargetOperatingSystem Condition="'$(Configuration)' == 'Debug-Linux' Or '$(Configuration)' == 'Release-Linux'">Linux</BroilerTargetOperatingSystem>
+    <BroilerTargetOperatingSystem Condition="'$(Configuration)' == 'Debug-Windows' Or '$(Configuration)' == 'Release-Windows'">Windows</BroilerTargetOperatingSystem>
+
+    <DebugSymbols Condition="'$(BroilerBaseConfiguration)' == 'Debug'">true</DebugSymbols>
+    <DebugType Condition="'$(BroilerBaseConfiguration)' == 'Debug'">portable</DebugType>
+    <Optimize Condition="'$(BroilerBaseConfiguration)' == 'Debug'">false</Optimize>
+    <DefineConstants Condition="'$(BroilerBaseConfiguration)' == 'Debug'">$(DefineConstants);DEBUG</DefineConstants>
+    <DebugType Condition="'$(BroilerBaseConfiguration)' == 'Release'">portable</DebugType>
+    <Optimize Condition="'$(BroilerBaseConfiguration)' == 'Release'">true</Optimize>
+    <DefineConstants Condition="'$(BroilerBaseConfiguration)' == 'Release'">$(DefineConstants);RELEASE</DefineConstants>
+
+    <DefineConstants Condition="'$(BroilerTargetOperatingSystem)' == 'Linux'">$(DefineConstants);LINUX</DefineConstants>
+    <DefineConstants Condition="'$(BroilerTargetOperatingSystem)' == 'Windows'">$(DefineConstants);WINDOWS</DefineConstants>
+
+    <!--
+      ════════════════════════════════════════════════════════════════════
+      Build Warnings
+      ════════════════════════════════════════════════════════════════════
+
+      There is deliberately no NoWarn list here. A clean `-t:Rebuild` of all five
+      solutions was measured, and the composed build emits almost nothing:
+
+        * `Broiler.Graphics.Linux.OpenGL` raises one CS8602 in
+          LinuxOpenGlNativeReplay.cs. It is a real upstream nullability warning and
+          is left visible on purpose — the fix belongs in Broiler.Graphics, and
+          suppressing it here would hide it from the only build that reports it.
+
+        * The xUnit analyzer raises xUnit1031 in Broiler.Code.Core.Tests
+          (blocking task operations in HostingTests). Also left visible: it is
+          this repository's own code and therefore fixable here.
+
+      Nothing else. Every Broiler.Code project sets TreatWarningsAsErrors and
+      compiles clean.
+
+      Do not add a code speculatively. The consumer repositories carry long
+      suppression lists inherited from a much larger composed graph; copying one
+      here would silence warnings this build does not even emit, and would hide
+      the next real one. Measure with a clean Rebuild first.
+      ════════════════════════════════════════════════════════════════════
+    -->
+  </PropertyGroup>
+
+</Project>
