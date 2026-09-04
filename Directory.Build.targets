@@ -1,0 +1,33 @@
+<Project>
+
+  <!--
+    This file exists to be found, not to do anything.
+
+    MSBuild imports only the NEAREST Directory.Build.targets above a project. When this
+    repository is checked out as a submodule of the Broiler monorepo, the monorepo's root
+    Directory.Build.targets would otherwise reach every project here — and it imports
+    eng/aggregate-workspace-references.targets, which rewrites a component's relative
+    ProjectReferences to point at the monorepo's own top-level component checkouts instead
+    of the nested ones beside this file.
+
+    That rewrite is right for a component the monorepo builds from its own solutions. It is
+    wrong here. The solutions in this repository (Broiler.Windows.Code.slnx and the rest)
+    enumerate the nested checkouts by relative path, because those paths are what let this
+    repository build standalone in its own CI. Redirect only the ProjectReferences and the
+    solutions still build the nested copies, so an aggregate build compiles BOTH the
+    monorepo's Broiler.UI, Broiler.Graphics, Broiler.Input and Broiler.Media and the copies
+    here — inventing the duplicate assemblies that redirect exists to remove.
+
+    Broiler.Browser shields itself the same way and for the same reason; the generator
+    script documents the trap in full, and reports a component that ships this file as
+    deliberately not redirected rather than silently emitting redirects that do nothing.
+
+    Do NOT "fix" this by chaining upward with GetPathOfFileAbove. Collapsing this repository
+    onto the monorepo's checkouts needs its solutions rewritten as well, which cannot be
+    done without breaking the standalone build. It is a real piece of design work, not a
+    one-line import.
+
+    Nothing else belongs here. Component-wide build settings go in Directory.Build.props.
+  -->
+
+</Project>
