@@ -86,6 +86,13 @@ internal static class CodeShellFactory
         shell.RevisionProvider = new GitRevisionProvider(root);
         shell.Reviewer = await GitIdentity.ResolveReviewerAsync(root).ConfigureAwait(false);
 
+        // And for a root the user grants later through Open Folder. Without it
+        // the shell would go on recording this directory's commit against
+        // reviews of files in another one.
+        shell.RevisionProviderFactory = static granted => granted.GrantedRoots.Count == 0
+            ? null
+            : new GitRevisionProvider(granted.GrantedRoots[0]);
+
         return await WorkspaceBootstrap
             .OpenAsync(shell, new FileSystemWorkspaceStorage(root))
             .ConfigureAwait(false);

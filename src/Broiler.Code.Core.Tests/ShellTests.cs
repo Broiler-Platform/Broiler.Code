@@ -238,6 +238,85 @@ public sealed class ShellTests : IDisposable
     }
 
     [Fact(Timeout = 600000)]
+    public void The_Explorer_Shows_A_Picked_Directorys_Own_Files_As_Folders()
+    {
+        CodeWorkspace workspace = CreateWorkspace();
+
+        // Registered the way WorkspaceBootstrap registers a granted directory:
+        // sources owned by no project, because an SDK-style project declares
+        // none. Before these had a home in the tree, picking a directory of
+        // component code produced an explorer with nothing in it.
+        workspace.AddItem("Shell/CodeShell.cs", WorkspaceItemKind.SourceDocument);
+        workspace.AddItem("Shell/Commands/Open.cs", WorkspaceItemKind.SourceDocument);
+        workspace.AddItem("Program.cs", WorkspaceItemKind.SourceDocument);
+
+        using var source = new SolutionExplorerSource(workspace);
+
+        TreeNodeId granted = source.GetChild(source.Root, 0);
+        Assert.Equal(Path.GetFileName(_root), source.GetPresentation(granted).Label);
+        Assert.Equal("3 files", source.GetPresentation(granted).SecondaryLabel);
+
+        // Folders before files, each alphabetical: the order every file manager
+        // uses, and the one a reviewer walking the tree can keep their place in.
+        TreeNodeId shell = source.GetChild(granted, 0);
+        Assert.Equal("Shell", source.GetPresentation(shell).Label);
+        Assert.Equal("Program.cs", source.GetPresentation(source.GetChild(granted, 1)).Label);
+
+        TreeNodeId commands = source.GetChild(shell, 0);
+        Assert.Equal("Commands", source.GetPresentation(commands).Label);
+        Assert.Equal("CodeShell.cs", source.GetPresentation(source.GetChild(shell, 1)).Label);
+
+        // A file row stands for its item, which is what lets the explorer open
+        // it and what a review badge is looked up by.
+        TreeNodeId open = source.GetChild(commands, 0);
+        Assert.Equal(
+            "Shell/Commands/Open.cs", workspace.FindItem(source.ItemFor(open))!.RelativePath);
+        Assert.Equal([granted, shell, commands], source.AncestorsOf(open));
+    }
+
+    [Fact(Timeout = 600000)]
+    public async Task A_File_A_Project_Declares_Is_Not_Repeated_In_The_Folder_Tree()
+    {
+        Write("src/P/P.csproj", """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+              <ItemGroup><Compile Include="A.cs" /></ItemGroup>
+            </Project>
+            """);
+        Write("src/P/A.cs", "class A { }\n");
+        Write("tests/T.cs", "class T { }\n");
+        Write("S.slnx", """
+            <Solution>
+              <Folder Name="/src/">
+                <Project Path="src/P/P.csproj" />
+              </Folder>
+            </Solution>
+            """);
+
+        var storage = new FileSystemWorkspaceStorage(_root);
+        CodeWorkspace workspace = (await WorkspaceLoader.LoadSolutionAsync(storage, "S.slnx")).Value!;
+
+        // What the bootstrap does after loading a solution: register every
+        // source under the grant, whether a project claimed it or not.
+        workspace.AddItem("src/P/A.cs", WorkspaceItemKind.SourceDocument);
+        workspace.AddItem("tests/T.cs", WorkspaceItemKind.SourceDocument);
+
+        using var source = new SolutionExplorerSource(workspace);
+
+        // Two top-level rows: what the solution declares, and what the directory
+        // holds beyond it. A.cs belongs to the project, so it appears under the
+        // project and not a second time under the folder tree — two rows for one
+        // file would give a reviewer two places to record the same decision.
+        Assert.Equal(2, source.GetChildCount(source.Root));
+        TreeNodeId granted = source.GetChild(source.Root, 1);
+        Assert.Equal("1 file", source.GetPresentation(granted).SecondaryLabel);
+
+        TreeNodeId tests = source.GetChild(granted, 0);
+        Assert.Equal("tests", source.GetPresentation(tests).Label);
+        Assert.Equal("T.cs", source.GetPresentation(source.GetChild(tests, 0)).Label);
+    }
+
+    [Fact(Timeout = 600000)]
     public async Task A_Templated_Solution_Contains_Only_Standard_Sdk_Files()
     {
         var storage = new FileSystemWorkspaceStorage(_root);

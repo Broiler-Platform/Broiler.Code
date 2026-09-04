@@ -118,6 +118,11 @@ public sealed class CodeShell : IDisposable
     [
         CodeCommandNames.New,
         CodeCommandNames.Open,
+
+        // The one addition to a deliberately small toolbar. Opening a folder is
+        // the first thing a reviewer does and the only way into the tree, and a
+        // command reachable only three levels into a menu is one nobody finds.
+        CodeCommandNames.OpenFolder,
         CodeCommandNames.Save,
         CodeCommandNames.SaveAll,
         CodeCommandNames.Build,
@@ -155,7 +160,7 @@ public sealed class CodeShell : IDisposable
         // same fact seen one level lower.
         _controls.Tabs.SelectionChanged += OnActiveDocumentChanged;
         RefreshCommands();
-        SetStatus("No workspace open. File ▸ Open…");
+        SetStatus("No workspace open. File ▸ Open Folder…");
     }
 
     /// <summary>Raised when a command runs, so a host can act on Open/New.</summary>
@@ -196,6 +201,7 @@ public sealed class CodeShell : IDisposable
         _commands = new CodeCommandSet(() => _workspace, () => _coordinator?.ActiveDocument ?? WorkspaceItemId.None)
         {
             HasFileDialogs = _fileDialogs is not null,
+            HasFolderPicker = _fileDialogs is { CanRequestFolder: true },
             HasBuildService = _commands.HasBuildService,
             HasReview = _controls.Review is not null,
             HasReviewer = !string.IsNullOrWhiteSpace(Reviewer),
@@ -303,6 +309,19 @@ public sealed class CodeShell : IDisposable
     public IRevisionProvider? RevisionProvider { get; set; }
 
     /// <summary>
+    /// Makes a revision provider for a root the user grants at runtime, so
+    /// <see cref="RevisionProvider"/> follows the folder the shell is actually
+    /// showing rather than the one the head opened on.
+    ///
+    /// A factory rather than the shell constructing one, for the reason
+    /// <see cref="Review.GitRevisionProvider"/> gives: asking git means running
+    /// a process, and a host whose platform has none simply supplies nothing
+    /// here. Left unset, provenance degrades to absent — which is an ordinary
+    /// answer — rather than to wrong.
+    /// </summary>
+    public Func<IWorkspaceStorage, IRevisionProvider?>? RevisionProviderFactory { get; set; }
+
+    /// <summary>
     /// Marshals background work onto the UI thread.
     ///
     /// Set by a head before the workspace attaches. Without it the review load
@@ -332,6 +351,8 @@ public sealed class CodeShell : IDisposable
             CodeCommandNames.New => await NewDocumentAsync(cancellationToken).ConfigureAwait(false),
             CodeCommandNames.NewProject => await NewProjectAsync(cancellationToken).ConfigureAwait(false),
             CodeCommandNames.Open => await OpenAsync(cancellationToken).ConfigureAwait(false),
+            CodeCommandNames.OpenFolder =>
+                await OpenFolderAsync(cancellationToken).ConfigureAwait(false),
             CodeCommandNames.Save => await SaveActiveAsync(cancellationToken).ConfigureAwait(false),
             CodeCommandNames.SaveAs => await SaveActiveAsAsync(cancellationToken).ConfigureAwait(false),
             CodeCommandNames.SaveAll => await SaveAllAsync(cancellationToken).ConfigureAwait(false),
@@ -524,6 +545,67 @@ public sealed class CodeShell : IDisposable
     }
 
     /// <summary>
+    /// Asks for a directory and opens it as the workspace. This is how a
+    /// reviewer points the tree at a component and walks it file by file.
+    ///
+    /// Unlike Open, which needs a workspace to open a document into, this makes
+    /// one: everything under the granted directory is registered, so the
+    /// explorer shows what is actually there rather than only what a solution
+    /// declares — which for an ordinary SDK-style project is nothing. The
+    /// workspace it replaces is closed first, so unsaved work is asked about
+    /// before it goes and a declined prompt leaves everything as it was.
+    /// </summary>
+    public async ValueTask<bool> OpenFolderAsync(CancellationToken cancellationToken = default)
+    {
+        ThrowIfDisposed();
+        if (FileDialogs is not { CanRequestFolder: true } dialogs)
+        {
+            SetStatus("This host has no way to ask for a folder.");
+            return false;
+        }
+
+        FileGrant? grant = await dialogs
+            .RequestFolderAsync(new FileDialogRequest { Title = "Open Folder" }, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (grant is null)
+            return false;
+
+        if (_coordinator is not null &&
+            !await _coordinator.CloseAllAsync(cancellationToken).ConfigureAwait(false))
+        {
+            SetStatus("The open workspace was kept: a document has unsaved changes.");
+            return false;
+        }
+
+        ApplyRevisionProviderFor(grant);
+
+        CodeWorkspace workspace = await WorkspaceBootstrap
+            .OpenAsync(this, grant.Storage, cancellationToken).ConfigureAwait(false);
+
+        int sources = workspace.Items.Count(item =>
+            item.Kind == WorkspaceItemKind.SourceDocument && !item.IsUntitled);
+        SetStatus($"{grant.DisplayPath} — {sources} source files");
+        return true;
+    }
+
+    /// <summary>
+    /// Points the revision provider at a root the user has just granted, when
+    /// the head supplied a way to make one.
+    ///
+    /// It runs before the workspace attaches, because AttachWorkspace is what
+    /// builds the review controller from it. A provider left pointing at the
+    /// previous root would stamp that repository's commit onto every review
+    /// recorded in this one — and provenance is the field nobody would think to
+    /// check, so it has to be right without being noticed.
+    /// </summary>
+    private void ApplyRevisionProviderFor(FileGrant grant)
+    {
+        if (RevisionProviderFactory is { } factory)
+            RevisionProvider = factory(grant.Storage);
+    }
+
+    /// <summary>
     /// Asks where to write the active document, writes it, and rebinds it
     /// there. The document keeps its ID, so its tab, buffer, and undo history
     /// come with it.
@@ -586,6 +668,7 @@ public sealed class CodeShell : IDisposable
         {
             _fileDialogs = value;
             _commands.HasFileDialogs = value is not null;
+            _commands.HasFolderPicker = value is { CanRequestFolder: true };
             RefreshCommands();
         }
     }
@@ -652,6 +735,7 @@ public sealed class CodeShell : IDisposable
             return false;
         }
 
+        ApplyRevisionProviderFor(grant);
         AttachWorkspace(loaded.Value!);
         return true;
     }
@@ -850,6 +934,7 @@ public sealed class CodeShell : IDisposable
         AddItem(file, CodeCommandNames.New);
         AddItem(file, CodeCommandNames.NewProject);
         AddItem(file, CodeCommandNames.Open);
+        AddItem(file, CodeCommandNames.OpenFolder);
         file.Children.Add(new UiMenuItem("file.sep", string.Empty) { IsSeparator = true });
         AddItem(file, CodeCommandNames.Save);
         AddItem(file, CodeCommandNames.SaveAs);

@@ -14,6 +14,7 @@ using Broiler.UI.Panel.Standard;
 using Broiler.UI.Splitter.Standard;
 using Broiler.UI.TabView.Standard;
 using Broiler.UI.Toolbar.Standard;
+using Broiler.UI.TreeView;
 using Broiler.UI.TreeView.Standard;
 
 namespace Broiler.Code.Core.Tests;
@@ -303,6 +304,79 @@ public sealed class DefaultDocumentTests : IDisposable
         Assert.False(fixture.Shell.Workspace!.HasUnsavedChanges);
     }
 
+    [Fact(Timeout = 600000)]
+    public async Task Open_Folder_Puts_The_Picked_Directorys_Files_In_The_Explorer()
+    {
+        string component = Grant("Broiler.Component");
+        Directory.CreateDirectory(Path.Combine(component, "src"));
+        await File.WriteAllTextAsync(
+            Path.Combine(component, "src", "Widget.cs"), "class Widget { }\n");
+        await File.WriteAllTextAsync(
+            Path.Combine(component, "Program.cs"), "class Program { }\n");
+
+        using Fixture fixture = Fixture.Create();
+        await WorkspaceBootstrap.OpenAsync(
+            fixture.Shell, new FileSystemWorkspaceStorage(Grant("empty")));
+
+        fixture.Dialogs.FolderFrom = component;
+        Assert.True(await fixture.Shell.InvokeAsync(CodeCommandNames.OpenFolder));
+
+        // The directory the user picked is the workspace, and what is in it is
+        // the tree — named after the folder, so it says which one was opened.
+        var source = (SolutionExplorerSource)fixture.Controls.Explorer.DataSource!;
+        TreeNodeId granted = source.GetChild(source.Root, 0);
+        Assert.Equal("Broiler.Component", source.GetPresentation(granted).Label);
+
+        TreeNodeId sources = source.GetChild(granted, 0);
+        Assert.Equal("src", source.GetPresentation(sources).Label);
+        Assert.Equal("Widget.cs", source.GetPresentation(source.GetChild(sources, 0)).Label);
+        Assert.Equal("Program.cs", source.GetPresentation(source.GetChild(granted, 1)).Label);
+
+        // And a row opens the file it stands for, which is the step-by-step
+        // part: a reviewer walks the tree and reads one file at a time.
+        Assert.True(await fixture.Shell.OpenDocumentAsync(
+            source.ItemFor(source.GetChild(sources, 0))));
+        Assert.Equal("Widget.cs", fixture.Controls.Tabs.SelectedTab!.Header);
+    }
+
+    [Fact(Timeout = 600000)]
+    public async Task Cancelling_The_Folder_Dialog_Keeps_The_Open_Workspace()
+    {
+        string opened = Grant("opened");
+        await File.WriteAllTextAsync(Path.Combine(opened, "Kept.cs"), "class Kept { }\n");
+
+        using Fixture fixture = Fixture.Create();
+        await WorkspaceBootstrap.OpenAsync(fixture.Shell, new FileSystemWorkspaceStorage(opened));
+        CodeWorkspace before = fixture.Shell.Workspace!;
+
+        fixture.Dialogs.FolderFrom = null;
+        Assert.False(await fixture.Shell.InvokeAsync(CodeCommandNames.OpenFolder));
+
+        // Not a new workspace over the same files: the same one, untouched.
+        Assert.Same(before, fixture.Shell.Workspace);
+        Assert.Equal("Kept.cs", fixture.Controls.Tabs.SelectedTab!.Header);
+    }
+
+    [Fact(Timeout = 600000)]
+    public async Task A_Host_That_Cannot_Ask_For_A_Folder_Says_So_Rather_Than_Doing_Nothing()
+    {
+        using Fixture fixture = Fixture.Create();
+        await WorkspaceBootstrap.OpenAsync(
+            fixture.Shell, new FileSystemWorkspaceStorage(Grant("empty")));
+
+        // File dialogs, but no folder chooser: they are different platform
+        // calls, so a host can carry one and not the other.
+        fixture.Shell.FileDialogs = new StubDialogs { CanRequestFolder = false };
+
+        CodeCommand command = fixture.Shell.Commands.Find(CodeCommandNames.OpenFolder)!;
+        Assert.Equal(CommandAvailability.Unavailable, command.Availability);
+        Assert.Contains("ask for a folder", command.Reason!, StringComparison.Ordinal);
+        Assert.False(await fixture.Shell.InvokeAsync(CodeCommandNames.OpenFolder));
+
+        // Open is still offered, because that half of the host works.
+        Assert.True(fixture.Shell.Commands.Find(CodeCommandNames.Open)!.IsEnabled);
+    }
+
     private sealed class Fixture(
         CodeShell shell, StandardCodeEditor editor, CodeShellControls controls, StubDialogs dialogs)
         : IDisposable
@@ -354,6 +428,15 @@ public sealed class DefaultDocumentTests : IDisposable
 
         public string? SaveTo { get; set; }
 
+        public string? FolderFrom { get; set; }
+
+        /// <summary>
+        /// Whether this stand-in claims a folder chooser. Settable because a
+        /// host that has file dialogs and no folder chooser is a real shape —
+        /// they are different platform calls — and the shell has to say so.
+        /// </summary>
+        public bool CanRequestFolder { get; init; } = true;
+
         public ValueTask<FileGrant?> RequestOpenAsync(
             FileDialogRequest request, CancellationToken cancellationToken = default) =>
             ValueTask.FromResult(GrantFor(OpenFrom));
@@ -361,6 +444,12 @@ public sealed class DefaultDocumentTests : IDisposable
         public ValueTask<FileGrant?> RequestSaveAsync(
             FileDialogRequest request, CancellationToken cancellationToken = default) =>
             ValueTask.FromResult(GrantFor(SaveTo));
+
+        public ValueTask<FileGrant?> RequestFolderAsync(
+            FileDialogRequest request, CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(FolderFrom is null
+                ? null
+                : new FileGrant(new FileSystemWorkspaceStorage(FolderFrom), string.Empty, FolderFrom));
 
         private static FileGrant? GrantFor(string? path) => path is null
             ? null
