@@ -48,6 +48,13 @@ public static class NoteAnchoring
     }
 
     /// <summary>Places one note against already-split, already-normalized lines.</summary>
+    /// <param name="lines">
+    /// The file, split on LF, already through
+    /// <see cref="ReviewContentHash.Normalize"/> — the overload above does both.
+    /// Lines that still carry a CR match nothing, because the anchor text was
+    /// normalized when it was recorded, and every note would silently come back
+    /// orphaned. Splitting a raw CRLF file here is the one way to misuse this.
+    /// </param>
     public static AnchoredNote Place(ReviewNote note, string[] lines)
     {
         ArgumentNullException.ThrowIfNull(note);
