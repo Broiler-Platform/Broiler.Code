@@ -1,4 +1,5 @@
 using Broiler.Code.Core.Shell;
+using Broiler.Code.Review;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
 using Broiler.Code.Workspaces.Storage;
@@ -375,6 +376,79 @@ public sealed class DefaultDocumentTests : IDisposable
 
         // Open is still offered, because that half of the host works.
         Assert.True(fixture.Shell.Commands.Find(CodeCommandNames.Open)!.IsEnabled);
+    }
+
+    /// <summary>
+    /// Provenance follows the folder, not the folder the head started on.
+    ///
+    /// The revision is the field nobody checks, so a wrong one is never noticed:
+    /// it looks exactly like a right one. A head that opened on repository A and
+    /// was then pointed at repository B must stamp B's commit onto reviews
+    /// recorded in B.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task Opening_A_Folder_Repoints_Provenance_At_The_Granted_Root()
+    {
+        string component = Grant("Broiler.Component");
+        await File.WriteAllTextAsync(
+            Path.Combine(component, "Widget.cs"), "class Widget { }\n");
+
+        using Fixture fixture = Fixture.Create();
+        await WorkspaceBootstrap.OpenAsync(
+            fixture.Shell, new FileSystemWorkspaceStorage(Grant("started-on")));
+
+        fixture.Shell.RevisionProvider = new StubRevisions("the-startup-root");
+        fixture.Shell.RevisionProviderFactory = granted =>
+            new StubRevisions(granted.GrantedRoots[0]);
+
+        fixture.Dialogs.FolderFrom = component;
+        Assert.True(await fixture.Shell.InvokeAsync(CodeCommandNames.OpenFolder));
+
+        // Compared against the full path, because that is what the storage
+        // grants and hands the factory.
+        Assert.Equal(
+            Path.GetFullPath(component),
+            await fixture.Shell.RevisionProvider!.GetCurrentRevisionAsync());
+    }
+
+    /// <summary>
+    /// A head that supplies no factory reports <em>absent</em> provenance, not
+    /// the previous root's.
+    ///
+    /// This is the direction that fails silently. Leaving the provider in place
+    /// keeps answering — with the wrong repository's commit — and no reviewer
+    /// would think to check. Null is an ordinary answer that says so, which is
+    /// why the assignment happens whether or not there is a factory to make one.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task A_Head_With_No_Factory_Loses_Provenance_Rather_Than_Reporting_The_Old_Roots()
+    {
+        string component = Grant("Broiler.Component");
+        await File.WriteAllTextAsync(
+            Path.Combine(component, "Widget.cs"), "class Widget { }\n");
+
+        using Fixture fixture = Fixture.Create();
+        await WorkspaceBootstrap.OpenAsync(
+            fixture.Shell, new FileSystemWorkspaceStorage(Grant("started-on")));
+
+        // The shape every head shipped before Open Folder existed, and the one
+        // an Android or browser head can still be written in: a provider for the
+        // root it opened on, and no way to make another.
+        fixture.Shell.RevisionProvider = new StubRevisions("the-startup-root");
+        fixture.Shell.RevisionProviderFactory = null;
+
+        fixture.Dialogs.FolderFrom = component;
+        Assert.True(await fixture.Shell.InvokeAsync(CodeCommandNames.OpenFolder));
+
+        Assert.Null(fixture.Shell.RevisionProvider);
+    }
+
+    /// <summary>A revision provider that reports whatever it was told to.</summary>
+    private sealed class StubRevisions(string revision) : IRevisionProvider
+    {
+        public ValueTask<string?> GetCurrentRevisionAsync(
+            CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<string?>(revision);
     }
 
     private sealed class Fixture(

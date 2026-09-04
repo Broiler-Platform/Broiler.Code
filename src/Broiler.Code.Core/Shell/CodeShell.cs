@@ -601,8 +601,14 @@ public sealed class CodeShell : IDisposable
     /// </summary>
     private void ApplyRevisionProviderFor(FileGrant grant)
     {
-        if (RevisionProviderFactory is { } factory)
-            RevisionProvider = factory(grant.Storage);
+        // Assigned unconditionally, including when there is no factory. Skipping
+        // the assignment instead would leave the provider the head built for the
+        // root it started on, which is the one outcome this method exists to
+        // prevent: a review recorded in the newly granted repository carrying
+        // the previous repository's commit. Absent provenance is an ordinary
+        // answer and says so; wrong provenance looks exactly like right
+        // provenance.
+        RevisionProvider = RevisionProviderFactory?.Invoke(grant.Storage);
     }
 
     /// <summary>
