@@ -1,0 +1,21 @@
+# Every text file is stored LF and checked out LF, on every platform.
+#
+# Without this the working copy's line endings come from whatever each developer
+# has core.autocrlf set to, and that is not a cosmetic difference here: a C# raw
+# string literal takes the line endings of the file it is written in. A fixture
+# written as one therefore means something different depending on how the
+# repository was cloned. NoteAnchoringTests compares source lines against anchor
+# text that Broiler.Code.Review normalizes to LF, so five of those tests failed
+# on every Windows checkout while CI, checking out LF, stayed green — a test that
+# cannot fail on the machine the code is written on is not protecting anything.
+#
+# text=auto rather than a bare text: git's own binary detection decides what gets
+# converted, so a binary added later is left alone rather than corrupted by a
+# rule written before it existed. Every file tracked here today is text, and
+# there is deliberately no list of binary extensions for files this repository
+# does not have — the same measure-first rule the build warnings in
+# Directory.Build.props are written under.
+#
+# The component submodules are separate repositories with their own working
+# copies. This file does not reach them.
+* text=auto eol=lf
