@@ -1,5 +1,34 @@
 <Project>
 
+  <!--
+    Where the component projects live, for the components that ask.
+
+    Every component repository vendors the ones it depends on as submodules so it builds
+    standalone, and each nested copy declares the same PackageId at the same version as the
+    top-level checkout here. Composed in this repository that is the same assembly claiming
+    one identity from several paths, and NuGet collapses it onto whichever it picks: build
+    two copies, and an assembly can fall out of a head's deps.json and take the app down at
+    startup with a FileNotFoundException for a file sitting next to the exe.
+
+    Broiler.Graphics guards against exactly that by reading its sibling roots from
+    overridable properties, and its Directory.Build.props says who is meant to set them:
+    "a consumer with its own copy sets it in the Directory.Build.props above, which is
+    imported first, and then one assembly of each name is built instead of several." This
+    repository is that consumer. Chaining works because the component's props reach up to
+    this file before defining its own defaults.
+
+    Components that have not adopted the idiom still spell their siblings as relative paths
+    into their own nested checkouts. Those are folded onto these same directories by
+    eng/fold-duplicate-checkouts.targets instead — the mechanism differs, the destination
+    does not. Prefer this one: a component that takes a property needs no generated rule.
+  -->
+  <PropertyGroup>
+    <BroilerGraphicsRoot>$(MSBuildThisFileDirectory)Broiler.Graphics</BroilerGraphicsRoot>
+    <BroilerInputRoot>$(MSBuildThisFileDirectory)Broiler.Input</BroilerInputRoot>
+    <BroilerMediaRoot>$(MSBuildThisFileDirectory)Broiler.Media</BroilerMediaRoot>
+    <BroilerUIRoot>$(MSBuildThisFileDirectory)Broiler.UI</BroilerUIRoot>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- Broiler.Graphics.Direct2D and the Windows head target net10.0-windows. Restoring
          them from a non-Windows host (a `dotnet restore` on the Linux runner that walks the

@@ -1,0 +1,168 @@
+<Project>
+
+  <!-- Generated from eng/solutions.json by scripts/update-solutions.ps1. -->
+
+  <!--
+    The solutions above fold every nested duplicate checkout onto the top-level one, so
+    they name a single Broiler.Input.Mouse. The ProjectReferences do not: Broiler.UI
+    reaches its OWN nested Broiler.Input, Broiler.Graphics reaches its own, and the
+    Broiler.Code heads reach the top-level checkout. Each spelling is correct for the
+    repository that owns it and builds standalone from it. Composed here they are three
+    project files claiming one package identity, Broiler.Input.Mouse/0.1.0-preview.1.
+
+    NuGet collapses that identity onto ONE checkout per restore. When the winner is a
+    checkout the solution does not list, the referencing project and the restore graph
+    disagree, the assembly drops out of the head's deps.json, and the app dies at
+    startup with FileNotFoundException on an assembly sitting right next to the exe.
+    Nothing warns: the build reports zero errors and quietly compiles both copies.
+
+    This file removes each nested spelling and adds the folded one back, so the build
+    graph names exactly the projects the solutions do. It is a static ItemGroup rather
+    than a target ON PURPOSE. Visual Studio nominates a project to NuGet from its
+    EVALUATION, so a target-based rewrite is honoured by `dotnet build` and skipped by
+    the IDE - which is the case that actually broke. Anything that runs here must
+    survive being read without executing a single target.
+
+    Generated rather than hand-written so it cannot drift from the solutions: both come
+    from one walk of one reference graph, and CI runs update-solutions.ps1 -Verify.
+  -->
+
+  <!--
+    This project, relative to the repository root and always forward-slashed, so the
+    conditions below read the same on both hosts. Every project that imports this file
+    lives under BroilerRepositoryRoot - MSBuild picks the NEAREST Directory.Build.targets
+    above a project - so the Substring is always in range.
+  -->
+  <PropertyGroup>
+    <_BroilerFoldProjectPath>$(MSBuildProjectFullPath.Substring($(BroilerRepositoryRoot.Length)))</_BroilerFoldProjectPath>
+    <_BroilerFoldProjectPath>$(_BroilerFoldProjectPath.Replace('\', '/'))</_BroilerFoldProjectPath>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Commands/Broiler.UI.Button/Broiler.UI.Button.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Commands/Broiler.UI.Menu/Broiler.UI.Menu.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Commands/Broiler.UI.Toolbar/Broiler.UI.Toolbar.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Content/Broiler.UI.Label/Broiler.UI.Label.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Layout/Broiler.UI.Splitter/Broiler.UI.Splitter.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Layout/Broiler.UI.TabView/Broiler.UI.TabView.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Text/Broiler.UI.CodeEditor/Broiler.UI.CodeEditor.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/Text/Broiler.UI.Edit/Broiler.UI.Edit.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Abstractions/ValueAndSelection/Broiler.UI.TreeView/Broiler.UI.TreeView.csproj'">
+    <ProjectReference Remove="..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Foundation/Broiler.UI.Standard/Broiler.UI.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Keyboard\Broiler.Input.Keyboard.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Keyboard/Broiler.Input.Keyboard.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Mouse\Broiler.Input.Mouse.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Mouse/Broiler.Input.Mouse.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Pen\Broiler.Input.Pen.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Pen/Broiler.Input.Pen.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Text\Broiler.Input.Text.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Text/Broiler.Input.Text.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Touch\Broiler.Input.Touch.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Touch/Broiler.Input.Touch.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Foundation/Broiler.UI/Broiler.UI.csproj'">
+    <ProjectReference Remove="..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input\Broiler.Input.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input/Broiler.Input.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Keyboard\Broiler.Input.Keyboard.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Keyboard/Broiler.Input.Keyboard.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Mouse\Broiler.Input.Mouse.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Mouse/Broiler.Input.Mouse.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Pen\Broiler.Input.Pen.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Pen/Broiler.Input.Pen.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Text\Broiler.Input.Text.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Text/Broiler.Input.Text.csproj" />
+    <ProjectReference Remove="..\..\..\Broiler.Input\src\Broiler.Input.Touch\Broiler.Input.Touch.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Input/src/Broiler.Input.Touch/Broiler.Input.Touch.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Commands/Broiler.UI.Button.Standard/Broiler.UI.Button.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Commands/Broiler.UI.Menu.Standard/Broiler.UI.Menu.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Commands/Broiler.UI.Toolbar.Standard/Broiler.UI.Toolbar.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Content/Broiler.UI.Label.Standard/Broiler.UI.Label.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Layout/Broiler.UI.Panel.Standard/Broiler.UI.Panel.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Layout/Broiler.UI.Splitter.Standard/Broiler.UI.Splitter.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Layout/Broiler.UI.TabView.Standard/Broiler.UI.TabView.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Text/Broiler.UI.CodeEditor.Standard/Broiler.UI.CodeEditor.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/Text/Broiler.UI.Edit.Standard/Broiler.UI.Edit.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(_BroilerFoldProjectPath)' == 'Broiler.UI/src/Implementations/Standard/ValueAndSelection/Broiler.UI.TreeView.Standard/Broiler.UI.TreeView.Standard.csproj'">
+    <ProjectReference Remove="..\..\..\..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
+    <ProjectReference Include="$(BroilerRepositoryRoot)Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -13,10 +13,12 @@
   </Folder>
   <Folder Name="/Dependencies/Broiler.Input/">
     <Project Path="Broiler.Input/src/Broiler.Input.Keyboard/Broiler.Input.Keyboard.csproj" />
+    <Project Path="Broiler.Input/src/Broiler.Input.Mouse.Windows/Broiler.Input.Mouse.Windows.csproj" />
     <Project Path="Broiler.Input/src/Broiler.Input.Mouse/Broiler.Input.Mouse.csproj" />
     <Project Path="Broiler.Input/src/Broiler.Input.Pen/Broiler.Input.Pen.csproj" />
     <Project Path="Broiler.Input/src/Broiler.Input.Text/Broiler.Input.Text.csproj" />
     <Project Path="Broiler.Input/src/Broiler.Input.Touch/Broiler.Input.Touch.csproj" />
+    <Project Path="Broiler.Input/src/Broiler.Input.Windows/Broiler.Input.Windows.csproj" />
     <Project Path="Broiler.Input/src/Broiler.Input/Broiler.Input.csproj" />
   </Folder>
   <Folder Name="/Dependencies/Broiler.Media/">
