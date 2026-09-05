@@ -252,6 +252,22 @@ public sealed class CodeShell : IDisposable
     {
         try
         {
+            if (Dispatcher is null)
+            {
+                // Nothing to marshal the result back with, and ReviewController's
+                // contract without a dispatcher is that one thread drives it. Moving
+                // the read to the pool anyway would leave it publishing into the
+                // maps from there while this thread carries on using them — and
+                // "attach a workspace, then review the first file" is one breath,
+                // which is exactly the window that would land in.
+                //
+                // Synchronous underneath, per the note below, so this finishes
+                // before AttachWorkspace returns rather than freezing anything a
+                // host without a dispatcher was going to draw.
+                await controller.LoadAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
             // Task.Run, despite LoadAsync being async, because the desktop
             // storage provider is synchronous underneath its async signatures —
             // FileSystemWorkspaceStorage reads with File.ReadAllBytes and returns
