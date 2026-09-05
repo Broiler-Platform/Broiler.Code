@@ -94,6 +94,7 @@ public sealed class CodeEditorArchitectureTests
             "../../Broiler.UI/src/Abstractions/Layout/Broiler.UI.TabView/Broiler.UI.TabView.csproj",
             "../../Broiler.UI/src/Abstractions/Text/Broiler.UI.CodeEditor/Broiler.UI.CodeEditor.csproj",
             "../../Broiler.UI/src/Abstractions/Text/Broiler.UI.Edit/Broiler.UI.Edit.csproj",
+            "../../Broiler.UI/src/Abstractions/ValueAndSelection/Broiler.UI.ComboBox/Broiler.UI.ComboBox.csproj",
             "../../Broiler.UI/src/Abstractions/ValueAndSelection/Broiler.UI.TreeView/Broiler.UI.TreeView.csproj",
 
             // The review model sits below Core on the same side of the seam as

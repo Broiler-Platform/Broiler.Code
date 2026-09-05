@@ -1,12 +1,13 @@
 # Broiler Code roadmap
 
-- **Status:** MVP-0 (Human Review workspace) and Phases 0-3 delivered. The
-  composed shell runs on Windows and Linux; the Linux head reports its IME as
-  unavailable, and its window has not yet been exercised on a Linux display
+- **Status:** MVP-0 (Human Review workspace), MVP-0.1 (per-declaration assurance
+  review) and Phases 0-3 delivered. The composed shell runs on Windows and Linux;
+  the Linux head reports its IME as unavailable, and its window has not yet been
+  exercised on a Linux display
 - **Scope:** A C#/.NET IDE that reuses the Broiler Writer application stack and
   supports multi-project workspaces, live diagnostics, and builds for ordinary
   .NET, Android, and browser WebAssembly
-- **Last reconciled:** 2026-09-04
+- **Last reconciled:** 2026-09-05
 
 ## Product goal
 
@@ -59,6 +60,33 @@ Exit gates, all met: the review model depends on nothing but the workspace
 (asserted by `CodeEditorArchitectureTests.The_Review_Model_Depends_Only_On_The_Workspace`);
 a dirty document cannot be marked reviewed; a review cannot be recorded without a
 reviewer; and the editor and CI compute the same state from the same code.
+
+## MVP-0.1 - Reviewing one declaration at a time
+
+**Delivered.** Some components record a narrower claim than "a person read this
+file": `Broiler.VM` carries two comment lines on every relevant declaration, and
+all 1,697 of its human lines say `PENDING`. Signing one meant typing into a
+comment at a column that component's parser insists on.
+
+| Outcome | Where |
+| --- | --- |
+| The annotation grammar, the review state machine, and the rewrite that records a decision | `Broiler.Code.Review/Assurance` |
+| Code units, the eight-case exemption predicate, and fingerprints that reproduce the owning component's published values | `Broiler.Code.Language.CSharp.Roslyn` |
+| The caret choosing a declaration, the pane sections, and the two commands | `Broiler.Code.Core/Review`, `CodeShell` |
+| A note-kind picker and symbol anchors, closing two of MVP-0's stated gaps | `CodeShell`, both heads |
+
+The decisions, and what it deliberately does not do, are in
+[the architecture record](architecture/broiler-code-assurance.md). Two are worth
+repeating here: the editor writes a reviewer's **name and never a fingerprint**,
+so it structurally cannot mint a verified approval; and it rewrites a file's
+generated header only after reproducing the existing one byte for byte, so a
+build that counts differently leaves it alone rather than writing a plausible
+wrong number.
+
+This is the first thing to compose a language service into a head. Roslyn reaches
+`Broiler.Code.Windows` and `.Linux` and stays out of `Broiler.Code.Core`'s
+closure, which is the arrangement the capability matrix below already describes
+and which `CodeEditorArchitectureTests` still asserts.
 
 ## Current baseline
 

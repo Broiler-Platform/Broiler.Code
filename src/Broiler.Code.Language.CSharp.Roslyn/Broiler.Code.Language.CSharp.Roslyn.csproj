@@ -33,6 +33,15 @@
   -->
   <ItemGroup>
     <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Text\Broiler.UI.CodeEditor\Broiler.UI.CodeEditor.csproj" />
+
+    <!--
+      The review model, for the assurance scanner alone. It is the only thing
+      here that a review pane consumes, and the reference points the way the
+      seam does: the model declares what a scanner must produce and knows
+      nothing about Roslyn, and this assembly is where the one implementation
+      that needs a real parser lives.
+    -->
+    <ProjectReference Include="..\Broiler.Code.Review\Broiler.Code.Review.csproj" />
     <ProjectReference Include="..\Broiler.Code.Workspaces\Broiler.Code.Workspaces.csproj" />
   </ItemGroup>
 
