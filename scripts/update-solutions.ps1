@@ -38,7 +38,14 @@ $duplicateCheckoutMappings = [ordered]@{
 
 $referenceCache = @{}
 
-function Convert-ToRepositoryPath {
+# A full path as a repository-relative, forward-slashed string, with no folding applied.
+#
+# The forward slashes are not cosmetic. A ProjectReference is written with backslashes
+# whatever the host, and on Linux those survive [IO.Path]::GetFullPath as ordinary
+# characters rather than separators - so the same project reaches here spelled two ways
+# depending on whether the path arrived rooted. Every comparison between paths goes through
+# this function so the two spellings cannot read as two different projects.
+function Convert-ToRepositoryRelativePath {
     param(
         [Parameter(Mandatory)]
         [string] $FullPath
@@ -49,7 +56,17 @@ function Convert-ToRepositoryPath {
     if (-not $normalizedFullPath.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Project path escapes the repository: $normalizedFullPath"
     }
-    $relativePath = $normalizedFullPath.Substring($rootPrefix.Length).Replace('\', '/')
+
+    return $normalizedFullPath.Substring($rootPrefix.Length).Replace('\', '/')
+}
+
+function Convert-ToRepositoryPath {
+    param(
+        [Parameter(Mandatory)]
+        [string] $FullPath
+    )
+
+    $relativePath = Convert-ToRepositoryRelativePath -FullPath $FullPath
 
     # Fold to a fixed point: one pass only strips the outermost nesting level.
     for ($pass = 0; $pass -lt 16; $pass++) {
@@ -90,7 +107,10 @@ function Expand-ProjectReferenceInclude {
     $projectFullPath = Join-Path $repositoryRoot $ProjectPath
     $projectDirectory = Split-Path -Parent $projectFullPath
 
-    $resolvedInclude = $Include
+    # MSBuild reads a backslash in an Include as a separator on every host. .NET does not,
+    # so translate before resolving: a path that arrives rooted (a component root property
+    # expands to one) never reaches the Join-Path below that would otherwise normalize it.
+    $resolvedInclude = $Include.Replace('\', [string][IO.Path]::DirectorySeparatorChar)
     $resolvedInclude = $resolvedInclude.Replace(
         '$(MSBuildThisFileDirectory)',
         $projectDirectory + [IO.Path]::DirectorySeparatorChar)
@@ -148,9 +168,10 @@ function Get-ProjectReferenceRewrites {
     $rewrites = [Collections.Generic.List[pscustomobject]]::new()
     foreach ($node in $project.SelectNodes('//ProjectReference[@Include]')) {
         foreach ($include in ([string] $node.Include).Split(';', [StringSplitOptions]::RemoveEmptyEntries)) {
-            $namedPath = Expand-ProjectReferenceInclude -ProjectPath $ProjectPath -Include $include
+            $namedPath = Convert-ToRepositoryRelativePath -FullPath (
+                Expand-ProjectReferenceInclude -ProjectPath $ProjectPath -Include $include)
             $canonicalPath = Resolve-ProjectReference -ProjectPath $ProjectPath -Include $include
-            if ($namedPath -eq [IO.Path]::GetFullPath((Join-Path $repositoryRoot $canonicalPath))) {
+            if ($namedPath -eq $canonicalPath) {
                 continue
             }
 
