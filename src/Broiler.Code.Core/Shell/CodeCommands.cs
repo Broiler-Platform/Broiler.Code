@@ -14,6 +14,7 @@ public static class CodeCommandNames
     public const string New = "code.new";
     public const string NewProject = "code.newProject";
     public const string Open = "code.open";
+    public const string OpenFolder = "code.openFolder";
     public const string Save = "code.save";
     public const string SaveAs = "code.saveAs";
     public const string SaveAll = "code.saveAll";
@@ -96,6 +97,14 @@ public sealed class CodeCommandSet
     public bool HasFileDialogs { get; set; }
 
     /// <summary>
+    /// Set when the host can ask the user for a directory, which is a narrower
+    /// claim than <see cref="HasFileDialogs"/>: picking a folder is a different
+    /// platform call from picking a file, and a host may carry one and not the
+    /// other.
+    /// </summary>
+    public bool HasFolderPicker { get; set; }
+
+    /// <summary>
     /// Set when the head composed a review pane. Without it the review commands
     /// report Unavailable with a reason, in keeping with the rest of this set:
     /// a menu entry that silently does nothing is worse than one that says the
@@ -137,6 +146,17 @@ public sealed class CodeCommandSet
             // does need somewhere to put it before it can do anything.
             Picker(CodeCommandNames.NewProject, "New Project…", 'P'),
             Picker(CodeCommandNames.Open, "Open…", 'O'),
+
+            // A folder needs no workspace to open into — it becomes the
+            // workspace — so unlike Open it is enabled the moment the host can
+            // ask, which is what lets it be the first thing a reviewer does.
+            HasFolderPicker
+                ? new CodeCommand(
+                    CodeCommandNames.OpenFolder, "Open Folder…", CommandAvailability.Enabled,
+                    AccessKey: 'F')
+                : new CodeCommand(
+                    CodeCommandNames.OpenFolder, "Open Folder…", CommandAvailability.Unavailable,
+                    "This host has no way to ask for a folder.", 'F'),
             new CodeCommand(
                 CodeCommandNames.Save, "Save",
                 hasDocument ? CommandAvailability.Enabled : CommandAvailability.Disabled,

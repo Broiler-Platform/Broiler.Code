@@ -21,11 +21,16 @@ namespace Broiler.Code.Windows;
 ///
 /// comdlg32 rather than IFileDialog: it needs no COM apartment setup beyond the
 /// STA the head already declares, and this head asks for one file at a time.
+/// comdlg32 has no folder chooser, so that one call goes to shell32's
+/// SHBrowseForFolder — still a plain export rather than a COM interface, which
+/// is the same trade for the same reason.
 /// </summary>
 [SupportedOSPlatform("windows7.0")]
 internal sealed partial class WindowsFileDialogs(IntPtr owner) : IFileDialogService
 {
     private const int MaxPath = 32768;
+
+    public bool CanRequestFolder => true;
 
     public ValueTask<FileGrant?> RequestOpenAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default)
@@ -47,6 +52,99 @@ internal sealed partial class WindowsFileDialogs(IntPtr owner) : IFileDialogServ
         // overwrite prompt is the dialog's, so the save path below does not
         // need an expected-revision check the user has already answered.
         return ValueTask.FromResult(Show(request, save: true, 0x00000002 | 0x00000800 | 0x00000004 | 0x00080000));
+    }
+
+    public ValueTask<FileGrant?> RequestFolderAsync(
+        FileDialogRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(Browse(request.Title));
+    }
+
+    /// <summary>
+    /// The folder chooser.
+    ///
+    /// The modern style needs OLE on the calling thread, and [STAThread] gives
+    /// the CLR's CoInitializeEx and not OleInitialize, so this asks for OLE
+    /// itself and falls back to the classic dialog if the apartment refuses.
+    /// Balanced, because an unmatched OleInitialize leaves OLE up on a thread
+    /// that is going to keep running the window.
+    /// </summary>
+    private FileGrant? Browse(string title)
+    {
+        const int SOk = 0;
+        const int SFalse = 1;
+
+        int initialized = OleInitialize(IntPtr.Zero);
+        bool hasOle = initialized is SOk or SFalse;
+
+        try
+        {
+            // BIF_RETURNONLYFSDIRS | BIF_EDITBOX, plus BIF_NEWDIALOGSTYLE when
+            // OLE is up. Only filesystem directories: a virtual folder has no
+            // path to grant storage over.
+            uint flags = 0x0001 | 0x0010;
+            if (hasOle)
+                flags |= 0x0040;
+
+            IntPtr list;
+            char[] display = new char[260];
+            unsafe
+            {
+                fixed (char* name = display)
+                fixed (char* caption = title + '\0')
+                {
+                    var browse = new BrowseInfo
+                    {
+                        Owner = owner,
+                        DisplayName = (IntPtr)name,
+                        Title = (IntPtr)caption,
+                        Flags = flags,
+                    };
+
+                    list = SHBrowseForFolder(ref browse);
+                }
+            }
+
+            if (list == IntPtr.Zero)
+                return null;
+
+            try
+            {
+                char[] buffer = new char[MaxPath];
+                unsafe
+                {
+                    fixed (char* path = buffer)
+                    {
+                        // The Ex form takes a length. The original assumes a
+                        // MAX_PATH buffer and would truncate a deeper path into
+                        // one that names a different directory.
+                        if (!SHGetPathFromIDListEx(list, path, MaxPath, 0))
+                            return null;
+                    }
+                }
+
+                int terminator = Array.IndexOf(buffer, '\0');
+                string full = new(buffer, 0, terminator < 0 ? buffer.Length : terminator);
+                if (full.Length == 0)
+                    return null;
+
+                // The directory itself is the grant, so there is nothing chosen
+                // inside it and the relative path is empty.
+                full = Path.GetFullPath(full);
+                return new FileGrant(new FileSystemWorkspaceStorage(full), string.Empty, full);
+            }
+            finally
+            {
+                CoTaskMemFree(list);
+            }
+        }
+        finally
+        {
+            if (hasOle)
+                OleUninitialize();
+        }
     }
 
     private FileGrant? Show(FileDialogRequest request, bool save, int flags)
@@ -148,6 +246,36 @@ internal sealed partial class WindowsFileDialogs(IntPtr owner) : IFileDialogServ
         public int ReservedInt;
         public int FlagsEx;
     }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct BrowseInfo
+    {
+        public IntPtr Owner;
+        public IntPtr Root;
+        public IntPtr DisplayName;
+        public IntPtr Title;
+        public uint Flags;
+        public IntPtr Callback;
+        public IntPtr Parameter;
+        public int Image;
+    }
+
+    [LibraryImport("shell32.dll", EntryPoint = "SHBrowseForFolderW")]
+    private static partial IntPtr SHBrowseForFolder(ref BrowseInfo browse);
+
+    [LibraryImport("shell32.dll", EntryPoint = "SHGetPathFromIDListEx")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static unsafe partial bool SHGetPathFromIDListEx(
+        IntPtr list, char* path, int length, int options);
+
+    [LibraryImport("ole32.dll")]
+    private static partial void CoTaskMemFree(IntPtr memory);
+
+    [LibraryImport("ole32.dll")]
+    private static partial int OleInitialize(IntPtr reserved);
+
+    [LibraryImport("ole32.dll")]
+    private static partial void OleUninitialize();
 
     [LibraryImport("comdlg32.dll", EntryPoint = "GetOpenFileNameW")]
     [return: MarshalAs(UnmanagedType.Bool)]

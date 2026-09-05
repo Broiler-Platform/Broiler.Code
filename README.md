@@ -90,6 +90,12 @@ by content, not by commit, so a rebase does not invalidate a review and a revert
 dotnet run --project src/Broiler.Code.Review.Cli -- coverage --root .
 ```
 
+In the editor, **File ▸ Open Folder…** grants a directory and fills the Solution
+Explorer with the sources under it, so a component can be read and marked file by
+file. It is the folder tree rather than the solution's own list that carries
+them: an SDK-style project declares no compile items, and the declared model does
+not evaluate the implicit globs that would invent them.
+
 The design, including why the CI job reports rather than gates, is in
 [`docs/architecture/broiler-code-review.md`](docs/architecture/broiler-code-review.md).
 
