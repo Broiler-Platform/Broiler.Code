@@ -59,6 +59,25 @@ public sealed class ReviewController : IDisposable
     private readonly IUiDispatcher? _dispatcher;
     private readonly Dictionary<string, FileReview> _records = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ReviewState> _states = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// When each path was last committed, against <see cref="_writeSequence"/>.
+    ///
+    /// <see cref="LoadAsync"/> reads a snapshot of every record and then publishes
+    /// it whole. A decision recorded while that read is in flight is newer than the
+    /// snapshot, so republishing the snapshot over it rolls it back: the record
+    /// stays right on disk while the explorer badge and the coverage number quietly
+    /// forget it, until something else happens to rebuild the map. Attaching a
+    /// workspace and immediately reviewing the first file is exactly that order,
+    /// and the load it races reads no records at all, so the state does not come
+    /// back on its own.
+    ///
+    /// A load remembers the sequence it started at, and <see cref="Publish"/> keeps
+    /// the live entry for any path stamped after it. One entry per path ever
+    /// committed, which is the same order as <see cref="_records"/> itself.
+    /// </summary>
+    private readonly Dictionary<string, long> _committedAt = new(StringComparer.Ordinal);
+    private long _writeSequence;
     private WorkspaceItemId _current = WorkspaceItemId.None;
     private bool _disposed;
 
@@ -137,6 +156,10 @@ public sealed class ReviewController : IDisposable
     /// </summary>
     public async ValueTask LoadAsync(CancellationToken cancellationToken = default)
     {
+        // Read before the records are, so anything committed from here on counts as
+        // newer than this snapshot even if it lands while the reads are still going.
+        long startedAt = Interlocked.Read(ref _writeSequence);
+
         ReviewStore.ReviewRecordSet all = await _store
             .ReadAllAsync(cancellationToken).ConfigureAwait(false);
 
@@ -154,7 +177,7 @@ public sealed class ReviewController : IDisposable
                 review, await ContentOfAsync(path, cancellationToken).ConfigureAwait(false));
         }
 
-        Publish(records, states, all.Unreadable);
+        Publish(records, states, all.Unreadable, startedAt);
     }
 
     /// <summary>
@@ -169,11 +192,12 @@ public sealed class ReviewController : IDisposable
     private void Publish(
         Dictionary<string, FileReview> records,
         Dictionary<string, ReviewState> states,
-        IReadOnlyList<StorageFailure> unreadable)
+        IReadOnlyList<StorageFailure> unreadable,
+        long loadStartedAt)
     {
         if (_dispatcher is { } dispatcher && !dispatcher.CheckAccess())
         {
-            dispatcher.Post(() => Publish(records, states, unreadable));
+            dispatcher.Post(() => Publish(records, states, unreadable, loadStartedAt));
             return;
         }
 
@@ -183,6 +207,30 @@ public sealed class ReviewController : IDisposable
         if (_disposed)
             return;
 
+        // What the snapshot cannot speak for: paths committed since the read began.
+        // Captured before the swap, because the swap is what would lose them.
+        //
+        // Absence is captured too. Clearing a review removes the path from both
+        // maps, and a snapshot taken before that still holds the old record — so a
+        // path with no live entry must come out of the swap with no entry either,
+        // rather than having its withdrawn approval put back.
+        var committedSince = new List<string>();
+        foreach ((string path, long at) in _committedAt)
+        {
+            if (at > loadStartedAt)
+                committedSince.Add(path);
+        }
+
+        var liveRecords = new Dictionary<string, FileReview>(committedSince.Count, StringComparer.Ordinal);
+        var liveStates = new Dictionary<string, ReviewState>(committedSince.Count, StringComparer.Ordinal);
+        foreach (string path in committedSince)
+        {
+            if (_records.TryGetValue(path, out FileReview? record))
+                liveRecords[path] = record;
+            if (_states.TryGetValue(path, out ReviewState state))
+                liveStates[path] = state;
+        }
+
         _records.Clear();
         foreach ((string path, FileReview review) in records)
             _records[path] = review;
@@ -191,7 +239,21 @@ public sealed class ReviewController : IDisposable
         foreach ((string path, ReviewState state) in states)
             _states[path] = state;
 
+        foreach (string path in committedSince)
+        {
+            _records.Remove(path);
+            _states.Remove(path);
+
+            if (liveRecords.TryGetValue(path, out FileReview? record))
+                _records[path] = record;
+            if (liveStates.TryGetValue(path, out ReviewState state))
+                _states[path] = state;
+        }
+
         Unreadable = unreadable;
+
+        // After the restore above, so the current document is re-evaluated against
+        // the records that survive rather than the ones the snapshot would impose.
         RefreshCurrent();
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -428,6 +490,7 @@ public sealed class ReviewController : IDisposable
         _disposed = true;
         _records.Clear();
         _states.Clear();
+        _committedAt.Clear();
         Unreadable = [];
     }
 
@@ -460,6 +523,10 @@ public sealed class ReviewController : IDisposable
                 updated,
                 await ContentOfAsync(updated.Path, cancellationToken).ConfigureAwait(true));
         }
+
+        // Stamped after the maps are written, so a load that publishes between the
+        // two does not see a stamp promising state that is not there yet.
+        _committedAt[updated.Path] = Interlocked.Increment(ref _writeSequence);
 
         RefreshCurrent();
         Changed?.Invoke(this, EventArgs.Empty);
