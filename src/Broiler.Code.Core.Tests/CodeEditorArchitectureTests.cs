@@ -17,9 +17,17 @@ public sealed class CodeEditorArchitectureTests
             "Broiler.UI", "src", "Abstractions", "Text", "Broiler.UI.CodeEditor",
             "Broiler.UI.CodeEditor.csproj");
 
+        // Graphics is reached through the root property rather than by walking
+        // up into Broiler.UI's own nested checkout of it. The two are not the
+        // same directory: the relative spelling this used to assert resolved to
+        // Broiler.UI/Broiler.Graphics, and only eng/fold-duplicate-checkouts
+        // made it mean the top-level one. Naming the property says outright
+        // what the fold used to arrange, so the spelling is asserted rather
+        // than normalized away — a component dropping its nested copy is an
+        // architectural change, not a formatting one.
         Assert.Equal(
         [
-            "../../../../Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj",
+            "$(BroilerGraphicsRoot)/src/Broiler.Graphics/Broiler.Graphics.csproj",
             "../../../Foundation/Broiler.UI/Broiler.UI.csproj",
         ],
             references);
