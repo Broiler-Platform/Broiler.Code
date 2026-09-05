@@ -17,8 +17,11 @@ replaces the sentence with a measurement:
 
 That is a much stronger claim, and unlike the first one it is falsifiable.
 
-Companion records: the [Broiler Code architecture](broiler-code.md) and the
-[Broiler Code roadmap](../broiler-code-roadmap.md).
+Companion records: the [Broiler Code architecture](broiler-code.md), the
+[Broiler Code roadmap](../broiler-code-roadmap.md), and
+[reviewing one declaration at a time](broiler-code-assurance.md) — the narrower
+per-unit claim some components record in the source itself, which this pane also
+carries.
 
 ## What the product is
 
@@ -307,9 +310,11 @@ Stated rather than left to be discovered:
   The annotation therefore lands on the file, but a pull request that bumps a
   pointer flags every stale review in that component rather than the ones its
   bump actually invalidated. `coverage` counts them all correctly.
-- **Only Question notes can be written.** `Concern`, `Todo` and `Observation`
-  exist in the record format, are read back, and are rendered — but the pane has
-  no way to choose one, so nothing in the product creates them.
+- ~~**Only Question notes can be written.**~~ Closed. The pane carries a kind
+  picker, so `Concern`, `Todo` and `Observation` are reachable — see
+  [the assurance record](broiler-code-assurance.md). A head that composes no
+  picker still writes a Question, which is what the product could write at all
+  before there was one.
 - **A note cannot be answered or deleted from the editor.**
   `ResolveNoteAsync` and `RemoveNoteAsync` exist and are tested; no command
   reaches them. Until one does, the open-note count is one-way and the rule that
@@ -323,8 +328,10 @@ Stated rather than left to be discovered:
   by nobody here — the Solution Explorer's splitter has been inert the same way
   since it was composed, and pane width comes from the head's `PreferredSize`.
   Applying `Value` to pane layout is one change for both splitters.
-- **Symbol anchors are never populated.** Nothing composes a semantic service
-  into the shell yet. The field, the format and the display path all exist.
+- ~~**Symbol anchors are never populated.**~~ Closed on a host that composes a
+  C# scanner. A note written while the caret is inside a declaration records that
+  declaration's qualified name. It is still display and search only — never the
+  thing that decides where a note goes, which remains the anchored text.
 - **Only the current document's badge follows an edit live.** Every file is
   evaluated against its real content when the workspace opens, closed ones
   included; after that, only the file being looked at is re-evaluated. It is the

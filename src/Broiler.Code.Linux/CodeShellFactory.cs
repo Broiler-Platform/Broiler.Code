@@ -4,11 +4,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Broiler.Code.Core.Review;
 using Broiler.Code.Core.Shell;
+using Broiler.Code.Language.CSharp.Roslyn;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Storage;
 using Broiler.Graphics;
 using Broiler.UI.Button.Standard;
 using Broiler.UI.CodeEditor.Standard;
+using Broiler.UI.ComboBox.Standard;
 using Broiler.UI.Edit.Standard;
 using Broiler.UI.Label.Standard;
 using Broiler.UI.Menu.Standard;
@@ -54,6 +56,13 @@ internal static class CodeShellFactory
             Review = new StandardTreeView { PreferredSize = new BSize(320, size.Height) },
             ReviewSplitter = new StandardSplitter(),
             ReviewNoteInput = new StandardEdit { PreferredSize = new BSize(320, 26) },
+
+            // What kind of thing the note is. Composed here for the same reason
+            // as the rest of the pane, and it closes a gap the review workspace
+            // shipped with: the record format has always carried four note kinds
+            // and the product could only write one of them, because there was
+            // nowhere to choose.
+            ReviewNoteKindInput = new StandardComboBox { PreferredSize = new BSize(320, 26) },
             Status = new StandardLabel { Text = "Ready" },
             Output = new StandardLabel { Text = string.Empty },
             CreateButton = () => new StandardButton(),
@@ -78,6 +87,14 @@ internal static class CodeShellFactory
         // what builds the review controller from them. Neither asking git lives
         // here: a head decides which directory is granted, and Core owns what to
         // ask about it.
+        // Set with the revision provider, and for the same reason: AttachWorkspace
+        // is what builds the review controllers from them, so both have to be in
+        // place before a workspace opens. Without a scanner the assurance pane
+        // reads the annotation blocks alone and declines to recount a file's
+        // generated header; with one it knows the file's units, which of them are
+        // exempt, and what each one's fingerprint is now.
+        shell.AssuranceScanner = new CSharpAssuranceScanner();
+
         shell.RevisionProvider = new GitRevisionProvider(root);
         shell.Reviewer = await GitIdentity
             .ResolveReviewerAsync(root, cancellationToken).ConfigureAwait(false);

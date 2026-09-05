@@ -35,6 +35,15 @@ public static class CodeCommandNames
     public const string ClearReview = "code.review.clear";
     public const string AddNote = "code.review.addNote";
     public const string ReviewCoverage = "code.review.coverage";
+
+    // Per-unit assurance. Separate commands from the four file-level decisions
+    // above, because they record a different claim in a different place: a file
+    // review says a person read this content and lives in .broiler-review/, and
+    // a unit signature says a person stands behind this declaration and lives in
+    // the source file the component that owns the format reads. One menu entry
+    // doing both would be one entry making two claims.
+    public const string ApproveUnit = "code.review.unit.approve";
+    public const string WithdrawUnit = "code.review.unit.withdraw";
 }
 
 public enum CommandAvailability
@@ -114,6 +123,16 @@ public sealed class CodeCommandSet
 
     /// <summary>Set once the host knows who is reviewing. An approval with no name is not evidence.</summary>
     public bool HasReviewer { get; set; }
+
+    /// <summary>Set when the caret is inside a declaration carrying an assurance annotation.</summary>
+    public bool HasAnnotatedUnit { get; set; }
+
+    /// <summary>
+    /// Why there is no unit to act on, when there is not. Supplied by the shell
+    /// because the answer depends on things the command set cannot see — whether
+    /// the open file carries annotations at all, and where the caret is.
+    /// </summary>
+    public string? AssuranceUnitReason { get; set; }
 
     public IReadOnlyList<CodeCommand> GetCommands()
     {
@@ -214,6 +233,17 @@ public sealed class CodeCommandSet
                     'T')
                 : NoReview(CodeCommandNames.AddNote, "Add Note", 'T'),
 
+            // Signing a unit is allowed on a document with unsaved changes, and
+            // the four commands above are not. The difference is what each one
+            // records: a file review names the exact content a human read, so
+            // unsaved text would make it unverifiable by anyone; this writes a
+            // name and no claim about content, because the fingerprint that binds
+            // an approval to a version is written later by the owning component's
+            // generator over the tree that was committed. A reviewer working down
+            // a file would otherwise have to save between every declaration.
+            Unit(CodeCommandNames.ApproveUnit, "Sign Unit as Reviewed", 'U'),
+            Unit(CodeCommandNames.WithdrawUnit, "Withdraw Unit Signature", 'W'),
+
             HasReview
                 ? new CodeCommand(
                     CodeCommandNames.ReviewCoverage, "Review Coverage",
@@ -261,6 +291,36 @@ public sealed class CodeCommandSet
             return new CodeCommand(
                 name, text, CommandAvailability.Disabled,
                 "Save the file first — a review records the content on disk.", accessKey);
+        }
+
+        return new CodeCommand(name, text, CommandAvailability.Enabled, AccessKey: accessKey);
+    }
+
+    /// <summary>
+    /// A command that writes a reviewer's name onto one declaration.
+    ///
+    /// Withdrawing needs no reviewer — it removes a claim rather than making one,
+    /// and a reviewer who signed the wrong declaration should not need a name
+    /// recorded to take it back — but it does need a unit, so both share this.
+    /// </summary>
+    private CodeCommand Unit(string name, string text, char accessKey)
+    {
+        if (!HasReview)
+            return NoReview(name, text, accessKey);
+
+        bool signing = string.Equals(name, CodeCommandNames.ApproveUnit, StringComparison.Ordinal);
+        if (signing && !HasReviewer)
+        {
+            return new CodeCommand(
+                name, text, CommandAvailability.Disabled,
+                "Set a reviewer name first — a signature has to say whose it is.", accessKey);
+        }
+
+        if (!HasAnnotatedUnit)
+        {
+            return new CodeCommand(
+                name, text, CommandAvailability.Disabled,
+                AssuranceUnitReason ?? "Put the caret inside an annotated declaration.", accessKey);
         }
 
         return new CodeCommand(name, text, CommandAvailability.Enabled, AccessKey: accessKey);

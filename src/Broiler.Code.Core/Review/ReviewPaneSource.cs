@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Broiler.Code.Review;
+using Broiler.Code.Review.Assurance;
 using Broiler.UI.TreeView;
 
 namespace Broiler.Code.Core.Review;
@@ -26,17 +27,30 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
 {
     private const string StatusGroup = "group:status";
     private const string NotesGroup = "group:notes";
+    private const string UnitGroup = "group:unit";
+    private const string UnitsGroup = "group:units";
 
     private readonly ReviewController _controller;
+    private readonly AssuranceController? _assurance;
     private readonly Dictionary<string, Row> _rows = [];
     private readonly List<string> _groups = [];
     private bool _valid;
     private bool _disposed;
 
-    public ReviewPaneSource(ReviewController controller)
+    /// <param name="assurance">
+    /// The per-unit assurance half, when the host composed one. Optional for the
+    /// same reason the whole review pane is optional to a head: a workspace of
+    /// files that carry no assurance annotations is the normal case, and the two
+    /// sections it adds simply do not appear.
+    /// </param>
+    public ReviewPaneSource(ReviewController controller, AssuranceController? assurance = null)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         _controller.Changed += OnControllerChanged;
+
+        _assurance = assurance;
+        if (_assurance is not null)
+            _assurance.Changed += OnControllerChanged;
     }
 
     public event EventHandler<TreeDataChangedEventArgs>? DataChanged;
@@ -48,6 +62,16 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     {
         EnsureBuilt();
         return _rows.TryGetValue(node.Value, out Row? row) ? row.Note : null;
+    }
+
+    /// <summary>
+    /// The code unit a row stands for, or null. Activating one of these rows is
+    /// how a reviewer walks a file declaration by declaration.
+    /// </summary>
+    public AssuranceUnit? UnitFor(TreeNodeId node)
+    {
+        EnsureBuilt();
+        return _rows.TryGetValue(node.Value, out Row? row) ? row.Unit : null;
     }
 
     public void Refresh()
@@ -86,7 +110,31 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             return;
         _disposed = true;
         _controller.Changed -= OnControllerChanged;
+
+        if (_assurance is not null)
+            _assurance.Changed -= OnControllerChanged;
     }
+
+    /// <summary>
+    /// Maps a unit's assurance state onto the decorations the tree already has.
+    ///
+    /// Pending is deliberately undecorated. Every relevant unit in the component
+    /// this format was built for is pending today, and marking all of them would
+    /// paint a file entirely yellow to say nothing — the same reason the Solution
+    /// Explorer leaves an unreviewed file unbadged. What is decorated is what a
+    /// reviewer has to act on: an approval the code has moved out from under, a
+    /// relevant declaration carrying no assessment at all, and a state this build
+    /// cannot establish.
+    /// </summary>
+    public static TreeNodeDecoration DecorationFor(AssuranceUnitState state) => state switch
+    {
+        AssuranceUnitState.New => TreeNodeDecoration.Error,
+        AssuranceUnitState.Stale => TreeNodeDecoration.Warning,
+        AssuranceUnitState.Unknown => TreeNodeDecoration.Warning,
+        AssuranceUnitState.Verified => TreeNodeDecoration.Information,
+        AssuranceUnitState.HumanApprovedPendingFingerprint => TreeNodeDecoration.Information,
+        _ => TreeNodeDecoration.None,
+    };
 
     /// <summary>
     /// Maps a review state onto the decorations the tree already has.
@@ -117,11 +165,150 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         _rows.Clear();
         _groups.Clear();
 
+        BuildUnit();
         BuildStatus();
         BuildNotes();
+        BuildUnits();
 
         _valid = true;
     }
+
+    /// <summary>
+    /// What the assurance annotation on the declaration under the caret records.
+    ///
+    /// First in the pane, above the file's own review, because it is the section
+    /// that answers the question a reviewer has while reading: <em>what is
+    /// claimed about this, and by whom?</em> The file-level record below it
+    /// answers a different one, and the two are kept visibly apart.
+    ///
+    /// Nothing at all is shown for a file that carries no annotations, which is
+    /// most files. A section that appeared everywhere saying "not applicable"
+    /// would be noise on every other file in the workspace.
+    /// </summary>
+    private void BuildUnit()
+    {
+        if (_assurance is not { IsAnnotatedFile: true } assurance)
+            return;
+
+        if (assurance.CurrentUnit is not { } unit)
+        {
+            var empty = new Row(UnitGroup, "Assurance", "no declaration selected", "review", TreeNodeDecoration.None);
+            _rows[UnitGroup] = empty;
+            _groups.Add(UnitGroup);
+            Add(empty, "unit:none", "Put the caret in an annotated declaration", "to review it");
+            return;
+        }
+
+        var group = new Row(
+            UnitGroup,
+            "Assurance",
+            unit.DisplayName,
+            "review",
+            DecorationFor(unit.State));
+
+        _rows[UnitGroup] = group;
+        _groups.Add(UnitGroup);
+
+        Add(group, "unit:state", "State", AssuranceStateMachine.ToDisplayString(unit.State), DecorationFor(unit.State));
+
+        if (unit.IsExempt)
+            Add(group, "unit:exempt", "Exempt", unit.Exemption);
+
+        if (unit.Annotation is { } annotation)
+        {
+            foreach (AssuranceField field in annotation.Fields)
+            {
+                // The machine's fields are shown in the order the source wrote
+                // them rather than in an order this pane prefers, so a reader can
+                // hold the row against the line it came from.
+                Add(group, "unit:field:" + field.Key, Humanize(field.Key), field.Value);
+            }
+
+            if (annotation.HasCriterion)
+            {
+                // The sentence the unit is meant to be falsifiable by. It is the
+                // thing a reviewer of a high-security declaration is being asked
+                // to argue with, so it gets a row of its own rather than a
+                // tooltip.
+                Add(group, "unit:criterion", "Falsified if", annotation.Criterion);
+            }
+
+            Add(group, "unit:human", "Human line", annotation.HumanBody);
+        }
+
+        // Only when a language service is composed. Without one the fingerprint
+        // is unknown, and an empty row would read as "there isn't one".
+        if (unit.Fingerprint is { } fingerprint)
+            Add(group, "unit:current", "Fingerprint now", fingerprint);
+    }
+
+    /// <summary>
+    /// Every unit in the file, so the pane is a way through it and not only a
+    /// readout of wherever the caret happens to be.
+    ///
+    /// Activating a row moves the caret to the declaration, which is the same
+    /// gesture that already moves it to a note's code. Working down a file
+    /// declaration by declaration is the task this whole workspace exists for,
+    /// and a list is what makes it a list of things to do rather than a hunt.
+    /// </summary>
+    private void BuildUnits()
+    {
+        if (_assurance is not { IsAnnotatedFile: true } assurance || assurance.Units.Count == 0)
+            return;
+
+        int relevant = 0;
+        int reviewed = 0;
+        foreach (AssuranceUnit unit in assurance.Units)
+        {
+            if (unit.IsExempt)
+                continue;
+
+            relevant++;
+            if (unit.State == AssuranceUnitState.Verified)
+                reviewed++;
+        }
+
+        var group = new Row(
+            UnitsGroup,
+            "Units",
+            string.Create(CultureInfo.InvariantCulture, $"{reviewed} of {relevant} reviewed"),
+            "notes",
+            TreeNodeDecoration.None);
+
+        _rows[UnitsGroup] = group;
+        _groups.Add(UnitsGroup);
+
+        int ordinal = 0;
+        foreach (AssuranceUnit unit in assurance.Units)
+        {
+            string key = string.Create(CultureInfo.InvariantCulture, $"unit:{ordinal++}");
+            _rows[key] = new Row(
+                key,
+                unit.DisplayName,
+                AssuranceStateMachine.ToDisplayString(unit.State),
+                unit.IsExempt ? "detail" : "review",
+                DecorationFor(unit.State))
+            {
+                Unit = unit,
+            };
+
+            group.Children.Add(key);
+        }
+    }
+
+    /// <summary>
+    /// A field key as a row label. The format's keys are terse because they are
+    /// written inside a comment; a pane has room for the words.
+    /// </summary>
+    private static string Humanize(string key) => key switch
+    {
+        "IP" => "IP risk",
+        "Security" => "Security risk",
+        "Resources" => "Resource impact",
+        "Spec" => "Specification",
+        "EXEMPT" => "Exempt because",
+        _ => key,
+    };
 
     private void BuildStatus()
     {
@@ -265,5 +452,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         public List<string> Children { get; } = [];
 
         public AnchoredNote? Note { get; init; }
+
+        public AssuranceUnit? Unit { get; init; }
     }
 }

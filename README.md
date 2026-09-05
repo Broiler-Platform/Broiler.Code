@@ -67,9 +67,9 @@ than only documented:
 | `Broiler.Code.Workspaces` | nothing | Broiler.UI, Roslyn, any platform |
 | `Broiler.Code.Review` | `Broiler.Code.Workspaces` | Broiler.UI, Roslyn, git |
 | `Broiler.Code.Language.CSharp.Syntax` | `Broiler.UI.CodeEditor` | Roslyn |
-| `Broiler.Code.Language.CSharp.Roslyn` | `Broiler.UI.CodeEditor`, workspaces, Roslyn | — |
+| `Broiler.Code.Language.CSharp.Roslyn` | `Broiler.UI.CodeEditor`, workspaces, the review model, Roslyn | — |
 | `Broiler.Code.Core` | workspaces, review, Broiler.UI **abstractions**, Broiler.Input, Broiler.Graphics | Roslyn, any Broiler.UI implementation |
-| `Broiler.Code.Windows` / `.Linux` | `Broiler.Code.Core` plus the standard controls and one graphics/input backend | shell or workspace logic of its own |
+| `Broiler.Code.Windows` / `.Linux` | `Broiler.Code.Core`, the C# semantic assembly, the standard controls and one graphics/input backend | shell or workspace logic of its own |
 
 Keeping Roslyn out of `Broiler.Code.Core`'s closure is what lets a browser or Android host
 compose the portable classifier alone — the decision the Phase 0 payload probes measured.

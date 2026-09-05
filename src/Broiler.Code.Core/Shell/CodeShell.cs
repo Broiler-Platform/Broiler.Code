@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Broiler.Code.Core.Diagnostics;
 using Broiler.Code.Core.Review;
 using Broiler.Code.Review;
+using Broiler.Code.Review.Assurance;
 using Broiler.Code.Core.Templates;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
@@ -14,6 +15,7 @@ using Broiler.Graphics;
 using Broiler.UI;
 using Broiler.UI.Button;
 using Broiler.UI.CodeEditor;
+using Broiler.UI.ComboBox;
 using Broiler.UI.Edit;
 using Broiler.UI.Label;
 using Broiler.UI.Menu;
@@ -84,6 +86,21 @@ public sealed record CodeShellControls
     /// </summary>
     public UiEdit? ReviewNoteInput { get; init; }
 
+    /// <summary>
+    /// Chooses what kind of thing a new note is.
+    ///
+    /// Optional like the rest of the pane, and the reason it exists is a gap the
+    /// review workspace shipped with: the record format carries four note kinds,
+    /// reads all four back and renders all four, and the product could only ever
+    /// write a Question because there was nowhere to choose. A count of open
+    /// notes that cannot distinguish an observation from a concern is a count
+    /// that means less than it says.
+    ///
+    /// A head that supplies none keeps the old behaviour exactly — every note a
+    /// Question — rather than losing the note field.
+    /// </summary>
+    public UiComboBox? ReviewNoteKindInput { get; init; }
+
     public required UiLabel Status { get; init; }
 
     public required UiLabel Output { get; init; }
@@ -129,11 +146,29 @@ public sealed class CodeShell : IDisposable
         CodeCommandNames.Cancel,
     ];
 
+    /// <summary>
+    /// What a note can be, in the order a reviewer reaches for them.
+    ///
+    /// The identifiers are the enum names, so the control's selection maps back
+    /// without a second table to keep in step. Question is first because it is
+    /// the default and the commonest, and Observation last because it is the one
+    /// that asks for nothing — the order is roughly how much of somebody else's
+    /// time each one claims.
+    /// </summary>
+    private static readonly UiComboBoxItem[] NoteKindItems =
+    [
+        new(nameof(ReviewNoteKind.Question), "Question"),
+        new(nameof(ReviewNoteKind.Concern), "Concern"),
+        new(nameof(ReviewNoteKind.Todo), "To do"),
+        new(nameof(ReviewNoteKind.Observation), "Observation"),
+    ];
+
     private readonly CodeShellControls _controls;
     private readonly Dictionary<string, UiButton> _toolbarButtons = [];
     private readonly ProblemsModel _problems = new();
     private readonly ProblemsTreeSource _problemsSource;
     private ReviewController? _review;
+    private AssuranceController? _assurance;
     private ReviewPaneSource? _reviewSource;
     private CancellationTokenSource? _reviewLoad;
     private CodeWorkspace? _workspace;
@@ -159,6 +194,13 @@ public sealed class CodeShell : IDisposable
         // raises no active-document event, and the tab strip's selection is the
         // same fact seen one level lower.
         _controls.Tabs.SelectionChanged += OnActiveDocumentChanged;
+
+        // The assurance section follows the caret, which is the gesture a
+        // reviewer already makes: they read a declaration, and the pane is about
+        // the declaration they are reading. Nothing else in the shell listened to
+        // this event before, and it is the whole of what makes selecting a class
+        // or a method fill the pane.
+        _controls.Editor.SelectionChanged += OnEditorSelectionChanged;
         RefreshCommands();
         SetStatus("No workspace open. File ▸ Open Folder…");
     }
@@ -183,6 +225,25 @@ public sealed class CodeShell : IDisposable
     public ReviewController? Review => _review;
 
     /// <summary>
+    /// The per-unit assurance state for the file on screen, or null when the head
+    /// composed no review pane.
+    /// </summary>
+    public AssuranceController? Assurance => _assurance;
+
+    /// <summary>
+    /// Finds the code units of a source file and fingerprints them, when the head
+    /// composed a language service that can.
+    ///
+    /// Set before a workspace attaches, like <see cref="RevisionProvider"/>. It is
+    /// optional on purpose: doing this exactly needs a real C# parser, and keeping
+    /// one out of Core's closure is the decision the Phase 0 payload measurements
+    /// produced. Without it the pane reads the annotation blocks alone — enough to
+    /// show what is recorded and to record a decision, and not enough to recount a
+    /// file's generated header, which it therefore does not.
+    /// </summary>
+    public IAssuranceUnitScanner? AssuranceScanner { get; set; }
+
+    /// <summary>
     /// Binds a workspace. The explorer, the tabs, and the commands all follow
     /// from this; before it, the shell is present and inert rather than absent.
     /// </summary>
@@ -198,6 +259,19 @@ public sealed class CodeShell : IDisposable
 
         _coordinator = new DocumentCoordinator(workspace, _controls.Editor, _controls.Tabs, journal);
         _coordinator.DirtyClosePrompt = DirtyClosePrompt;
+
+        // Moved behind the coordinator's own handler, which was subscribed in the
+        // line above. Handlers run in subscription order, and this shell
+        // subscribed in its constructor — so on a tab click it read
+        // Coordinator.ActiveDocument before ActivateSelectedTab had moved it, and
+        // pointed the review panes at the file the user had just left. The panes
+        // then stayed there, because nothing else re-syncs them.
+        //
+        // Re-subscribing here rather than adding an event to the coordinator: the
+        // ordering is the whole defect, and one place that states it is easier to
+        // keep right than a second notification path.
+        _controls.Tabs.SelectionChanged -= OnActiveDocumentChanged;
+        _controls.Tabs.SelectionChanged += OnActiveDocumentChanged;
         _commands = new CodeCommandSet(() => _workspace, () => _coordinator?.ActiveDocument ?? WorkspaceItemId.None)
         {
             HasFileDialogs = _fileDialogs is not null,
@@ -233,13 +307,15 @@ public sealed class CodeShell : IDisposable
             return;
 
         _review = new ReviewController(workspace, RevisionProvider, Reviewer, Dispatcher);
-        _reviewSource = new ReviewPaneSource(_review);
+        _assurance = new AssuranceController(workspace, AssuranceScanner) { Reviewer = Reviewer };
+        _reviewSource = new ReviewPaneSource(_review, _assurance);
         _controls.Review.DataSource = _reviewSource;
 
         if (_explorerSource is { } explorer)
             explorer.ReviewStateOf = _review.StateFor;
 
         _review.Changed += OnReviewChanged;
+        _assurance.Changed += OnAssuranceChanged;
 
         // Cancelled by DetachWorkspace, so closing a workspace stops a load that
         // is still reading rather than leaving it to finish filling a controller
@@ -385,6 +461,8 @@ public sealed class CodeShell : IDisposable
             CodeCommandNames.ClearReview =>
                 await RecordReviewAsync(ReviewStatus.Unreviewed, cancellationToken).ConfigureAwait(false),
             CodeCommandNames.AddNote => await AddNoteFromInputAsync(cancellationToken).ConfigureAwait(false),
+            CodeCommandNames.ApproveUnit => SignUnit(sign: true),
+            CodeCommandNames.WithdrawUnit => SignUnit(sign: false),
             CodeCommandNames.ReviewCoverage => ShowReviewCoverage(),
             _ => false,
         };
@@ -833,6 +911,7 @@ public sealed class CodeShell : IDisposable
             review.NodeActivated -= OnReviewNodeActivated;
         if (_controls.ReviewNoteInput is { } noteInput)
             noteInput.Submitted -= OnReviewNoteSubmitted;
+        _controls.Editor.SelectionChanged -= OnEditorSelectionChanged;
         _controls.Tabs.SelectionChanged -= OnActiveDocumentChanged;
         foreach (UiButton button in _toolbarButtons.Values)
             button.Clicked -= OnToolbarButtonClicked;
@@ -923,6 +1002,18 @@ public sealed class CodeShell : IDisposable
                 pane.SetDock(input, UiDock.Bottom);
             }
 
+            // Docked after the field so it lands above it: a dock panel gives
+            // each Bottom child the edge the previous one left, so the second is
+            // the higher of the two. Reading downwards it is "a Question about…"
+            // followed by the text, which is the order the sentence is in.
+            if (_controls.ReviewNoteKindInput is { } kinds)
+            {
+                kinds.SetItems(NoteKindItems);
+                kinds.SelectIndex(0);
+                pane.AddChild(kinds);
+                pane.SetDock(kinds, UiDock.Bottom);
+            }
+
             pane.AddChild(review);
             pane.SetDock(review, UiDock.Fill);
             body.AddChild(pane);
@@ -981,6 +1072,10 @@ public sealed class CodeShell : IDisposable
         review.Children.Add(new UiMenuItem("review.sep", string.Empty) { IsSeparator = true });
         AddItem(review, CodeCommandNames.AddNote);
         AddItem(review, CodeCommandNames.ClearReview);
+        review.Children.Add(new UiMenuItem("review.sep2", string.Empty) { IsSeparator = true });
+        AddItem(review, CodeCommandNames.ApproveUnit);
+        AddItem(review, CodeCommandNames.WithdrawUnit);
+        review.Children.Add(new UiMenuItem("review.sep3", string.Empty) { IsSeparator = true });
         AddItem(review, CodeCommandNames.ReviewCoverage);
         items.Add(review);
 
@@ -1017,8 +1112,16 @@ public sealed class CodeShell : IDisposable
         if (_review is not null && _review.CurrentDocument != active)
             _review.SetCurrentDocument(active);
 
+        if (_assurance is not null)
+        {
+            _assurance.Reviewer = Reviewer;
+            _assurance.SetCurrentDocument(active);
+        }
+
         _commands.HasReview = _controls.Review is not null;
         _commands.HasReviewer = !string.IsNullOrWhiteSpace(Reviewer);
+        _commands.HasAnnotatedUnit = _assurance is { CurrentUnit: not null };
+        _commands.AssuranceUnitReason = AssuranceReason();
     }
 
     /// <summary>
@@ -1133,24 +1236,86 @@ public sealed class CodeShell : IDisposable
     }
 
     /// <summary>
+    /// The caret chose a different declaration, so the pane and the commands
+    /// follow it.
+    ///
+    /// Routed through the controller's own change event rather than refreshing
+    /// from here, because the caret moves on every keystroke and the unit under it
+    /// does not. Rebuilding the menu that often would be work on the typing path
+    /// for a result that is almost always the same.
+    /// </summary>
+    private void OnEditorSelectionChanged(object? sender, CodeSelectionChangedEventArgs e)
+    {
+        if (_assurance is null)
+            return;
+
+        ICodeTextSnapshot snapshot = _controls.Editor.Snapshot;
+        _assurance.SetCaretLine(
+            snapshot.GetLineFromPosition(Math.Clamp(_controls.Editor.Selection.Focus, 0, snapshot.Length)));
+    }
+
+    private void OnAssuranceChanged(object? sender, EventArgs e) => RefreshCommands();
+
+    /// <summary>
+    /// Why the unit commands are unavailable, or null when they are not.
+    ///
+    /// Each refusal is a different problem with a different fix — open a file,
+    /// put the caret in a declaration, open one that carries annotations — and a
+    /// single greyed-out entry saying none of that is how a feature meant to be
+    /// used daily stops being used.
+    /// </summary>
+    private string? AssuranceReason()
+    {
+        if (_assurance is not { } assurance)
+            return "This host does not compose the Human Review pane.";
+
+        if (assurance.Document is null)
+            return "Open a file to review it.";
+
+        if (!assurance.IsAnnotatedFile)
+            return "This file carries no Broiler Code Assurance annotations.";
+
+        if (assurance.CurrentUnit is null)
+            return "Put the caret inside an annotated declaration.";
+
+        return null;
+    }
+
+    /// <summary>
     /// Activating a note in the review pane puts the caret on the code it is
     /// about. The note's placed line is used, not its recorded one, so this lands
     /// correctly on a file that has been edited since the note was written.
+    ///
+    /// A row standing for a code unit does the same thing for its declaration,
+    /// which is what turns the Units section into a way through the file rather
+    /// than a readout of it.
     /// </summary>
     private void OnReviewNodeActivated(object? sender, TreeNodeEventArgs e)
     {
+        if (_reviewSource?.UnitFor(e.Node) is { } unit)
+        {
+            GoToLine(unit.DeclarationLine);
+            return;
+        }
+
         if (_reviewSource?.NoteFor(e.Node) is not { } note ||
             note.Status is ReviewAnchorStatus.FileLevel or ReviewAnchorStatus.Orphaned)
         {
             return;
         }
 
+        GoToLine(note.StartLine);
+    }
+
+    /// <summary>Puts the caret at the start of a line and scrolls it into view.</summary>
+    private void GoToLine(int line)
+    {
         ICodeTextSnapshot snapshot = _controls.Editor.Snapshot;
-        if (note.StartLine >= 0 && note.StartLine < snapshot.LineCount)
-        {
-            _controls.Editor.Selection = CodeSelection.Caret(snapshot.GetLineStart(note.StartLine));
-            _controls.Editor.EnsureCaretVisible();
-        }
+        if (line < 0 || line >= snapshot.LineCount)
+            return;
+
+        _controls.Editor.Selection = CodeSelection.Caret(snapshot.GetLineStart(line));
+        _controls.Editor.EnsureCaretVisible();
     }
 
     /// <summary>
@@ -1172,10 +1337,16 @@ public sealed class CodeShell : IDisposable
     /// already reading the line they are asking about, and a note-taking step
     /// that first asks where is a note-taking step people skip.
     ///
-    /// Every note is a Question. The other three kinds exist in the record
-    /// format and are unreachable from the product until the pane can offer a
-    /// choice — see the limitations in
-    /// <c>docs/architecture/broiler-code-review.md</c>.
+    /// The kind comes from the pane's picker when the head composed one, and is
+    /// a Question when it did not — which is what the product could write at
+    /// all before the picker existed.
+    ///
+    /// When the caret is inside an annotated declaration the note also records
+    /// that declaration's qualified name as its symbol. The review format has
+    /// carried that field from the start and nothing has ever filled it in,
+    /// because nothing in the shell knew what a declaration was; the assurance
+    /// scanner does. It stays what it always was — display and search, never the
+    /// thing that decides where a note goes, which is still the anchored text.
     /// </summary>
     private async ValueTask<bool> AddNoteFromInputAsync(CancellationToken cancellationToken)
     {
@@ -1197,7 +1368,7 @@ public sealed class CodeShell : IDisposable
             Math.Clamp(_controls.Editor.Selection.Focus, 0, snapshot.Length));
 
         ReviewActionResult result = await _review
-            .AddNoteAsync(ReviewNoteKind.Question, text, line, line, cancellationToken: cancellationToken)
+            .AddNoteAsync(SelectedNoteKind(), text, line, line, SymbolAtCaret(), cancellationToken)
             .ConfigureAwait(true);
 
         if (result.Succeeded && !input.IsDisposed)
@@ -1206,6 +1377,53 @@ public sealed class CodeShell : IDisposable
         SetStatus(result.Message);
         return result.Succeeded;
     }
+
+    /// <summary>
+    /// Writes the reviewer's name onto the declaration under the caret, or takes
+    /// it back.
+    ///
+    /// Synchronous, unlike the file-level decisions, because it writes nothing to
+    /// storage: the rewrite goes into the open buffer, which is what makes it
+    /// undoable and puts it in front of the reviewer before it is saved. Saving
+    /// stays where it was.
+    /// </summary>
+    private bool SignUnit(bool sign)
+    {
+        if (_assurance is not { } assurance)
+        {
+            SetStatus("This host does not compose the Human Review pane.");
+            return false;
+        }
+
+        assurance.Reviewer = Reviewer;
+        AssuranceActionResult result = sign ? assurance.Approve() : assurance.Withdraw();
+
+        SetStatus(result.Message);
+        RefreshCommands();
+        return result.Succeeded;
+    }
+
+    /// <summary>
+    /// The kind the pane's picker is showing, or a Question when the head
+    /// composed no picker.
+    ///
+    /// Read from the control at the moment the note is written rather than
+    /// tracked as the selection changes: one place decides, and there is no
+    /// second copy of the answer to go stale.
+    /// </summary>
+    private ReviewNoteKind SelectedNoteKind()
+    {
+        if (_controls.ReviewNoteKindInput?.SelectedItem is not { } item)
+            return ReviewNoteKind.Question;
+
+        return Enum.TryParse(item.Id, out ReviewNoteKind kind) ? kind : ReviewNoteKind.Question;
+    }
+
+    /// <summary>
+    /// The qualified name of the declaration the caret is in, or null when it is
+    /// not in one — which is most of the time, and is why the field is optional.
+    /// </summary>
+    private string? SymbolAtCaret() => _assurance?.CurrentUnit?.Name;
 
     private async ValueTask<bool> RecordReviewAsync(ReviewStatus status, CancellationToken cancellationToken)
     {
@@ -1368,10 +1586,14 @@ public sealed class CodeShell : IDisposable
 
         if (_review is not null)
             _review.Changed -= OnReviewChanged;
+        if (_assurance is not null)
+            _assurance.Changed -= OnAssuranceChanged;
         _reviewSource?.Dispose();
         _reviewSource = null;
         _review?.Dispose();
         _review = null;
+        _assurance?.Dispose();
+        _assurance = null;
 
         if (_controls.Review is { IsDisposed: false } review)
             review.DataSource = null;
