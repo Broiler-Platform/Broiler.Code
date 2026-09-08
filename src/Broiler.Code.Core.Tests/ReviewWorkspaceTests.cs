@@ -9,6 +9,8 @@ using Broiler.Graphics;
 using Broiler.UI;
 using Broiler.UI.Button.Standard;
 using Broiler.UI.CodeEditor.Standard;
+using Broiler.UI.ComboBox;
+using Broiler.UI.ComboBox.Standard;
 using Broiler.UI.Edit.Standard;
 using Broiler.UI.Label.Standard;
 using Broiler.UI.Menu;
@@ -339,6 +341,103 @@ public sealed class ReviewWorkspaceTests : IDisposable
         shell.Dispose();
     }
 
+    /// <summary>
+    /// The pane could read a review and not write one. It said "Nothing recorded
+    /// yet — mark it reviewed, or add a note" on a row that did nothing, and the
+    /// four decisions it was pointing at lived only in the Review menu.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task The_Pane_Records_The_Decision_Its_Picker_Names()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenAlphaAsync(shell, workspace);
+
+        UiComboBox picker = controls.ReviewStatusInput!;
+        Assert.Equal("Not reviewed", picker.SelectedItem!.Text);
+
+        picker.SelectIndex(IndexOf(picker, CodeCommandNames.MarkReviewed));
+
+        await WaitFor(() => shell.Review!.StateFor("src/Alpha.cs").IsVerified);
+        Assert.Contains(
+            "\"status\": \"reviewed\"",
+            await File.ReadAllTextAsync(
+                Path.Combine(_root, ".broiler-review", "src", "Alpha.cs.review.json")),
+            StringComparison.Ordinal);
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// The picker shows what is recorded, not what was last clicked in it — so a
+    /// decision made from the menu, or a different file arriving in the editor,
+    /// moves it.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task The_Picker_Shows_What_The_Record_Says()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenAlphaAsync(shell, workspace);
+
+        Assert.True(await shell.InvokeAsync(CodeCommandNames.MarkQuestion));
+        Assert.Equal("Open question", controls.ReviewStatusInput!.SelectedItem!.Text);
+
+        Assert.True(await shell.InvokeAsync(CodeCommandNames.ClearReview));
+        Assert.Equal("Not reviewed", controls.ReviewStatusInput.SelectedItem!.Text);
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// The picker asks; the command still decides. A file with unsaved changes
+    /// refuses the decision, and the picker has to go back to what is on record
+    /// rather than sit there claiming a status nothing carries.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task A_Refused_Decision_Puts_The_Picker_Back()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        SourceDocument document = await OpenAlphaAsync(shell, workspace);
+        Append(document, "// unsaved\n");
+
+        UiComboBox picker = controls.ReviewStatusInput!;
+        picker.SelectIndex(IndexOf(picker, CodeCommandNames.MarkReviewed));
+
+        await WaitFor(() => picker.SelectedItem!.Id == CodeCommandNames.ClearReview);
+        Assert.False(File.Exists(Path.Combine(_root, ".broiler-review", "src", "Alpha.cs.review.json")));
+
+        shell.Dispose();
+    }
+
+    private static int IndexOf(UiComboBox picker, string commandName)
+    {
+        for (int index = 0; index < picker.Items.Count; index++)
+        {
+            if (picker.Items[index].Id == commandName)
+                return index;
+        }
+
+        throw new InvalidOperationException($"The picker carries no entry for {commandName}.");
+    }
+
+    /// <summary>
+    /// The picker starts the command and does not wait for it, the way a click
+    /// on a control does, so a test that asserts straight afterwards is racing
+    /// the write rather than reading it.
+    /// </summary>
+    private static async Task WaitFor(Func<bool> condition)
+    {
+        for (int attempt = 0; attempt < 200 && !condition(); attempt++)
+            await Task.Delay(10);
+
+        Assert.True(condition());
+    }
+
     private static void Append(SourceDocument document, string text)
     {
         TextSnapshot current = document.Buffer.Current;
@@ -442,6 +541,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
             Review = withReview ? new StandardTreeView() : null,
             ReviewSplitter = withReview ? new StandardSplitter() : null,
             ReviewNoteInput = withReview ? new StandardEdit() : null,
+            ReviewStatusInput = withReview ? new StandardComboBox() : null,
             Status = new StandardLabel(),
             Output = new StandardLabel(),
             CreateButton = () => new StandardButton(),

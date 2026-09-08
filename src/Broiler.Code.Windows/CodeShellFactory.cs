@@ -64,6 +64,13 @@ internal static class CodeShellFactory
             // and the product could only write one of them, because there was
             // nowhere to choose.
             ReviewNoteKindInput = new StandardComboBox { PreferredSize = new BSize(320, 26) },
+
+            // The file-level decision, recorded from the pane that shows it.
+            // Composed here for the same reason as the rest, and it closes the
+            // gap the pane shipped with: it told a reviewer to mark the file
+            // reviewed on a row that did nothing, and the four decisions it
+            // pointed at lived only in the Review menu.
+            ReviewStatusInput = new StandardComboBox { PreferredSize = new BSize(320, 26) },
             Status = new StandardLabel { Text = "Ready" },
             Output = new StandardLabel { Text = string.Empty },
             CreateButton = () => new StandardButton(),
