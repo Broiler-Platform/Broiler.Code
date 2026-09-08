@@ -65,6 +65,17 @@ public sealed class AssuranceWorkspaceTests : IDisposable
     private const string PlainSource = "class Beta { }\n";
 
     /// <summary>
+    /// A declaration the source exempts itself, with the author's own reason on
+    /// the machine line — the one exemption a scanner never decides.
+    /// </summary>
+    private const string ExemptSource =
+        "namespace Sample;\n" +
+        "\n" +
+        "// Broiler-AI:           Origin=Original; EXEMPT=hand-written table checked against the spec\n" +
+        "// Broiler-Human:        PENDING\n" +
+        "public sealed class Table { }\n";
+
+    /// <summary>
     /// A second annotated file whose declaration sits at a different line, so a
     /// caret carried over from another file would find a unit here.
     /// </summary>
@@ -87,6 +98,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         File.WriteAllText(Path.Combine(_root, "src", "Thing.cs"), AnnotatedSource);
         File.WriteAllText(Path.Combine(_root, "src", "Beta.cs"), PlainSource);
         File.WriteAllText(Path.Combine(_root, "src", "Other.cs"), OtherSource);
+        File.WriteAllText(Path.Combine(_root, "src", "Exempt.cs"), ExemptSource);
     }
 
     public void Dispose()
@@ -733,7 +745,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         // reviewed count stays where it was, and a summary that said only that
         // would read as though the button had done nothing.
         Assert.Equal(
-            "0 of 2 reviewed, 2 signed and awaiting a fingerprint",
+            "0 of 2 reviewed, 2 signed",
             controls.Review!.DataSource!.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
 
         // One gesture, one undo step.
@@ -786,6 +798,104 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         Assert.Equal(AnnotatedSource, document.Buffer.Current.ToString());
 
         shell.Dispose();
+    }
+
+    /// <summary>
+    /// An exempt declaration is a row like any other, and it says why it is
+    /// exempt rather than only that it is.
+    ///
+    /// The scanner's identifiers are rendered into words, the way the machine
+    /// line's keys already are: "exempt" on nine of a file's thirteen rows tells
+    /// a reviewer that somebody decided something, and which case it was is the
+    /// difference between agreeing and going to look.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task Exempt_Declarations_Are_Listed_With_Their_Reason()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+
+        // Set before the workspace attaches, which is what builds the controller
+        // from it — the same order a head uses.
+        shell.AssuranceScanner = new StubScanner(
+        [
+            new("Sample.Thing", "Thing", 5, 15, false, "None", "AAAAAA"),
+            new("Sample.Thing.Work(int)", "Work", 11, 14, true, "TrivialPropertyOrAccessor", "BBBBBB"),
+        ]);
+
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        IReadOnlyList<(string Label, string? Value)> rows = PaneRows(controls, "group:units");
+
+        Assert.Contains(("Thing", "needs human review"), rows);
+        Assert.Contains(("Work", "exempt: trivial property or accessor"), rows);
+
+        // And the group's own line accounts for every row underneath it, rather
+        // than counting four and listing thirteen.
+        Assert.Equal(
+            "0 of 1 reviewed, 1 exempt",
+            controls.Review!.DataSource!.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
+
+        // The same words in the section about the declaration under the caret.
+        // Two renderings of one fact in one pane would be one of them wrong.
+        PutCaretOn(controls, 13);
+        Assert.Contains(("Exempt", "trivial property or accessor"), PaneRows(controls, "group:unit"));
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// A case this build has not heard of is passed through rather than dropped.
+    /// The predicate is a port of another component's, and that component may
+    /// grow a ninth case first; a row reading the identifier is true and
+    /// searchable, where "exempt" alone would have swallowed the answer.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task An_Unknown_Exemption_Case_Is_Shown_As_It_Came()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        shell.AssuranceScanner = new StubScanner(
+        [
+            new("Sample.Thing", "Thing", 5, 15, true, "SomeNinthCase", "AAAAAA"),
+        ]);
+
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        Assert.Contains(("Thing", "exempt: SomeNinthCase"), PaneRows(controls, "group:units"));
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// When the source states its own reason, that is what the pane shows: it is
+    /// a sentence somebody wrote about this declaration, and no rendering here
+    /// improves on it.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task An_Exemption_Stated_In_The_Source_Reports_The_Authors_Words()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenAsync(shell, workspace, "src/Exempt.cs");
+
+        Assert.Contains(
+            PaneRows(controls, "group:units"),
+            row => row.Value == "exempt: hand-written table checked against the spec");
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// Units as a language service would report them, so the exemption cases can
+    /// be exercised where Roslyn deliberately cannot reach — Core's closure is
+    /// the whole reason the scanner is a seam.
+    /// </summary>
+    private sealed class StubScanner(IReadOnlyList<AssuranceScannedUnit> units) : IAssuranceUnitScanner
+    {
+        public IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path) => units;
     }
 
     private static UiButton ApplyButton(CodeShellControls controls) =>
@@ -870,6 +980,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
                 workspace.AddItem("src/Thing.cs", WorkspaceItemKind.SourceDocument).Id,
                 workspace.AddItem("src/Beta.cs", WorkspaceItemKind.SourceDocument).Id,
                 workspace.AddItem("src/Other.cs", WorkspaceItemKind.SourceDocument).Id,
+                workspace.AddItem("src/Exempt.cs", WorkspaceItemKind.SourceDocument).Id,
             ],
         };
 

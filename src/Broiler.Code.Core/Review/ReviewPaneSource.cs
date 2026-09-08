@@ -212,7 +212,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         Add(group, "unit:state", "State", AssuranceStateMachine.ToDisplayString(unit.State), DecorationFor(unit.State));
 
         if (unit.IsExempt)
-            Add(group, "unit:exempt", "Exempt", unit.Exemption);
+            Add(group, "unit:exempt", "Exempt", ExemptionReason(unit) ?? unit.Exemption);
 
         if (unit.Annotation is { } annotation)
         {
@@ -259,10 +259,14 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         int relevant = 0;
         int reviewed = 0;
         int signed = 0;
+        int exempt = 0;
         foreach (AssuranceUnit unit in assurance.Units)
         {
             if (unit.IsExempt)
+            {
+                exempt++;
                 continue;
+            }
 
             relevant++;
             if (unit.State == AssuranceUnitState.Verified)
@@ -271,16 +275,18 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
                 signed++;
         }
 
-        // Signed units are counted apart from verified ones rather than folded
-        // in, and are said out loud rather than left to be discovered by
-        // expanding the group. A reviewer who has just put their name on every
-        // declaration in the file would otherwise read "0 of 4 reviewed" and
-        // conclude nothing happened — where what actually happened is the whole
-        // of what a person can do, and the remaining step is the owning
+        // Three numbers, because the group holds three kinds of row and the
+        // first number alone accounts for none of them. "0 of 4 reviewed" over
+        // thirteen rows is a reviewer wondering what the other nine are; and a
+        // reviewer who has just put their name on every declaration in the file
+        // would read it and conclude nothing happened — where what happened is
+        // the whole of what a person can do, and the step left is the owning
         // component's generator sealing each one with a fingerprint.
         string counted = string.Create(CultureInfo.InvariantCulture, $"{reviewed} of {relevant} reviewed");
         if (signed > 0)
-            counted += string.Create(CultureInfo.InvariantCulture, $", {signed} signed and awaiting a fingerprint");
+            counted += string.Create(CultureInfo.InvariantCulture, $", {signed} signed");
+        if (exempt > 0)
+            counted += string.Create(CultureInfo.InvariantCulture, $", {exempt} exempt");
 
         var group = new Row(
             UnitsGroup,
@@ -299,7 +305,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             _rows[key] = new Row(
                 key,
                 unit.DisplayName,
-                AssuranceStateMachine.ToDisplayString(unit.State),
+                UnitSummary(unit),
                 unit.IsExempt ? "detail" : "review",
                 DecorationFor(unit.State))
             {
@@ -308,6 +314,62 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
 
             group.Children.Add(key);
         }
+    }
+
+    /// <summary>
+    /// What a unit's row says beside its name: its state, and for an exempt one
+    /// the reason it is exempt.
+    ///
+    /// The reason rather than the bare word, because "exempt" on nine of a
+    /// file's thirteen rows tells a reviewer only that somebody decided
+    /// something. Whether a declaration is exempt because it is an auto-property
+    /// or because it sits inside an assembly marker is the difference between
+    /// agreeing with the exemption and going to look at it — and a reviewer who
+    /// cannot tell has to open the other tool's report to find out.
+    /// </summary>
+    private static string UnitSummary(AssuranceUnit unit)
+    {
+        if (!unit.IsExempt)
+            return AssuranceStateMachine.ToDisplayString(unit.State);
+
+        return ExemptionReason(unit) is { } reason ? $"exempt: {reason}" : "exempt";
+    }
+
+    /// <summary>
+    /// Why a declaration is exempt, in words, or null when nothing says.
+    ///
+    /// A source that states its own reason wins: that is a sentence somebody
+    /// wrote about this declaration, and no rendering here improves on it.
+    /// Otherwise the scanner's case is spelled out. The identifiers are the
+    /// owning component's, ported case for case by
+    /// <c>CSharpAssuranceScanner</c>, and are rendered rather than shown raw for
+    /// the same reason the machine line's keys are — the format writes them
+    /// inside a comment, and a pane has room for the words.
+    ///
+    /// An identifier this build does not know is passed through unchanged. That
+    /// component may add a ninth case before this one hears about it, and a row
+    /// reading <c>exempt: SomeNewCase</c> is true and searchable, where "exempt"
+    /// alone would have quietly dropped the answer.
+    /// </summary>
+    private static string? ExemptionReason(AssuranceUnit unit)
+    {
+        if (unit.Annotation?.ExemptReason is { Length: > 0 } stated)
+            return stated;
+
+        return unit.Exemption switch
+        {
+            "TrivialPropertyOrAccessor" => "trivial property or accessor",
+            "ParameterAssigningConstructor" => "constructor assigns its parameters only",
+            "TrivialExpressionBodiedMember" => "trivial expression body",
+            "CompilerSuppliedRecordOrEnumMember" => "compiler-supplied record or enum member",
+            "DelegatingOverrideOrOperator" => "override or operator that only delegates",
+            "InsideAssemblyMarker" => "inside the assembly marker",
+            "FieldDeclaringStorage" => "field declaring storage",
+            "EnumMemberOfADeclaredVocabulary" => "enum member of a declared vocabulary",
+            "DeclaredInSource" => "declared exempt in the source",
+            null or "" or "None" => null,
+            var other => other,
+        };
     }
 
     /// <summary>
