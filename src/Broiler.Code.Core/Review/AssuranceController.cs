@@ -96,28 +96,6 @@ public sealed class AssuranceController : IDisposable
     /// <summary>True when the file on screen carries assurance annotations at all.</summary>
     public bool IsAnnotatedFile => _document is { IsAnnotated: true };
 
-    /// <summary>
-    /// How many declarations in the open file a reviewer could put their name
-    /// on: annotated, and not exempt.
-    ///
-    /// What the whole-file command is offered on. A file whose every declaration
-    /// is exempt is annotated and has nothing to sign, and a button that is
-    /// enabled over it is a button that reports "nothing to do" for a living.
-    /// </summary>
-    public int WritableUnitCount
-    {
-        get
-        {
-            int count = 0;
-            foreach (AssuranceUnit unit in Units)
-            {
-                if (unit.IsWritable)
-                    count++;
-            }
-
-            return count;
-        }
-    }
 
     /// <summary>Points the pane at a document and re-reads it.</summary>
     public void SetCurrentDocument(WorkspaceItemId id)
@@ -264,37 +242,6 @@ public sealed class AssuranceController : IDisposable
     public AssuranceActionResult Withdraw() =>
         Act(static (document, unit, _) => document.Withdraw(unit));
 
-    /// <summary>
-    /// Records the reviewer against every declaration in the open file that is
-    /// still waiting for a human line, as one edit and one undo step.
-    ///
-    /// The reviewer's gesture, not an automatic one — see
-    /// <see cref="AssuranceDocument.ApproveAll"/> for what it does and does not
-    /// claim. Nothing about the caret matters here: it is a statement about the
-    /// file, which is why it is the one unit-level action that does not first ask
-    /// where the caret is.
-    /// </summary>
-    public AssuranceActionResult ApproveAll()
-    {
-        Rebuild();
-        CurrentUnit = _document?.UnitAt(_caretLine);
-
-        if (_document is not { } document)
-            return new AssuranceActionResult(AssuranceActionOutcome.NoTarget, "Open a file to review it.");
-
-        if (!document.IsAnnotated)
-        {
-            return new AssuranceActionResult(
-                AssuranceActionOutcome.NoTarget,
-                "This file carries no Broiler Code Assurance annotations.");
-        }
-
-        AssuranceApplyResult applied = document.ApproveAll(Reviewer);
-        return applied.Succeeded
-            ? Commit(applied.Text, applied.Message)
-            : new AssuranceActionResult(AssuranceActionOutcome.Refused, applied.Message);
-    }
-
     private AssuranceActionResult Act(
         Func<AssuranceDocument, AssuranceUnit, string, AssuranceEditResult> decide)
     {
@@ -314,21 +261,10 @@ public sealed class AssuranceController : IDisposable
         }
 
         AssuranceEditResult edit = decide(document, unit, Reviewer);
-        return edit.Succeeded
-            ? Commit(edit.Text, edit.Message)
-            : new AssuranceActionResult(AssuranceActionOutcome.Refused, edit.Message);
-    }
+        if (!edit.Succeeded)
+            return new AssuranceActionResult(AssuranceActionOutcome.Refused, edit.Message);
 
-    /// <summary>
-    /// Puts a rewrite the document produced into the buffer, and re-reads.
-    ///
-    /// Shared by the single-unit decisions and the whole-file one, so all three
-    /// invalidate, re-read and notify the same way — the sequence below is the
-    /// part that is easy to get subtly wrong, and there is one of it.
-    /// </summary>
-    private AssuranceActionResult Commit(string text, string message)
-    {
-        string? rejection = Apply(text);
+        string? rejection = Apply(edit.Text);
 
         // Invalidated either way. The document model applied the rewrite to its
         // own copy before the buffer was asked, so a refusal leaves it holding an
@@ -348,7 +284,7 @@ public sealed class AssuranceController : IDisposable
         Refresh();
         Changed?.Invoke(this, EventArgs.Empty);
 
-        return new AssuranceActionResult(AssuranceActionOutcome.Applied, message);
+        return new AssuranceActionResult(AssuranceActionOutcome.Applied, edit.Message);
     }
 
     /// <summary>

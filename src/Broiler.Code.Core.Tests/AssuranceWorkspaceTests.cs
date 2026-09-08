@@ -183,6 +183,14 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         // The other declaration is untouched: one signature, one line.
         Assert.Contains("// Broiler-Human:        PENDING\n", text, StringComparison.Ordinal);
 
+        // And the pane says so. Signing is not verifying — the fingerprint that
+        // verifies is the owning component's to write — so the reviewed count
+        // does not move, and a summary reporting only that would read as though
+        // the signature had not landed.
+        Assert.Equal(
+            "0 of 2 reviewed, 1 signed",
+            controls.Review!.DataSource!.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
+
         shell.Dispose();
     }
 
@@ -715,92 +723,6 @@ public sealed class AssuranceWorkspaceTests : IDisposable
     }
 
     /// <summary>
-    /// The button the reviewer presses once they have read the file: every
-    /// declaration still waiting for a human line gets one, in a single edit.
-    /// </summary>
-    [Fact(Timeout = 600000)]
-    public async Task Applying_To_All_Signs_Every_Declaration_In_The_File()
-    {
-        (CodeShell shell, CodeShellControls controls) = CreateShell();
-        CodeWorkspace workspace = CreateWorkspace();
-        shell.AttachWorkspace(workspace);
-        SourceDocument document = await OpenThingAsync(shell, workspace);
-
-        // Deliberately nowhere near a declaration: this is a statement about the
-        // file, so unlike the two single-unit commands it does not read the caret.
-        PutCaretOn(controls, 0);
-
-        Assert.True(await shell.InvokeAsync(CodeCommandNames.ApplyUnitReview));
-
-        string text = document.Buffer.Current.ToString();
-        Assert.Contains("// Broiler-Human:        Enrico\n", text, StringComparison.Ordinal);
-        Assert.Contains("    // Broiler-Human:        Enrico\n", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("PENDING", text, StringComparison.Ordinal);
-
-        // A name and never a fingerprint, however many declarations it wrote.
-        Assert.DoesNotContain("Enrico; Fingerprint", text, StringComparison.Ordinal);
-
-        // And the pane says what happened. Signing is not verifying — the
-        // fingerprint that verifies is the owning component's to write — so the
-        // reviewed count stays where it was, and a summary that said only that
-        // would read as though the button had done nothing.
-        Assert.Equal(
-            "0 of 2 reviewed, 2 signed",
-            controls.Review!.DataSource!.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
-
-        // One gesture, one undo step.
-        Assert.True(document.Buffer.Undo());
-        Assert.Equal(AnnotatedSource, document.Buffer.Current.ToString());
-
-        shell.Dispose();
-    }
-
-    /// <summary>
-    /// The button reads how many declarations it is about to put the reviewer's
-    /// name on, and refuses with a reason on a file that has none.
-    /// </summary>
-    [Fact(Timeout = 600000)]
-    public async Task The_Apply_Button_Counts_What_It_Would_Sign()
-    {
-        (CodeShell shell, CodeShellControls controls) = CreateShell();
-        CodeWorkspace workspace = CreateWorkspace();
-        shell.AttachWorkspace(workspace);
-        await OpenThingAsync(shell, workspace);
-
-        UiButton button = ApplyButton(controls);
-        Assert.True(button.IsEnabled);
-        Assert.Equal("Apply to all 2", button.Text);
-        Assert.Contains("Apply Human Review", button.ToolTipText, StringComparison.Ordinal);
-
-        await OpenAsync(shell, workspace, "src/Beta.cs");
-
-        Assert.False(button.IsEnabled);
-        Assert.Equal("Apply to all", button.Text);
-        Assert.Contains("no Broiler Code Assurance annotations", button.ToolTipText, StringComparison.Ordinal);
-
-        shell.Dispose();
-    }
-
-    /// <summary>An approval with nobody's name on it is not evidence, in bulk as much as singly.</summary>
-    [Fact(Timeout = 600000)]
-    public async Task Applying_To_All_Needs_A_Reviewer()
-    {
-        (CodeShell shell, CodeShellControls controls) = CreateShell(reviewer: string.Empty);
-        CodeWorkspace workspace = CreateWorkspace();
-        shell.AttachWorkspace(workspace);
-        SourceDocument document = await OpenThingAsync(shell, workspace);
-
-        CodeCommand command = shell.Commands.Find(CodeCommandNames.ApplyUnitReview)!;
-        Assert.Equal(CommandAvailability.Disabled, command.Availability);
-        Assert.Contains("Set a reviewer name first", command.Reason!, StringComparison.Ordinal);
-
-        Assert.False(await shell.InvokeAsync(CodeCommandNames.ApplyUnitReview));
-        Assert.Equal(AnnotatedSource, document.Buffer.Current.ToString());
-
-        shell.Dispose();
-    }
-
-    /// <summary>
     /// An exempt declaration is a row like any other, and it says why it is
     /// exempt rather than only that it is.
     ///
@@ -897,11 +819,6 @@ public sealed class AssuranceWorkspaceTests : IDisposable
     {
         public IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path) => units;
     }
-
-    private static UiButton ApplyButton(CodeShellControls controls) =>
-        controls.ReviewPane!.Children
-            .OfType<UiButton>()
-            .Single(button => button.CommandName == CodeCommandNames.ApplyUnitReview);
 
     private static int IndexOf(UiComboBox picker, string commandName)
     {

@@ -282,16 +282,6 @@ public sealed class CodeShell : IDisposable
     /// onto the new one.
     /// </summary>
     private bool _syncingReviewStatus;
-
-    /// <summary>
-    /// The pane's "apply to every declaration" button.
-    ///
-    /// Made from the head's button factory like a toolbar button, and kept out
-    /// of the toolbar's own list because the two are refreshed differently: a
-    /// toolbar button is sized from its text, and this one is sized by the
-    /// splitter along with everything else in the pane.
-    /// </summary>
-    private UiButton? _applyReviewButton;
     private bool _disposed;
 
     public CodeShell(CodeShellControls controls)
@@ -579,7 +569,6 @@ public sealed class CodeShell : IDisposable
             CodeCommandNames.AddNote => await AddNoteFromInputAsync(cancellationToken).ConfigureAwait(false),
             CodeCommandNames.ApproveUnit => SignUnit(sign: true),
             CodeCommandNames.WithdrawUnit => SignUnit(sign: false),
-            CodeCommandNames.ApplyUnitReview => ApplyUnitReview(),
             CodeCommandNames.ReviewCoverage => ShowReviewCoverage(),
             _ => false,
         };
@@ -1050,8 +1039,6 @@ public sealed class CodeShell : IDisposable
             reviewStatus.SelectionChanged -= OnReviewStatusSelected;
         if (_controls.ReviewUnitInput is { } reviewUnit)
             reviewUnit.SelectionChanged -= OnReviewUnitSelected;
-        if (_applyReviewButton is not null)
-            _applyReviewButton.Clicked -= OnToolbarButtonClicked;
         _controls.ExplorerSplitter.ValueChanged -= OnExplorerSplitterMoved;
         if (_controls.ReviewSplitter is { } reviewSplitter)
             reviewSplitter.ValueChanged -= OnReviewSplitterMoved;
@@ -1152,6 +1139,14 @@ public sealed class CodeShell : IDisposable
         if (_controls.Review is not { } review)
             return;
 
+        // This pane's secondary labels are sentences — "approved, fingerprint to
+        // be generated", "exempt: override or operator that only delegates" —
+        // where the explorer's are a word. Beside the name they run off the end
+        // of the pane, so the reader gets the subject and loses the answer. Set
+        // on the abstraction rather than in each head: it is a fact about what
+        // this tree shows, and every head shows the same thing.
+        review.SecondaryLabelPlacement = TreeSecondaryLabelPlacement.BelowLabel;
+
         // The pane goes to the far right and the splitter to its left, mirroring
         // the explorer's arrangement on the other side. Both grips are applied
         // by ComposeSplitter, which is where the width a drag produces is turned
@@ -1184,18 +1179,6 @@ public sealed class CodeShell : IDisposable
                 pane.AddChild(unit);
                 pane.SetDock(unit, UiDock.Top);
             }
-
-            // The whole file in one gesture, under the two pickers it is the
-            // bulk form of. A button rather than a third picker: it is an action
-            // and not a state, and a control that looked like the two above it
-            // would be read as a third thing to set.
-            UiButton apply = _controls.CreateButton();
-            apply.CommandName = CodeCommandNames.ApplyUnitReview;
-            apply.Clicked += OnToolbarButtonClicked;
-            apply.PreferredSize = new BSize(review.PreferredSize.Width, 28);
-            _applyReviewButton = apply;
-            pane.AddChild(apply);
-            pane.SetDock(apply, UiDock.Top);
 
             if (_controls.ReviewNoteInput is { } input)
             {
@@ -1285,8 +1268,6 @@ public sealed class CodeShell : IDisposable
             status.PreferredSize = new BSize(width, status.PreferredSize.Height);
         if (_controls.ReviewUnitInput is { IsDisposed: false } unit)
             unit.PreferredSize = new BSize(width, unit.PreferredSize.Height);
-        if (_applyReviewButton is { IsDisposed: false } apply)
-            apply.PreferredSize = new BSize(width, apply.PreferredSize.Height);
         if (_controls.ReviewNoteKindInput is { IsDisposed: false } kinds)
             kinds.PreferredSize = new BSize(width, kinds.PreferredSize.Height);
         if (_controls.ReviewNoteInput is { IsDisposed: false } input)
@@ -1391,14 +1372,12 @@ public sealed class CodeShell : IDisposable
         review.Children.Add(new UiMenuItem("review.sep2", string.Empty) { IsSeparator = true });
         AddItem(review, CodeCommandNames.ApproveUnit);
         AddItem(review, CodeCommandNames.WithdrawUnit);
-        AddItem(review, CodeCommandNames.ApplyUnitReview);
         review.Children.Add(new UiMenuItem("review.sep3", string.Empty) { IsSeparator = true });
         AddItem(review, CodeCommandNames.ReviewCoverage);
         items.Add(review);
 
         _controls.Menu.SetItems(items);
         RefreshToolbar();
-        RefreshReviewButton();
 
         void AddItem(UiMenuItem parent, string name)
         {
@@ -1439,7 +1418,6 @@ public sealed class CodeShell : IDisposable
         _commands.HasReview = _controls.Review is not null;
         _commands.HasReviewer = !string.IsNullOrWhiteSpace(Reviewer);
         _commands.HasAnnotatedUnit = _assurance is { CurrentUnit: not null };
-        _commands.WritableUnitCount = _assurance?.WritableUnitCount ?? 0;
         _commands.AssuranceUnitReason = AssuranceReason();
         SyncReviewStatusInput();
         SyncReviewUnitInput();
@@ -1497,38 +1475,6 @@ public sealed class CodeShell : IDisposable
 
         if (_controls.ReviewUnitInput?.SelectedItem is { Id: { Length: > 0 } command })
             _ = RecordPickedStatusAsync(command);
-    }
-
-    /// <summary>
-    /// Keeps the pane's apply button in step with its command.
-    ///
-    /// It carries a shorter caption than the menu entry, and not for tidiness: a
-    /// button measures at least as wide as its own text, so a pane holding the
-    /// menu's full sentence could not be dragged narrower than that sentence. The
-    /// sentence is not lost — it is the button's tooltip, along with the reason
-    /// when the command is refused, which is the one place a disabled control can
-    /// still explain itself.
-    ///
-    /// The count stays in the caption. A reviewer is about to put their name on
-    /// that many declarations, and reading how many before pressing is the whole
-    /// of what this control owes them.
-    /// </summary>
-    private void RefreshReviewButton()
-    {
-        if (_applyReviewButton is not { IsDisposed: false } button)
-            return;
-
-        if (_commands.Find(CodeCommandNames.ApplyUnitReview) is not { } command)
-            return;
-
-        int count = _commands.WritableUnitCount;
-        button.Text = command.IsEnabled
-            ? string.Create(CultureInfo.InvariantCulture, $"Apply to all {count}")
-            : "Apply to all";
-        button.IsEnabled = command.IsEnabled;
-        button.ToolTipText = command.Reason is { Length: > 0 } reason
-            ? $"{command.Text} — {reason}"
-            : command.Text;
     }
 
     /// <summary>
@@ -1886,32 +1832,6 @@ public sealed class CodeShell : IDisposable
 
         assurance.Reviewer = Reviewer;
         AssuranceActionResult result = sign ? assurance.Approve() : assurance.Withdraw();
-
-        SetStatus(result.Message);
-        RefreshCommands();
-        return result.Succeeded;
-    }
-
-    /// <summary>
-    /// Writes the reviewer's name onto every declaration in the file that is
-    /// still waiting for one.
-    ///
-    /// Synchronous and through the buffer, exactly like signing a single
-    /// declaration, so it is one undo step and the reviewer sees the whole change
-    /// before anything is saved — which is the review this button asks them to
-    /// stand behind. The status line reports what it did to each kind of
-    /// declaration, including the ones it left alone.
-    /// </summary>
-    private bool ApplyUnitReview()
-    {
-        if (_assurance is not { } assurance)
-        {
-            SetStatus("This host does not compose the Human Review pane.");
-            return false;
-        }
-
-        assurance.Reviewer = Reviewer;
-        AssuranceActionResult result = assurance.ApproveAll();
 
         SetStatus(result.Message);
         RefreshCommands();
