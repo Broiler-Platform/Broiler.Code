@@ -751,13 +751,21 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         IReadOnlyList<(string Label, string? Value)> rows = PaneRows(controls, "group:units");
 
         Assert.Contains(("Thing", "needs human review"), rows);
-        Assert.Contains(("Work", "exempt: trivial property or accessor"), rows);
+        Assert.DoesNotContain(rows, row => row.Label == "Work");
 
-        // And the group's own line accounts for every row underneath it, rather
-        // than counting four and listing thirteen.
+        // The exempt one is its own group, so the declarations a reviewer has to
+        // act on are not four rows to find among nine that are already answered.
+        Assert.Contains(
+            ("Work", "exempt: trivial property or accessor"),
+            PaneRows(controls, "group:units.exempt"));
+
+        ITreeDataSource source = controls.Review!.DataSource!;
+        Assert.Equal("Units — to review", source.GetPresentation(new TreeNodeId("group:units")).Label);
+        Assert.Equal("0 of 1 reviewed", source.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
+        Assert.Equal("Units — exempt", source.GetPresentation(new TreeNodeId("group:units.exempt")).Label);
         Assert.Equal(
-            "0 of 1 reviewed, 1 exempt",
-            controls.Review!.DataSource!.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
+            "1 the format expects no review on",
+            source.GetPresentation(new TreeNodeId("group:units.exempt")).SecondaryLabel);
 
         // The same words in the section about the declaration under the caret.
         // Two renderings of one fact in one pane would be one of them wrong.
@@ -786,7 +794,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         shell.AttachWorkspace(workspace);
         await OpenThingAsync(shell, workspace);
 
-        Assert.Contains(("Thing", "exempt: SomeNinthCase"), PaneRows(controls, "group:units"));
+        Assert.Contains(("Thing", "exempt: SomeNinthCase"), PaneRows(controls, "group:units.exempt"));
         shell.Dispose();
     }
 
@@ -804,7 +812,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         await OpenAsync(shell, workspace, "src/Exempt.cs");
 
         Assert.Contains(
-            PaneRows(controls, "group:units"),
+            PaneRows(controls, "group:units.exempt"),
             row => row.Value == "exempt: hand-written table checked against the spec");
 
         shell.Dispose();

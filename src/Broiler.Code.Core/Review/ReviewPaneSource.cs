@@ -29,6 +29,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     private const string NotesGroup = "group:notes";
     private const string UnitGroup = "group:unit";
     private const string UnitsGroup = "group:units";
+    private const string ExemptGroup = "group:units.exempt";
 
     private readonly ReviewController _controller;
     private readonly AssuranceController? _assurance;
@@ -275,28 +276,38 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
                 signed++;
         }
 
-        // Three numbers, because the group holds three kinds of row and the
-        // first number alone accounts for none of them. "0 of 4 reviewed" over
-        // thirteen rows is a reviewer wondering what the other nine are; and a
-        // reviewer who has just put their name on every declaration in the file
-        // would read it and conclude nothing happened — where what happened is
-        // the whole of what a person can do, and the step left is the owning
-        // component's generator sealing each one with a fingerprint.
+        // Signed units are counted apart from verified ones. Signing is not
+        // verifying — the fingerprint that verifies is the owning component's
+        // generator's to write — so a reviewer who has just put their name on
+        // every declaration in the file would read "0 of 4 reviewed" and
+        // conclude nothing happened.
         string counted = string.Create(CultureInfo.InvariantCulture, $"{reviewed} of {relevant} reviewed");
         if (signed > 0)
             counted += string.Create(CultureInfo.InvariantCulture, $", {signed} signed");
-        if (exempt > 0)
-            counted += string.Create(CultureInfo.InvariantCulture, $", {exempt} exempt");
 
-        var group = new Row(
-            UnitsGroup,
-            "Units",
-            counted,
-            "notes",
-            TreeNodeDecoration.None);
-
-        _rows[UnitsGroup] = group;
+        var toReview = new Row(UnitsGroup, "Units — to review", counted, "notes", TreeNodeDecoration.None);
+        _rows[UnitsGroup] = toReview;
         _groups.Add(UnitsGroup);
+
+        // A second group rather than a run of rows inside the first. On the file
+        // this format was built for, nine of thirteen declarations are exempt,
+        // and mixed together the four a reviewer has to act on are four rows to
+        // find among nine that are already answered. Split, the first group is
+        // the work and the second is the evidence that the rest was considered —
+        // and it collapses, which the work should not.
+        Row? exemptGroup = null;
+        if (exempt > 0)
+        {
+            exemptGroup = new Row(
+                ExemptGroup,
+                "Units — exempt",
+                string.Create(CultureInfo.InvariantCulture, $"{exempt} the format expects no review on"),
+                "detail",
+                TreeNodeDecoration.None);
+
+            _rows[ExemptGroup] = exemptGroup;
+            _groups.Add(ExemptGroup);
+        }
 
         int ordinal = 0;
         foreach (AssuranceUnit unit in assurance.Units)
@@ -312,7 +323,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
                 Unit = unit,
             };
 
-            group.Children.Add(key);
+            // Document order is kept within each group, so a reviewer working
+            // down the first one is working down the file.
+            (unit.IsExempt ? exemptGroup! : toReview).Children.Add(key);
         }
     }
 
