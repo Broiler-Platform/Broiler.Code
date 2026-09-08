@@ -53,14 +53,37 @@ public sealed class DesktopInputRouter
             MapButtons(args.Buttons),
             InputEventSource.Raw));
 
+    /// <summary>
+    /// A wheel notch, with the axis it turned on and the modifiers held while it
+    /// did.
+    ///
+    /// Both matter and both used to be dropped here. A control cannot tell a
+    /// sideways scroll from a downwards one without the axis, and cannot honour
+    /// shift-and-wheel — which is how every editor scrolls sideways on a mouse
+    /// with one wheel — without the modifiers.
+    /// </summary>
     public UiInputEvent FromWheel(BMouseWheelEventArgs args) =>
         UiInputEvent.FromMouseWheel(new MouseWheelEvent(
             Header(_pointerDevice),
             InputPoint.ClientDeviceIndependentPixels(args.Position.X, args.Position.Y),
             MapButtons(args.Buttons),
-            MouseWheelAxis.Vertical,
+            args.IsHorizontal ? MouseWheelAxis.Horizontal : MouseWheelAxis.Vertical,
             args.Delta,
-            InputEventSource.Raw));
+            InputEventSource.Raw,
+            WheelModifiers(args)));
+
+    private static InputModifiers WheelModifiers(BMouseWheelEventArgs args)
+    {
+        InputModifiers modifiers = InputModifiers.None;
+        if (args.Control)
+            modifiers |= InputModifiers.Control;
+        if (args.Shift)
+            modifiers |= InputModifiers.Shift;
+        if (args.Alt)
+            modifiers |= InputModifiers.Alt;
+
+        return modifiers;
+    }
 
     public UiInputEvent FromKey(BKeyEventArgs args, bool pressed) =>
         UiInputEvent.FromKeyboardKey(new KeyboardKeyEvent(

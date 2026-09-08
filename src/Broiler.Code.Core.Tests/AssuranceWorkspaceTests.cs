@@ -7,6 +7,7 @@ using Broiler.Code.Workspaces.Model;
 using Broiler.Code.Workspaces.Storage;
 using Broiler.Code.Workspaces.Text;
 using Broiler.Graphics;
+using Broiler.UI.Button;
 using Broiler.UI.Button.Standard;
 using Broiler.UI.CodeEditor;
 using Broiler.UI.CodeEditor.Standard;
@@ -64,6 +65,17 @@ public sealed class AssuranceWorkspaceTests : IDisposable
     private const string PlainSource = "class Beta { }\n";
 
     /// <summary>
+    /// A declaration the source exempts itself, with the author's own reason on
+    /// the machine line — the one exemption a scanner never decides.
+    /// </summary>
+    private const string ExemptSource =
+        "namespace Sample;\n" +
+        "\n" +
+        "// Broiler-AI:           Origin=Original; EXEMPT=hand-written table checked against the spec\n" +
+        "// Broiler-Human:        PENDING\n" +
+        "public sealed class Table { }\n";
+
+    /// <summary>
     /// A second annotated file whose declaration sits at a different line, so a
     /// caret carried over from another file would find a unit here.
     /// </summary>
@@ -86,6 +98,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         File.WriteAllText(Path.Combine(_root, "src", "Thing.cs"), AnnotatedSource);
         File.WriteAllText(Path.Combine(_root, "src", "Beta.cs"), PlainSource);
         File.WriteAllText(Path.Combine(_root, "src", "Other.cs"), OtherSource);
+        File.WriteAllText(Path.Combine(_root, "src", "Exempt.cs"), ExemptSource);
     }
 
     public void Dispose()
@@ -169,6 +182,14 @@ public sealed class AssuranceWorkspaceTests : IDisposable
 
         // The other declaration is untouched: one signature, one line.
         Assert.Contains("// Broiler-Human:        PENDING\n", text, StringComparison.Ordinal);
+
+        // And the pane says so. Signing is not verifying — the fingerprint that
+        // verifies is the owning component's to write — so the reviewed count
+        // does not move, and a summary reporting only that would read as though
+        // the signature had not landed.
+        Assert.Equal(
+            "0 of 2 reviewed, 1 signed",
+            controls.Review!.DataSource!.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
 
         shell.Dispose();
     }
@@ -642,6 +663,182 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         shell.Dispose();
     }
 
+    /// <summary>
+    /// A source marked with human review records a decision per declaration, so
+    /// the pane's picker has to be about the declaration the reviewer is in
+    /// rather than about the file.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task The_Declaration_Picker_Follows_The_Caret()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        UiComboBox picker = controls.ReviewUnitInput!;
+
+        PutCaretOn(controls, 13);
+        Assert.True(picker.IsEnabled);
+        Assert.Equal("Declaration: needs human review", picker.SelectedItem!.Text);
+
+        // Line 0 is the namespace: no declaration, so nothing to decide about.
+        PutCaretOn(controls, 0);
+        Assert.False(picker.IsEnabled);
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// Picking a state writes it, and picking the other one takes it back — the
+    /// per-declaration counterpart of the file's own picker, driving the same
+    /// two commands the Review menu does.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task The_Declaration_Picker_Records_The_State_It_Names()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        SourceDocument document = await OpenThingAsync(shell, workspace);
+        PutCaretOn(controls, 13);
+
+        UiComboBox picker = controls.ReviewUnitInput!;
+        picker.SelectIndex(IndexOf(picker, CodeCommandNames.ApproveUnit));
+
+        Assert.Contains(
+            "    // Broiler-Human:        Enrico\n",
+            document.Buffer.Current.ToString(),
+            StringComparison.Ordinal);
+        Assert.Equal("Declaration: reviewed", picker.SelectedItem!.Text);
+
+        picker.SelectIndex(IndexOf(picker, CodeCommandNames.WithdrawUnit));
+
+        Assert.Contains(
+            "    // Broiler-Human:        PENDING\n",
+            document.Buffer.Current.ToString(),
+            StringComparison.Ordinal);
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// An exempt declaration is a row like any other, and it says why it is
+    /// exempt rather than only that it is.
+    ///
+    /// The scanner's identifiers are rendered into words, the way the machine
+    /// line's keys already are: "exempt" on nine of a file's thirteen rows tells
+    /// a reviewer that somebody decided something, and which case it was is the
+    /// difference between agreeing and going to look.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task Exempt_Declarations_Are_Listed_With_Their_Reason()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+
+        // Set before the workspace attaches, which is what builds the controller
+        // from it — the same order a head uses.
+        shell.AssuranceScanner = new StubScanner(
+        [
+            new("Sample.Thing", "Thing", 5, 15, false, "None", "AAAAAA"),
+            new("Sample.Thing.Work(int)", "Work", 11, 14, true, "TrivialPropertyOrAccessor", "BBBBBB"),
+        ]);
+
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        IReadOnlyList<(string Label, string? Value)> rows = PaneRows(controls, "group:units");
+
+        Assert.Contains(("Thing", "needs human review"), rows);
+        Assert.DoesNotContain(rows, row => row.Label == "Work");
+
+        // The exempt one is its own group, so the declarations a reviewer has to
+        // act on are not four rows to find among nine that are already answered.
+        Assert.Contains(
+            ("Work", "exempt: trivial property or accessor"),
+            PaneRows(controls, "group:units.exempt"));
+
+        ITreeDataSource source = controls.Review!.DataSource!;
+        Assert.Equal("Units — to review", source.GetPresentation(new TreeNodeId("group:units")).Label);
+        Assert.Equal("0 of 1 reviewed", source.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
+        Assert.Equal("Units — exempt", source.GetPresentation(new TreeNodeId("group:units.exempt")).Label);
+        Assert.Equal(
+            "1 the format expects no review on",
+            source.GetPresentation(new TreeNodeId("group:units.exempt")).SecondaryLabel);
+
+        // The same words in the section about the declaration under the caret.
+        // Two renderings of one fact in one pane would be one of them wrong.
+        PutCaretOn(controls, 13);
+        Assert.Contains(("Exempt", "trivial property or accessor"), PaneRows(controls, "group:unit"));
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// A case this build has not heard of is passed through rather than dropped.
+    /// The predicate is a port of another component's, and that component may
+    /// grow a ninth case first; a row reading the identifier is true and
+    /// searchable, where "exempt" alone would have swallowed the answer.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task An_Unknown_Exemption_Case_Is_Shown_As_It_Came()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        shell.AssuranceScanner = new StubScanner(
+        [
+            new("Sample.Thing", "Thing", 5, 15, true, "SomeNinthCase", "AAAAAA"),
+        ]);
+
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        Assert.Contains(("Thing", "exempt: SomeNinthCase"), PaneRows(controls, "group:units.exempt"));
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// When the source states its own reason, that is what the pane shows: it is
+    /// a sentence somebody wrote about this declaration, and no rendering here
+    /// improves on it.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task An_Exemption_Stated_In_The_Source_Reports_The_Authors_Words()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenAsync(shell, workspace, "src/Exempt.cs");
+
+        Assert.Contains(
+            PaneRows(controls, "group:units.exempt"),
+            row => row.Value == "exempt: hand-written table checked against the spec");
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// Units as a language service would report them, so the exemption cases can
+    /// be exercised where Roslyn deliberately cannot reach — Core's closure is
+    /// the whole reason the scanner is a seam.
+    /// </summary>
+    private sealed class StubScanner(IReadOnlyList<AssuranceScannedUnit> units) : IAssuranceUnitScanner
+    {
+        public IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path) => units;
+    }
+
+    private static int IndexOf(UiComboBox picker, string commandName)
+    {
+        for (int index = 0; index < picker.Items.Count; index++)
+        {
+            if (picker.Items[index].Id == commandName)
+                return index;
+        }
+
+        throw new InvalidOperationException($"The picker carries no entry for {commandName}.");
+    }
+
     private static void PutCaretOn(CodeShellControls controls, int line)
     {
         ICodeTextSnapshot snapshot = controls.Editor.Snapshot;
@@ -708,6 +905,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
                 workspace.AddItem("src/Thing.cs", WorkspaceItemKind.SourceDocument).Id,
                 workspace.AddItem("src/Beta.cs", WorkspaceItemKind.SourceDocument).Id,
                 workspace.AddItem("src/Other.cs", WorkspaceItemKind.SourceDocument).Id,
+                workspace.AddItem("src/Exempt.cs", WorkspaceItemKind.SourceDocument).Id,
             ],
         };
 
@@ -743,6 +941,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
             ReviewSplitter = new StandardSplitter(),
             ReviewNoteInput = new StandardEdit(),
             ReviewNoteKindInput = withPicker ? new StandardComboBox() : null,
+            ReviewUnitInput = new StandardComboBox(),
             Status = new StandardLabel(),
             Output = new StandardLabel(),
             CreateButton = () => new StandardButton(),

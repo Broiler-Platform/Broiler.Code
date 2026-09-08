@@ -355,7 +355,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
         await OpenAlphaAsync(shell, workspace);
 
         UiComboBox picker = controls.ReviewStatusInput!;
-        Assert.Equal("Not reviewed", picker.SelectedItem!.Text);
+        Assert.Equal("File: not reviewed", picker.SelectedItem!.Text);
 
         picker.SelectIndex(IndexOf(picker, CodeCommandNames.MarkReviewed));
 
@@ -383,10 +383,10 @@ public sealed class ReviewWorkspaceTests : IDisposable
         await OpenAlphaAsync(shell, workspace);
 
         Assert.True(await shell.InvokeAsync(CodeCommandNames.MarkQuestion));
-        Assert.Equal("Open question", controls.ReviewStatusInput!.SelectedItem!.Text);
+        Assert.Equal("File: open question", controls.ReviewStatusInput!.SelectedItem!.Text);
 
         Assert.True(await shell.InvokeAsync(CodeCommandNames.ClearReview));
-        Assert.Equal("Not reviewed", controls.ReviewStatusInput.SelectedItem!.Text);
+        Assert.Equal("File: not reviewed", controls.ReviewStatusInput.SelectedItem!.Text);
 
         shell.Dispose();
     }

@@ -29,6 +29,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     private const string NotesGroup = "group:notes";
     private const string UnitGroup = "group:unit";
     private const string UnitsGroup = "group:units";
+    private const string ExemptGroup = "group:units.exempt";
 
     private readonly ReviewController _controller;
     private readonly AssuranceController? _assurance;
@@ -212,7 +213,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         Add(group, "unit:state", "State", AssuranceStateMachine.ToDisplayString(unit.State), DecorationFor(unit.State));
 
         if (unit.IsExempt)
-            Add(group, "unit:exempt", "Exempt", unit.Exemption);
+            Add(group, "unit:exempt", "Exempt", ExemptionReason(unit) ?? unit.Exemption);
 
         if (unit.Annotation is { } annotation)
         {
@@ -258,25 +259,55 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
 
         int relevant = 0;
         int reviewed = 0;
+        int signed = 0;
+        int exempt = 0;
         foreach (AssuranceUnit unit in assurance.Units)
         {
             if (unit.IsExempt)
+            {
+                exempt++;
                 continue;
+            }
 
             relevant++;
             if (unit.State == AssuranceUnitState.Verified)
                 reviewed++;
+            else if (unit.State == AssuranceUnitState.HumanApprovedPendingFingerprint)
+                signed++;
         }
 
-        var group = new Row(
-            UnitsGroup,
-            "Units",
-            string.Create(CultureInfo.InvariantCulture, $"{reviewed} of {relevant} reviewed"),
-            "notes",
-            TreeNodeDecoration.None);
+        // Signed units are counted apart from verified ones. Signing is not
+        // verifying — the fingerprint that verifies is the owning component's
+        // generator's to write — so a reviewer who has just put their name on
+        // every declaration in the file would read "0 of 4 reviewed" and
+        // conclude nothing happened.
+        string counted = string.Create(CultureInfo.InvariantCulture, $"{reviewed} of {relevant} reviewed");
+        if (signed > 0)
+            counted += string.Create(CultureInfo.InvariantCulture, $", {signed} signed");
 
-        _rows[UnitsGroup] = group;
+        var toReview = new Row(UnitsGroup, "Units — to review", counted, "notes", TreeNodeDecoration.None);
+        _rows[UnitsGroup] = toReview;
         _groups.Add(UnitsGroup);
+
+        // A second group rather than a run of rows inside the first. On the file
+        // this format was built for, nine of thirteen declarations are exempt,
+        // and mixed together the four a reviewer has to act on are four rows to
+        // find among nine that are already answered. Split, the first group is
+        // the work and the second is the evidence that the rest was considered —
+        // and it collapses, which the work should not.
+        Row? exemptGroup = null;
+        if (exempt > 0)
+        {
+            exemptGroup = new Row(
+                ExemptGroup,
+                "Units — exempt",
+                string.Create(CultureInfo.InvariantCulture, $"{exempt} the format expects no review on"),
+                "detail",
+                TreeNodeDecoration.None);
+
+            _rows[ExemptGroup] = exemptGroup;
+            _groups.Add(ExemptGroup);
+        }
 
         int ordinal = 0;
         foreach (AssuranceUnit unit in assurance.Units)
@@ -285,15 +316,73 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             _rows[key] = new Row(
                 key,
                 unit.DisplayName,
-                AssuranceStateMachine.ToDisplayString(unit.State),
+                UnitSummary(unit),
                 unit.IsExempt ? "detail" : "review",
                 DecorationFor(unit.State))
             {
                 Unit = unit,
             };
 
-            group.Children.Add(key);
+            // Document order is kept within each group, so a reviewer working
+            // down the first one is working down the file.
+            (unit.IsExempt ? exemptGroup! : toReview).Children.Add(key);
         }
+    }
+
+    /// <summary>
+    /// What a unit's row says beside its name: its state, and for an exempt one
+    /// the reason it is exempt.
+    ///
+    /// The reason rather than the bare word, because "exempt" on nine of a
+    /// file's thirteen rows tells a reviewer only that somebody decided
+    /// something. Whether a declaration is exempt because it is an auto-property
+    /// or because it sits inside an assembly marker is the difference between
+    /// agreeing with the exemption and going to look at it — and a reviewer who
+    /// cannot tell has to open the other tool's report to find out.
+    /// </summary>
+    private static string UnitSummary(AssuranceUnit unit)
+    {
+        if (!unit.IsExempt)
+            return AssuranceStateMachine.ToDisplayString(unit.State);
+
+        return ExemptionReason(unit) is { } reason ? $"exempt: {reason}" : "exempt";
+    }
+
+    /// <summary>
+    /// Why a declaration is exempt, in words, or null when nothing says.
+    ///
+    /// A source that states its own reason wins: that is a sentence somebody
+    /// wrote about this declaration, and no rendering here improves on it.
+    /// Otherwise the scanner's case is spelled out. The identifiers are the
+    /// owning component's, ported case for case by
+    /// <c>CSharpAssuranceScanner</c>, and are rendered rather than shown raw for
+    /// the same reason the machine line's keys are — the format writes them
+    /// inside a comment, and a pane has room for the words.
+    ///
+    /// An identifier this build does not know is passed through unchanged. That
+    /// component may add a ninth case before this one hears about it, and a row
+    /// reading <c>exempt: SomeNewCase</c> is true and searchable, where "exempt"
+    /// alone would have quietly dropped the answer.
+    /// </summary>
+    private static string? ExemptionReason(AssuranceUnit unit)
+    {
+        if (unit.Annotation?.ExemptReason is { Length: > 0 } stated)
+            return stated;
+
+        return unit.Exemption switch
+        {
+            "TrivialPropertyOrAccessor" => "trivial property or accessor",
+            "ParameterAssigningConstructor" => "constructor assigns its parameters only",
+            "TrivialExpressionBodiedMember" => "trivial expression body",
+            "CompilerSuppliedRecordOrEnumMember" => "compiler-supplied record or enum member",
+            "DelegatingOverrideOrOperator" => "override or operator that only delegates",
+            "InsideAssemblyMarker" => "inside the assembly marker",
+            "FieldDeclaringStorage" => "field declaring storage",
+            "EnumMemberOfADeclaredVocabulary" => "enum member of a declared vocabulary",
+            "DeclaredInSource" => "declared exempt in the source",
+            null or "" or "None" => null,
+            var other => other,
+        };
     }
 
     /// <summary>
