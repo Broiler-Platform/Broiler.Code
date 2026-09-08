@@ -101,6 +101,23 @@ public sealed record CodeShellControls
     /// </summary>
     public UiComboBox? ReviewNoteKindInput { get; init; }
 
+    /// <summary>
+    /// Records the file-level review decision from inside the pane.
+    ///
+    /// Optional like the rest of it, and the reason it exists is that the pane
+    /// could read a review and not write one: it said "Nothing recorded yet —
+    /// mark it reviewed, or add a note" on a row that did nothing, and the four
+    /// decisions it was pointing at were reachable only from the Review menu. A
+    /// workspace whose whole purpose is recording what a person has read should
+    /// not send them to a menu bar to record it.
+    ///
+    /// It picks a status rather than committing one: the write still goes
+    /// through the same named commands the menu drives, so the rule that a
+    /// decision needs a reviewer and a saved file is enforced in one place and
+    /// the picker snaps back to what was actually recorded when it is refused.
+    /// </summary>
+    public UiComboBox? ReviewStatusInput { get; init; }
+
     public required UiLabel Status { get; init; }
 
     public required UiLabel Output { get; init; }
@@ -163,6 +180,48 @@ public sealed class CodeShell : IDisposable
         new(nameof(ReviewNoteKind.Observation), "Observation"),
     ];
 
+    /// <summary>
+    /// The file-level decisions the pane can record, in the order a review moves
+    /// through them: nothing, started, and then one of the three ways it can end.
+    ///
+    /// The identifiers are the command names rather than the enum names, so the
+    /// picker drives exactly what the Review menu drives and there is no second
+    /// table deciding what a selection means. Clearing is one of them because
+    /// undoing a decision recorded on the wrong file is part of recording
+    /// decisions, and it is the entry a reviewer reaches for in a hurry.
+    /// </summary>
+    private static readonly UiComboBoxItem[] ReviewStatusItems =
+    [
+        new(CodeCommandNames.ClearReview, "Not reviewed"),
+        new(CodeCommandNames.MarkInReview, "In review"),
+        new(CodeCommandNames.MarkReviewed, "Reviewed"),
+        new(CodeCommandNames.MarkQuestion, "Open question"),
+        new(CodeCommandNames.MarkNeedsChange, "Needs change"),
+    ];
+
+    /// <summary>
+    /// What a grip's reported movement is measured against.
+    ///
+    /// <see cref="UiSplitter"/> is normalized: it divides the pointer's travel by
+    /// <see cref="UiSplitter.DragExtent"/> to produce a value, so multiplying a
+    /// reported change back by the same number gives the layout units the grip
+    /// moved, whatever the number is — the drag is one-to-one either way. What
+    /// the number does decide is the range, because the value is clamped: a pane
+    /// can be dragged 0.8 × this away from the width its head chose and no
+    /// further, which is wider than any window this runs in.
+    ///
+    /// A constant rather than the body's own width because the body has no width
+    /// until the first frame is arranged, and a grip has to behave on the frame
+    /// after that one.
+    /// </summary>
+    private const double SplitterDragExtent = 2400;
+
+    /// <summary>The narrowest a pane may be dragged. Below this it is a strip nobody can read.</summary>
+    private const double MinimumPaneWidth = 120;
+
+    /// <summary>How much editor a pane has to leave behind it, however far its grip is dragged.</summary>
+    private const double MinimumDocumentWidth = 240;
+
     private readonly CodeShellControls _controls;
     private readonly Dictionary<string, UiButton> _toolbarButtons = [];
     private readonly ProblemsModel _problems = new();
@@ -176,6 +235,15 @@ public sealed class CodeShell : IDisposable
     private DocumentCoordinator? _coordinator;
     private CodeCommandSet _commands;
     private IFileDialogService? _fileDialogs;
+
+    /// <summary>
+    /// True while the status picker is being set to match the record, so the
+    /// selection it raises is not read back as the user asking for a decision.
+    /// <see cref="UiComboBox.SelectIndex"/> raises the same event either way,
+    /// and without this a tab switch would record the previous file's status
+    /// onto the new one.
+    /// </summary>
+    private bool _syncingReviewStatus;
     private bool _disposed;
 
     public CodeShell(CodeShellControls controls)
@@ -806,6 +874,22 @@ public sealed class CodeShell : IDisposable
                 return _controls.Explorer;
             if (ReferenceEquals(element, _controls.Problems))
                 return _controls.Problems;
+
+            // The review pane and the grips. A tree does not focus itself, so
+            // without the first of these the review tree took a click and then
+            // ignored every arrow key; the rest do focus themselves, and are
+            // named here so the head is told the caret has left the editor —
+            // otherwise it goes on drawing one in a document the keystrokes are
+            // no longer reaching.
+            if (ReferenceEquals(element, _controls.Review) ||
+                ReferenceEquals(element, _controls.ReviewStatusInput) ||
+                ReferenceEquals(element, _controls.ReviewNoteKindInput) ||
+                ReferenceEquals(element, _controls.ReviewNoteInput) ||
+                ReferenceEquals(element, _controls.ExplorerSplitter) ||
+                ReferenceEquals(element, _controls.ReviewSplitter))
+            {
+                return element;
+            }
         }
 
         return null;
@@ -897,6 +981,7 @@ public sealed class CodeShell : IDisposable
     {
         ThrowIfDisposed();
         _controls.Output.Text = text ?? string.Empty;
+        RefreshBottomPanes();
     }
 
     public void Dispose()
@@ -911,6 +996,11 @@ public sealed class CodeShell : IDisposable
             review.NodeActivated -= OnReviewNodeActivated;
         if (_controls.ReviewNoteInput is { } noteInput)
             noteInput.Submitted -= OnReviewNoteSubmitted;
+        if (_controls.ReviewStatusInput is { } reviewStatus)
+            reviewStatus.SelectionChanged -= OnReviewStatusSelected;
+        _controls.ExplorerSplitter.ValueChanged -= OnExplorerSplitterMoved;
+        if (_controls.ReviewSplitter is { } reviewSplitter)
+            reviewSplitter.ValueChanged -= OnReviewSplitterMoved;
         _controls.Editor.SelectionChanged -= OnEditorSelectionChanged;
         _controls.Tabs.SelectionChanged -= OnActiveDocumentChanged;
         foreach (UiButton button in _toolbarButtons.Values)
@@ -966,8 +1056,33 @@ public sealed class CodeShell : IDisposable
         root.SetDock(body, UiDock.Fill);
 
         _controls.Problems.DataSource = _problemsSource;
-        _controls.ExplorerSplitter.Orientation = UiSplitterOrientation.Vertical;
+        ComposeSplitter(_controls.ExplorerSplitter, OnExplorerSplitterMoved);
         ComposeToolbar();
+        RefreshBottomPanes();
+    }
+
+    /// <summary>
+    /// Makes a grip that actually moves the pane beside it.
+    ///
+    /// <see cref="UiSplitter"/> is a normalized value with a drag gesture on it
+    /// and no opinion about layout — its own documentation says hosts apply the
+    /// value — and this shell composed both grips without applying either. They
+    /// drew, took the pointer, and moved a number nobody read, which is a grip
+    /// that looks broken rather than one that is missing.
+    ///
+    /// The keys are stepped down from the control's defaults because those are
+    /// fractions of the drag extent, and the extent here is a whole window's
+    /// worth: an arrow key moves a pane 24 units and a page key 120, rather than
+    /// half a pane at a time.
+    /// </summary>
+    private static void ComposeSplitter(
+        UiSplitter splitter, EventHandler<UiSplitterValueChangedEventArgs> moved)
+    {
+        splitter.Orientation = UiSplitterOrientation.Vertical;
+        splitter.DragExtent = SplitterDragExtent;
+        splitter.SmallChange = 0.01;
+        splitter.LargeChange = 0.05;
+        splitter.ValueChanged += moved;
     }
 
     /// <summary>
@@ -984,15 +1099,25 @@ public sealed class CodeShell : IDisposable
             return;
 
         // The pane goes to the far right and the splitter to its left, mirroring
-        // the explorer's arrangement on the other side. The splitter is a grip
-        // and nothing more today: UiSplitter.Value is read by no one here, and
-        // the explorer's has been inert the same way since it was composed —
-        // pane width comes from the PreferredSize the head sets. Applying Value
-        // to pane layout is one change for both splitters, not something to
-        // solve for this pane alone.
+        // the explorer's arrangement on the other side. Both grips are applied
+        // by ComposeSplitter, which is where the width a drag produces is turned
+        // back into a PreferredSize.
         if (_controls.ReviewPane is { } pane)
         {
             pane.LayoutMode = UiPanelLayoutMode.Dock;
+
+            // Docked first among the Top children so it is the pane's own
+            // heading: the decision is about the whole file, and the sections
+            // below it — the declaration under the caret, the record, the notes
+            // — are what that decision is made from.
+            if (_controls.ReviewStatusInput is { } status)
+            {
+                status.SetItems(ReviewStatusItems);
+                SyncReviewStatusInput();
+                status.SelectionChanged += OnReviewStatusSelected;
+                pane.AddChild(status);
+                pane.SetDock(status, UiDock.Top);
+            }
 
             if (_controls.ReviewNoteInput is { } input)
             {
@@ -1027,12 +1152,121 @@ public sealed class CodeShell : IDisposable
 
         if (_controls.ReviewSplitter is { } splitter)
         {
-            splitter.Orientation = UiSplitterOrientation.Vertical;
+            ComposeSplitter(splitter, OnReviewSplitterMoved);
             body.AddChild(splitter);
             body.SetDock(splitter, UiDock.Right);
         }
 
         review.NodeActivated += OnReviewNodeActivated;
+    }
+
+    private void OnExplorerSplitterMoved(object? sender, UiSplitterValueChangedEventArgs e) =>
+        ResizeExplorer(GripTravel(e));
+
+    /// <summary>
+    /// The review pane is docked on the far side, so the movement that widens
+    /// the explorer narrows it. One sign, and the two grips both feel like the
+    /// edge of the pane they are drawn against.
+    /// </summary>
+    private void OnReviewSplitterMoved(object? sender, UiSplitterValueChangedEventArgs e) =>
+        ResizeReview(-GripTravel(e));
+
+    /// <summary>How far the grip moved, in layout units. See <see cref="SplitterDragExtent"/>.</summary>
+    private static double GripTravel(UiSplitterValueChangedEventArgs e) =>
+        (e.NewValue - e.OldValue) * SplitterDragExtent;
+
+    private void ResizeExplorer(double travel)
+    {
+        UiTreeView explorer = _controls.Explorer;
+        if (explorer.IsDisposed || travel == 0)
+            return;
+
+        BSize size = explorer.PreferredSize;
+        explorer.PreferredSize = new BSize(PaneWidth(size.Width + travel, explorer), size.Height);
+    }
+
+    /// <summary>
+    /// Resizes the Human Review pane.
+    ///
+    /// Every control in it is set, not the tree alone: the pane is a dock panel
+    /// and a dock panel is as wide as its widest child, so narrowing the tree by
+    /// itself would leave the pane standing at the note field's width and the
+    /// grip would appear to do nothing.
+    /// </summary>
+    private void ResizeReview(double travel)
+    {
+        if (_controls.Review is not { IsDisposed: false } review || travel == 0)
+            return;
+
+        double width = PaneWidth(
+            review.PreferredSize.Width + travel, (UiElement?)_controls.ReviewPane ?? review);
+
+        review.PreferredSize = new BSize(width, review.PreferredSize.Height);
+
+        if (_controls.ReviewStatusInput is { IsDisposed: false } status)
+            status.PreferredSize = new BSize(width, status.PreferredSize.Height);
+        if (_controls.ReviewNoteKindInput is { IsDisposed: false } kinds)
+            kinds.PreferredSize = new BSize(width, kinds.PreferredSize.Height);
+        if (_controls.ReviewNoteInput is { IsDisposed: false } input)
+            input.PreferredSize = new BSize(width, input.PreferredSize.Height);
+    }
+
+    /// <summary>
+    /// The width a pane should take once its grip has moved, kept between a
+    /// strip too narrow to read and one that would leave no editor.
+    ///
+    /// The ceiling is measured from the arranged bounds of the other docked
+    /// panes rather than from their preferred sizes, so it is the room they
+    /// actually took. Before the first frame there are none and only the floor
+    /// applies — which costs nothing, because a grip cannot have been dragged
+    /// before it was drawn.
+    /// </summary>
+    private double PaneWidth(double width, UiElement pane)
+    {
+        double body = _controls.Body.Bounds.Width;
+        if (!double.IsFinite(body) || body <= 0)
+            return Math.Max(MinimumPaneWidth, width);
+
+        double taken = 0;
+        foreach (UiElement child in _controls.Body.Children)
+        {
+            if (!ReferenceEquals(child, pane) &&
+                _controls.Body.GetDock(child) is UiDock.Left or UiDock.Right)
+            {
+                taken += child.Bounds.Width;
+            }
+        }
+
+        return Math.Clamp(
+            width, MinimumPaneWidth, Math.Max(MinimumPaneWidth, body - taken - MinimumDocumentWidth));
+    }
+
+    /// <summary>
+    /// Gives the bottom of the window to the editor when there is nothing to put
+    /// there.
+    ///
+    /// The Problems tree and the Output line were docked unconditionally at the
+    /// height their head asked for, so a session with no diagnostics and no
+    /// coverage report drew a blank band under the editor that named nothing and
+    /// could not be dismissed — reported, reasonably, as "an empty area at the
+    /// bottom, maybe an output pane?". Collapsed rather than hidden, so the dock
+    /// gives the space back instead of leaving a gap where the pane was.
+    /// </summary>
+    private void RefreshBottomPanes()
+    {
+        if (!_controls.Problems.IsDisposed)
+        {
+            _controls.Problems.Visibility = _problems.GetVisible().Count > 0
+                ? UiVisibility.Visible
+                : UiVisibility.Collapsed;
+        }
+
+        if (!_controls.Output.IsDisposed)
+        {
+            _controls.Output.Visibility = _controls.Output.Text.Length > 0
+                ? UiVisibility.Visible
+                : UiVisibility.Collapsed;
+        }
     }
 
     private void RefreshCommands()
@@ -1122,6 +1356,86 @@ public sealed class CodeShell : IDisposable
         _commands.HasReviewer = !string.IsNullOrWhiteSpace(Reviewer);
         _commands.HasAnnotatedUnit = _assurance is { CurrentUnit: not null };
         _commands.AssuranceUnitReason = AssuranceReason();
+        SyncReviewStatusInput();
+    }
+
+    /// <summary>
+    /// Points the status picker at what is actually recorded for the file on
+    /// screen.
+    ///
+    /// Driven from the command refresh like the rest of this, so it follows a
+    /// tab switch, a completed background load, and a decision the menu recorded
+    /// — and so a decision the shell refused, because the file has unsaved
+    /// changes or nobody has named the reviewer, puts the picker back where it
+    /// was instead of leaving it showing a status no record carries.
+    ///
+    /// Only the status is read, never the freshness: a stale approval is still
+    /// an approval its reviewer recorded, and offering to re-record it is a
+    /// different gesture from being told it has gone stale, which the row below
+    /// already says.
+    /// </summary>
+    private void SyncReviewStatusInput()
+    {
+        if (_controls.ReviewStatusInput is not { IsDisposed: false } status)
+            return;
+
+        string command = (_review?.CurrentState.Status ?? ReviewStatus.Unreviewed) switch
+        {
+            ReviewStatus.InReview => CodeCommandNames.MarkInReview,
+            ReviewStatus.Reviewed => CodeCommandNames.MarkReviewed,
+            ReviewStatus.Question => CodeCommandNames.MarkQuestion,
+            ReviewStatus.NeedsChange => CodeCommandNames.MarkNeedsChange,
+            _ => CodeCommandNames.ClearReview,
+        };
+
+        int index = Array.FindIndex(ReviewStatusItems, item => item.Id == command);
+        if (index < 0 || index == status.SelectedIndex)
+            return;
+
+        _syncingReviewStatus = true;
+        try
+        {
+            status.SelectIndex(index);
+        }
+        finally
+        {
+            _syncingReviewStatus = false;
+        }
+    }
+
+    /// <summary>
+    /// Records the decision the reviewer picked, through the command the menu
+    /// entry drives.
+    ///
+    /// The command rather than the controller, so that one place still decides
+    /// whether a decision may be written — and so the reason it may not is said
+    /// out loud on the status line, which is what
+    /// <see cref="InvokeAsync(string, CancellationToken)"/> already does for a
+    /// command that is disabled.
+    /// </summary>
+    private void OnReviewStatusSelected(object? sender, UiComboBoxSelectionChangedEventArgs e)
+    {
+        if (_syncingReviewStatus)
+            return;
+
+        if (_controls.ReviewStatusInput?.SelectedItem is { Id: { Length: > 0 } command })
+            _ = RecordPickedStatusAsync(command);
+    }
+
+    /// <summary>
+    /// Runs the picked decision and then puts the picker back on whatever ended
+    /// up recorded.
+    ///
+    /// The second half is not redundant: a command that ran refreshes the picker
+    /// on its way out, and a command that was refused for being disabled returns
+    /// before it gets there — which is the case that matters, because that is
+    /// exactly when the picker is showing something no record carries.
+    /// </summary>
+    private async ValueTask RecordPickedStatusAsync(string command)
+    {
+        await InvokeAsync(command).ConfigureAwait(true);
+        if (!_disposed)
+            SyncReviewStatusInput();
     }
 
     /// <summary>
@@ -1456,11 +1770,16 @@ public sealed class CodeShell : IDisposable
         }
 
         ReviewCoverageTotals totals = ReviewCoverage.Overall(_review.Snapshot());
-        _controls.Output.Text =
+
+        // Through SetOutput rather than onto the label, so the pane it lands in
+        // is shown. The Output line is collapsed while it is empty, and writing
+        // past the one method that knows that would report coverage into a strip
+        // the window is not drawing.
+        SetOutput(
             $"Human review: {totals.Verified}/{totals.Total} files verified " +
             $"({totals.FormatPercent(totals.VerifiedPercent)}), " +
             $"{totals.StaleApprovals} modified since review, " +
-            $"{totals.Unreviewed} never reviewed, {totals.OpenNotes} open notes.";
+            $"{totals.Unreviewed} never reviewed, {totals.OpenNotes} open notes.");
 
         SetStatus("Review coverage written to the Output pane.");
         return true;
@@ -1561,8 +1880,15 @@ public sealed class CodeShell : IDisposable
         RefreshStatusCounts();
     }
 
-    private void RefreshStatusCounts() =>
+    private void RefreshStatusCounts()
+    {
         SetStatus(_problems.Counts.Describe(_problems.Mode));
+
+        // Every path that changes the problem rows ends here, so this is the one
+        // place that has to remember the pane only earns its band of the window
+        // while it has rows.
+        RefreshBottomPanes();
+    }
 
     private void SetStatus(string text)
     {
