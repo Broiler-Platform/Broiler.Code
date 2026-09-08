@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -118,6 +119,24 @@ public sealed record CodeShellControls
     /// </summary>
     public UiComboBox? ReviewStatusInput { get; init; }
 
+    /// <summary>
+    /// Records the human review of the declaration the caret is in — the
+    /// per-section counterpart to <see cref="ReviewStatusInput"/>.
+    ///
+    /// A file marked with assurance annotations records a decision per
+    /// declaration, not one for the file, and the pane could only ever show
+    /// those: the two decisions a reviewer writes lived in the Review menu and
+    /// applied to wherever the caret happened to be. Selecting a declaration in
+    /// the Units list now points this at it, so the pane is a way of working down
+    /// a file section by section rather than a readout of one section at a time.
+    ///
+    /// Two entries, because two is what a person may write. Everything else the
+    /// pane shows about a declaration — exempt, assessed, stale, verified — is
+    /// derived from the two lines and from the code, and is reported on the
+    /// State row rather than offered here as though it were a choice.
+    /// </summary>
+    public UiComboBox? ReviewUnitInput { get; init; }
+
     public required UiLabel Status { get; init; }
 
     public required UiLabel Output { get; init; }
@@ -192,11 +211,30 @@ public sealed class CodeShell : IDisposable
     /// </summary>
     private static readonly UiComboBoxItem[] ReviewStatusItems =
     [
-        new(CodeCommandNames.ClearReview, "Not reviewed"),
-        new(CodeCommandNames.MarkInReview, "In review"),
-        new(CodeCommandNames.MarkReviewed, "Reviewed"),
-        new(CodeCommandNames.MarkQuestion, "Open question"),
-        new(CodeCommandNames.MarkNeedsChange, "Needs change"),
+        new(CodeCommandNames.ClearReview, "File: not reviewed"),
+        new(CodeCommandNames.MarkInReview, "File: in review"),
+        new(CodeCommandNames.MarkReviewed, "File: reviewed"),
+        new(CodeCommandNames.MarkQuestion, "File: open question"),
+        new(CodeCommandNames.MarkNeedsChange, "File: needs change"),
+    ];
+
+    /// <summary>
+    /// What a reviewer may write on one declaration.
+    ///
+    /// Two entries and no more, because the annotation's human line holds either
+    /// the reserved word or a person's name — the fingerprint that turns a name
+    /// into a verified unit is the owning component's generator's to write, and
+    /// an editor that offered "verified" here would be offering something it
+    /// cannot do.
+    ///
+    /// Prefixed, like the file's own entries above them, because two pickers
+    /// stacked in one pane that both say "reviewed" are two pickers a reviewer
+    /// has to remember the order of.
+    /// </summary>
+    private static readonly UiComboBoxItem[] ReviewUnitItems =
+    [
+        new(CodeCommandNames.WithdrawUnit, "Declaration: needs human review"),
+        new(CodeCommandNames.ApproveUnit, "Declaration: reviewed"),
     ];
 
     /// <summary>
@@ -244,6 +282,16 @@ public sealed class CodeShell : IDisposable
     /// onto the new one.
     /// </summary>
     private bool _syncingReviewStatus;
+
+    /// <summary>
+    /// The pane's "apply to every declaration" button.
+    ///
+    /// Made from the head's button factory like a toolbar button, and kept out
+    /// of the toolbar's own list because the two are refreshed differently: a
+    /// toolbar button is sized from its text, and this one is sized by the
+    /// splitter along with everything else in the pane.
+    /// </summary>
+    private UiButton? _applyReviewButton;
     private bool _disposed;
 
     public CodeShell(CodeShellControls controls)
@@ -531,6 +579,7 @@ public sealed class CodeShell : IDisposable
             CodeCommandNames.AddNote => await AddNoteFromInputAsync(cancellationToken).ConfigureAwait(false),
             CodeCommandNames.ApproveUnit => SignUnit(sign: true),
             CodeCommandNames.WithdrawUnit => SignUnit(sign: false),
+            CodeCommandNames.ApplyUnitReview => ApplyUnitReview(),
             CodeCommandNames.ReviewCoverage => ShowReviewCoverage(),
             _ => false,
         };
@@ -883,6 +932,7 @@ public sealed class CodeShell : IDisposable
             // no longer reaching.
             if (ReferenceEquals(element, _controls.Review) ||
                 ReferenceEquals(element, _controls.ReviewStatusInput) ||
+                ReferenceEquals(element, _controls.ReviewUnitInput) ||
                 ReferenceEquals(element, _controls.ReviewNoteKindInput) ||
                 ReferenceEquals(element, _controls.ReviewNoteInput) ||
                 ReferenceEquals(element, _controls.ExplorerSplitter) ||
@@ -998,6 +1048,10 @@ public sealed class CodeShell : IDisposable
             noteInput.Submitted -= OnReviewNoteSubmitted;
         if (_controls.ReviewStatusInput is { } reviewStatus)
             reviewStatus.SelectionChanged -= OnReviewStatusSelected;
+        if (_controls.ReviewUnitInput is { } reviewUnit)
+            reviewUnit.SelectionChanged -= OnReviewUnitSelected;
+        if (_applyReviewButton is not null)
+            _applyReviewButton.Clicked -= OnToolbarButtonClicked;
         _controls.ExplorerSplitter.ValueChanged -= OnExplorerSplitterMoved;
         if (_controls.ReviewSplitter is { } reviewSplitter)
             reviewSplitter.ValueChanged -= OnReviewSplitterMoved;
@@ -1119,6 +1173,30 @@ public sealed class CodeShell : IDisposable
                 pane.SetDock(status, UiDock.Top);
             }
 
+            // Under the file's own decision, because that is the order the two
+            // are read in: what is claimed about the file, then what is claimed
+            // about the declaration in front of the reviewer.
+            if (_controls.ReviewUnitInput is { } unit)
+            {
+                unit.SetItems(ReviewUnitItems);
+                SyncReviewUnitInput();
+                unit.SelectionChanged += OnReviewUnitSelected;
+                pane.AddChild(unit);
+                pane.SetDock(unit, UiDock.Top);
+            }
+
+            // The whole file in one gesture, under the two pickers it is the
+            // bulk form of. A button rather than a third picker: it is an action
+            // and not a state, and a control that looked like the two above it
+            // would be read as a third thing to set.
+            UiButton apply = _controls.CreateButton();
+            apply.CommandName = CodeCommandNames.ApplyUnitReview;
+            apply.Clicked += OnToolbarButtonClicked;
+            apply.PreferredSize = new BSize(review.PreferredSize.Width, 28);
+            _applyReviewButton = apply;
+            pane.AddChild(apply);
+            pane.SetDock(apply, UiDock.Top);
+
             if (_controls.ReviewNoteInput is { } input)
             {
                 input.PlaceholderText = "Add a review note…";
@@ -1205,6 +1283,10 @@ public sealed class CodeShell : IDisposable
 
         if (_controls.ReviewStatusInput is { IsDisposed: false } status)
             status.PreferredSize = new BSize(width, status.PreferredSize.Height);
+        if (_controls.ReviewUnitInput is { IsDisposed: false } unit)
+            unit.PreferredSize = new BSize(width, unit.PreferredSize.Height);
+        if (_applyReviewButton is { IsDisposed: false } apply)
+            apply.PreferredSize = new BSize(width, apply.PreferredSize.Height);
         if (_controls.ReviewNoteKindInput is { IsDisposed: false } kinds)
             kinds.PreferredSize = new BSize(width, kinds.PreferredSize.Height);
         if (_controls.ReviewNoteInput is { IsDisposed: false } input)
@@ -1309,12 +1391,14 @@ public sealed class CodeShell : IDisposable
         review.Children.Add(new UiMenuItem("review.sep2", string.Empty) { IsSeparator = true });
         AddItem(review, CodeCommandNames.ApproveUnit);
         AddItem(review, CodeCommandNames.WithdrawUnit);
+        AddItem(review, CodeCommandNames.ApplyUnitReview);
         review.Children.Add(new UiMenuItem("review.sep3", string.Empty) { IsSeparator = true });
         AddItem(review, CodeCommandNames.ReviewCoverage);
         items.Add(review);
 
         _controls.Menu.SetItems(items);
         RefreshToolbar();
+        RefreshReviewButton();
 
         void AddItem(UiMenuItem parent, string name)
         {
@@ -1355,8 +1439,96 @@ public sealed class CodeShell : IDisposable
         _commands.HasReview = _controls.Review is not null;
         _commands.HasReviewer = !string.IsNullOrWhiteSpace(Reviewer);
         _commands.HasAnnotatedUnit = _assurance is { CurrentUnit: not null };
+        _commands.WritableUnitCount = _assurance?.WritableUnitCount ?? 0;
         _commands.AssuranceUnitReason = AssuranceReason();
         SyncReviewStatusInput();
+        SyncReviewUnitInput();
+    }
+
+    /// <summary>
+    /// Points the declaration picker at the unit the caret is in, and turns it
+    /// off when there is no unit a reviewer may decide about.
+    ///
+    /// Reviewed means this reviewer's own name is on the line. Somebody else's
+    /// name, the reserved word, and a line recording that the code moved out from
+    /// under an approval all read as needing review, which is what each of them
+    /// means for the person looking at the pane: there is no signature of theirs
+    /// on this declaration as it stands.
+    ///
+    /// Disabled rather than showing a sixth entry for exempt and unannotated
+    /// declarations. Those are not states a reviewer chooses — the format decides
+    /// them — and putting them in the list would offer them as decisions. What
+    /// they are is on the State row above.
+    /// </summary>
+    private void SyncReviewUnitInput()
+    {
+        if (_controls.ReviewUnitInput is not { IsDisposed: false } picker)
+            return;
+
+        AssuranceUnit? unit = _assurance?.CurrentUnit;
+        picker.IsEnabled = unit is { IsWritable: true };
+
+        bool reviewed =
+            unit?.Annotation?.Reviewer is { } signatory &&
+            string.Equals(signatory, Reviewer.Trim(), StringComparison.Ordinal);
+
+        int index = Array.FindIndex(
+            ReviewUnitItems,
+            item => item.Id == (reviewed ? CodeCommandNames.ApproveUnit : CodeCommandNames.WithdrawUnit));
+
+        if (index < 0 || index == picker.SelectedIndex)
+            return;
+
+        _syncingReviewStatus = true;
+        try
+        {
+            picker.SelectIndex(index);
+        }
+        finally
+        {
+            _syncingReviewStatus = false;
+        }
+    }
+
+    private void OnReviewUnitSelected(object? sender, UiComboBoxSelectionChangedEventArgs e)
+    {
+        if (_syncingReviewStatus)
+            return;
+
+        if (_controls.ReviewUnitInput?.SelectedItem is { Id: { Length: > 0 } command })
+            _ = RecordPickedStatusAsync(command);
+    }
+
+    /// <summary>
+    /// Keeps the pane's apply button in step with its command.
+    ///
+    /// It carries a shorter caption than the menu entry, and not for tidiness: a
+    /// button measures at least as wide as its own text, so a pane holding the
+    /// menu's full sentence could not be dragged narrower than that sentence. The
+    /// sentence is not lost — it is the button's tooltip, along with the reason
+    /// when the command is refused, which is the one place a disabled control can
+    /// still explain itself.
+    ///
+    /// The count stays in the caption. A reviewer is about to put their name on
+    /// that many declarations, and reading how many before pressing is the whole
+    /// of what this control owes them.
+    /// </summary>
+    private void RefreshReviewButton()
+    {
+        if (_applyReviewButton is not { IsDisposed: false } button)
+            return;
+
+        if (_commands.Find(CodeCommandNames.ApplyUnitReview) is not { } command)
+            return;
+
+        int count = _commands.WritableUnitCount;
+        button.Text = command.IsEnabled
+            ? string.Create(CultureInfo.InvariantCulture, $"Apply to all {count}")
+            : "Apply to all";
+        button.IsEnabled = command.IsEnabled;
+        button.ToolTipText = command.Reason is { Length: > 0 } reason
+            ? $"{command.Text} — {reason}"
+            : command.Text;
     }
 
     /// <summary>
@@ -1434,8 +1606,11 @@ public sealed class CodeShell : IDisposable
     private async ValueTask RecordPickedStatusAsync(string command)
     {
         await InvokeAsync(command).ConfigureAwait(true);
-        if (!_disposed)
-            SyncReviewStatusInput();
+        if (_disposed)
+            return;
+
+        SyncReviewStatusInput();
+        SyncReviewUnitInput();
     }
 
     /// <summary>
@@ -1711,6 +1886,32 @@ public sealed class CodeShell : IDisposable
 
         assurance.Reviewer = Reviewer;
         AssuranceActionResult result = sign ? assurance.Approve() : assurance.Withdraw();
+
+        SetStatus(result.Message);
+        RefreshCommands();
+        return result.Succeeded;
+    }
+
+    /// <summary>
+    /// Writes the reviewer's name onto every declaration in the file that is
+    /// still waiting for one.
+    ///
+    /// Synchronous and through the buffer, exactly like signing a single
+    /// declaration, so it is one undo step and the reviewer sees the whole change
+    /// before anything is saved — which is the review this button asks them to
+    /// stand behind. The status line reports what it did to each kind of
+    /// declaration, including the ones it left alone.
+    /// </summary>
+    private bool ApplyUnitReview()
+    {
+        if (_assurance is not { } assurance)
+        {
+            SetStatus("This host does not compose the Human Review pane.");
+            return false;
+        }
+
+        assurance.Reviewer = Reviewer;
+        AssuranceActionResult result = assurance.ApproveAll();
 
         SetStatus(result.Message);
         RefreshCommands();

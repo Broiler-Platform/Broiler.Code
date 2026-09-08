@@ -7,6 +7,7 @@ using Broiler.Code.Workspaces.Model;
 using Broiler.Code.Workspaces.Storage;
 using Broiler.Code.Workspaces.Text;
 using Broiler.Graphics;
+using Broiler.UI.Button;
 using Broiler.UI.Button.Standard;
 using Broiler.UI.CodeEditor;
 using Broiler.UI.CodeEditor.Standard;
@@ -642,6 +643,167 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         shell.Dispose();
     }
 
+    /// <summary>
+    /// A source marked with human review records a decision per declaration, so
+    /// the pane's picker has to be about the declaration the reviewer is in
+    /// rather than about the file.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task The_Declaration_Picker_Follows_The_Caret()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        UiComboBox picker = controls.ReviewUnitInput!;
+
+        PutCaretOn(controls, 13);
+        Assert.True(picker.IsEnabled);
+        Assert.Equal("Declaration: needs human review", picker.SelectedItem!.Text);
+
+        // Line 0 is the namespace: no declaration, so nothing to decide about.
+        PutCaretOn(controls, 0);
+        Assert.False(picker.IsEnabled);
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// Picking a state writes it, and picking the other one takes it back — the
+    /// per-declaration counterpart of the file's own picker, driving the same
+    /// two commands the Review menu does.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task The_Declaration_Picker_Records_The_State_It_Names()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        SourceDocument document = await OpenThingAsync(shell, workspace);
+        PutCaretOn(controls, 13);
+
+        UiComboBox picker = controls.ReviewUnitInput!;
+        picker.SelectIndex(IndexOf(picker, CodeCommandNames.ApproveUnit));
+
+        Assert.Contains(
+            "    // Broiler-Human:        Enrico\n",
+            document.Buffer.Current.ToString(),
+            StringComparison.Ordinal);
+        Assert.Equal("Declaration: reviewed", picker.SelectedItem!.Text);
+
+        picker.SelectIndex(IndexOf(picker, CodeCommandNames.WithdrawUnit));
+
+        Assert.Contains(
+            "    // Broiler-Human:        PENDING\n",
+            document.Buffer.Current.ToString(),
+            StringComparison.Ordinal);
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// The button the reviewer presses once they have read the file: every
+    /// declaration still waiting for a human line gets one, in a single edit.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task Applying_To_All_Signs_Every_Declaration_In_The_File()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        SourceDocument document = await OpenThingAsync(shell, workspace);
+
+        // Deliberately nowhere near a declaration: this is a statement about the
+        // file, so unlike the two single-unit commands it does not read the caret.
+        PutCaretOn(controls, 0);
+
+        Assert.True(await shell.InvokeAsync(CodeCommandNames.ApplyUnitReview));
+
+        string text = document.Buffer.Current.ToString();
+        Assert.Contains("// Broiler-Human:        Enrico\n", text, StringComparison.Ordinal);
+        Assert.Contains("    // Broiler-Human:        Enrico\n", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("PENDING", text, StringComparison.Ordinal);
+
+        // A name and never a fingerprint, however many declarations it wrote.
+        Assert.DoesNotContain("Enrico; Fingerprint", text, StringComparison.Ordinal);
+
+        // And the pane says what happened. Signing is not verifying — the
+        // fingerprint that verifies is the owning component's to write — so the
+        // reviewed count stays where it was, and a summary that said only that
+        // would read as though the button had done nothing.
+        Assert.Equal(
+            "0 of 2 reviewed, 2 signed and awaiting a fingerprint",
+            controls.Review!.DataSource!.GetPresentation(new TreeNodeId("group:units")).SecondaryLabel);
+
+        // One gesture, one undo step.
+        Assert.True(document.Buffer.Undo());
+        Assert.Equal(AnnotatedSource, document.Buffer.Current.ToString());
+
+        shell.Dispose();
+    }
+
+    /// <summary>
+    /// The button reads how many declarations it is about to put the reviewer's
+    /// name on, and refuses with a reason on a file that has none.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task The_Apply_Button_Counts_What_It_Would_Sign()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        UiButton button = ApplyButton(controls);
+        Assert.True(button.IsEnabled);
+        Assert.Equal("Apply to all 2", button.Text);
+        Assert.Contains("Apply Human Review", button.ToolTipText, StringComparison.Ordinal);
+
+        await OpenAsync(shell, workspace, "src/Beta.cs");
+
+        Assert.False(button.IsEnabled);
+        Assert.Equal("Apply to all", button.Text);
+        Assert.Contains("no Broiler Code Assurance annotations", button.ToolTipText, StringComparison.Ordinal);
+
+        shell.Dispose();
+    }
+
+    /// <summary>An approval with nobody's name on it is not evidence, in bulk as much as singly.</summary>
+    [Fact(Timeout = 600000)]
+    public async Task Applying_To_All_Needs_A_Reviewer()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell(reviewer: string.Empty);
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        SourceDocument document = await OpenThingAsync(shell, workspace);
+
+        CodeCommand command = shell.Commands.Find(CodeCommandNames.ApplyUnitReview)!;
+        Assert.Equal(CommandAvailability.Disabled, command.Availability);
+        Assert.Contains("Set a reviewer name first", command.Reason!, StringComparison.Ordinal);
+
+        Assert.False(await shell.InvokeAsync(CodeCommandNames.ApplyUnitReview));
+        Assert.Equal(AnnotatedSource, document.Buffer.Current.ToString());
+
+        shell.Dispose();
+    }
+
+    private static UiButton ApplyButton(CodeShellControls controls) =>
+        controls.ReviewPane!.Children
+            .OfType<UiButton>()
+            .Single(button => button.CommandName == CodeCommandNames.ApplyUnitReview);
+
+    private static int IndexOf(UiComboBox picker, string commandName)
+    {
+        for (int index = 0; index < picker.Items.Count; index++)
+        {
+            if (picker.Items[index].Id == commandName)
+                return index;
+        }
+
+        throw new InvalidOperationException($"The picker carries no entry for {commandName}.");
+    }
+
     private static void PutCaretOn(CodeShellControls controls, int line)
     {
         ICodeTextSnapshot snapshot = controls.Editor.Snapshot;
@@ -743,6 +905,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
             ReviewSplitter = new StandardSplitter(),
             ReviewNoteInput = new StandardEdit(),
             ReviewNoteKindInput = withPicker ? new StandardComboBox() : null,
+            ReviewUnitInput = new StandardComboBox(),
             Status = new StandardLabel(),
             Output = new StandardLabel(),
             CreateButton = () => new StandardButton(),

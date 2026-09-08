@@ -71,6 +71,11 @@ internal static class CodeShellFactory
             // reviewed on a row that did nothing, and the four decisions it
             // pointed at lived only in the Review menu.
             ReviewStatusInput = new StandardComboBox { PreferredSize = new BSize(320, 26) },
+
+            // And the decision for the declaration the caret is in. An annotated
+            // file records a review per declaration rather than one for the file,
+            // so this is the picker that matches what such a file actually holds.
+            ReviewUnitInput = new StandardComboBox { PreferredSize = new BSize(320, 26) },
             Status = new StandardLabel { Text = "Ready" },
             Output = new StandardLabel { Text = string.Empty },
             CreateButton = () => new StandardButton(),

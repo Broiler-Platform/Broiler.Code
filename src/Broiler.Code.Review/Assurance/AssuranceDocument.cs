@@ -44,6 +44,32 @@ public readonly record struct AssuranceEditResult(
 }
 
 /// <summary>
+/// The result of signing a whole file's declarations at once: the new text, and
+/// what happened to each declaration counted by kind.
+///
+/// The counts are the point of the type. One sentence saying "signed" over a
+/// file where four declarations were left carrying somebody else's name would be
+/// a reviewer believing they had finished a file they had not, and the four
+/// kinds are four different things a reviewer may want to go and look at.
+/// </summary>
+/// <param name="Signed">Declarations this call wrote the reviewer's name onto.</param>
+/// <param name="AlreadyRecorded">Declarations whose line already said exactly that.</param>
+/// <param name="OtherReviewer">Declarations left alone because somebody else's name is on them.</param>
+/// <param name="NotApplicable">Exempt declarations, and those carrying no annotation to write on.</param>
+public readonly record struct AssuranceApplyResult(
+    AssuranceEditOutcome Outcome,
+    string Text,
+    string Message,
+    bool HeaderUpdated,
+    int Signed,
+    int AlreadyRecorded,
+    int OtherReviewer,
+    int NotApplicable)
+{
+    public bool Succeeded => Outcome == AssuranceEditOutcome.Applied;
+}
+
+/// <summary>
 /// One source file, read as the assurance system reads it: a generated header,
 /// and a sequence of code units each carrying what a machine assessed and what a
 /// human has said.
@@ -273,6 +299,137 @@ public sealed class AssuranceDocument
 
         return Rewrite(unit, annotation, ApprovalBody(unit, reviewer), Approved(unit, reviewer));
     }
+
+    /// <summary>
+    /// Records <paramref name="reviewer"/> against every declaration in the file
+    /// that is waiting for a human line, as one rewrite.
+    ///
+    /// This is a bulk act by a person, not an automatic one, and the distinction
+    /// is the whole of why it is allowed to exist: it writes a name, never a
+    /// fingerprint, so it cannot produce <c>VERIFIED</c> any more than signing one
+    /// declaration can. What it does compress is the reviewer's own attention —
+    /// one gesture standing for every declaration in the file — which is the same
+    /// claim the file-level <c>Mark Reviewed</c> already makes, recorded at the
+    /// granularity the format asks for.
+    ///
+    /// It fills the lines that are empty and touches nothing else. A declaration
+    /// carrying somebody else's name is left exactly as it is: replacing it is a
+    /// deliberate act about one declaration, which <see cref="Approve"/> is for,
+    /// and doing it silently across a file would overwrite other people's reviews
+    /// by the dozen. Exempt and unannotated declarations are counted and skipped,
+    /// because the format wants no human line on either.
+    ///
+    /// The header is recounted once at the end rather than per declaration, so a
+    /// file signed in one gesture produces one header, not one per unit.
+    /// </summary>
+    public AssuranceApplyResult ApproveAll(string reviewer)
+    {
+        if (!AssuranceVocabulary.IsWritableReviewer(reviewer))
+        {
+            return RefusedAll(
+                AssuranceEditOutcome.NoReviewer,
+                reviewer is null || reviewer.Trim().Length == 0
+                    ? "Set a reviewer name before signing a file — an approval with no name is not evidence."
+                    : $"'{reviewer.Trim()}' cannot be written as a reviewer: a name may not contain " +
+                      "';', '=' or '@', and has to have something visible in it.");
+        }
+
+        string name = reviewer.Trim();
+        int signed = 0;
+        int already = 0;
+        int others = 0;
+        int notApplicable = 0;
+
+        foreach (AssuranceUnit unit in Units)
+        {
+            if (unit.IsExempt || unit.Annotation is not { } annotation)
+            {
+                notApplicable++;
+                continue;
+            }
+
+            // Their reading and their approval, of a version this person has not
+            // spoken about. Signing one declaration replaces it on purpose; a
+            // sweep across a file must not.
+            if (annotation.Reviewer is { } existing &&
+                !string.Equals(existing, name, StringComparison.Ordinal))
+            {
+                others++;
+                continue;
+            }
+
+            string line = annotation.RenderHumanLine(ApprovalBody(unit, name));
+            if (string.Equals(_lines[annotation.HumanLine], line, StringComparison.Ordinal))
+            {
+                already++;
+                continue;
+            }
+
+            // Safe to hold every annotation's line index across the loop: this
+            // replaces a line's text and never inserts or removes one, so no
+            // index below it moves.
+            _lines.Replace(annotation.HumanLine, line);
+            signed++;
+        }
+
+        if (signed == 0)
+        {
+            return RefusedAll(
+                Units.Count == 0 ? AssuranceEditOutcome.NotAnnotated : AssuranceEditOutcome.NothingToDo,
+                Describe(0, already, others, notApplicable),
+                already,
+                others,
+                notApplicable);
+        }
+
+        bool header = RecountBanner();
+        string message = Describe(signed, already, others, notApplicable);
+
+        return new AssuranceApplyResult(
+            AssuranceEditOutcome.Applied,
+            _lines.Render(),
+            header ? message + " The file header was recounted." : message,
+            header,
+            signed,
+            already,
+            others,
+            notApplicable);
+    }
+
+    /// <summary>
+    /// One sentence for the status line, naming only the counts that are not
+    /// zero. A report that always lists four numbers is one nobody reads.
+    /// </summary>
+    private static string Describe(int signed, int already, int others, int notApplicable)
+    {
+        var builder = new StringBuilder();
+        builder.Append(signed switch
+        {
+            0 => "No declaration needed a human line",
+            1 => "Signed 1 declaration",
+            _ => string.Create(CultureInfo.InvariantCulture, $"Signed {signed} declarations"),
+        });
+
+        Append(already, "already recorded");
+        Append(others, "left to their own reviewer");
+        Append(notApplicable, "exempt or unannotated");
+
+        return builder.Append('.').ToString();
+
+        void Append(int count, string what)
+        {
+            if (count > 0)
+                builder.Append(string.Create(CultureInfo.InvariantCulture, $"; {count} {what}"));
+        }
+    }
+
+    private AssuranceApplyResult RefusedAll(
+        AssuranceEditOutcome outcome,
+        string message,
+        int already = 0,
+        int others = 0,
+        int notApplicable = 0) =>
+        new(outcome, _lines.Render(), message, false, 0, already, others, notApplicable);
 
     /// <summary>
     /// Puts <paramref name="unit"/> back to pending.

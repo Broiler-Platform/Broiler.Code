@@ -44,6 +44,16 @@ public static class CodeCommandNames
     // doing both would be one entry making two claims.
     public const string ApproveUnit = "code.review.unit.approve";
     public const string WithdrawUnit = "code.review.unit.withdraw";
+
+    /// <summary>
+    /// Signs every declaration in the file that is still waiting for a human
+    /// line. Separate from <see cref="ApproveUnit"/> rather than a modifier on
+    /// it, because it is a different claim about a different thing — one
+    /// declaration the reviewer is looking at, against every declaration in the
+    /// file — and a command that quietly meant either would be one nobody could
+    /// be sure of before pressing it.
+    /// </summary>
+    public const string ApplyUnitReview = "code.review.unit.applyAll";
 }
 
 public enum CommandAvailability
@@ -126,6 +136,13 @@ public sealed class CodeCommandSet
 
     /// <summary>Set when the caret is inside a declaration carrying an assurance annotation.</summary>
     public bool HasAnnotatedUnit { get; set; }
+
+    /// <summary>
+    /// How many declarations in the open file a reviewer could sign. Drives the
+    /// whole-file command, which unlike the two above does not care where the
+    /// caret is — only whether the file has anything to write on.
+    /// </summary>
+    public int WritableUnitCount { get; set; }
 
     /// <summary>
     /// Why there is no unit to act on, when there is not. Supplied by the shell
@@ -244,6 +261,11 @@ public sealed class CodeCommandSet
             Unit(CodeCommandNames.ApproveUnit, "Sign Unit as Reviewed", 'U'),
             Unit(CodeCommandNames.WithdrawUnit, "Withdraw Unit Signature", 'W'),
 
+            // The whole file at once. It needs a name, like signing one unit,
+            // and something to write on — but not a caret in a declaration,
+            // because it is a statement about all of them.
+            ApplyAll(),
+
             HasReview
                 ? new CodeCommand(
                     CodeCommandNames.ReviewCoverage, "Review Coverage",
@@ -324,6 +346,45 @@ public sealed class CodeCommandSet
         }
 
         return new CodeCommand(name, text, CommandAvailability.Enabled, AccessKey: accessKey);
+    }
+
+    /// <summary>
+    /// Signing every declaration in the file.
+    ///
+    /// The text carries the count, so the reviewer reads how many declarations
+    /// they are about to put their name on before they press it rather than
+    /// afterwards. That is the one mitigation available for a bulk attestation,
+    /// and it costs a word.
+    /// </summary>
+    private CodeCommand ApplyAll()
+    {
+        const string Name = CodeCommandNames.ApplyUnitReview;
+        const char Key = 'A';
+
+        if (!HasReview)
+            return NoReview(Name, "Apply Human Review to All", Key);
+
+        if (!HasReviewer)
+        {
+            return new CodeCommand(
+                Name, "Apply Human Review to All", CommandAvailability.Disabled,
+                "Set a reviewer name first — a signature has to say whose it is.", Key);
+        }
+
+        if (WritableUnitCount <= 0)
+        {
+            return new CodeCommand(
+                Name, "Apply Human Review to All", CommandAvailability.Disabled,
+                AssuranceUnitReason ?? "This file has no declaration a reviewer can sign.", Key);
+        }
+
+        return new CodeCommand(
+            Name,
+            string.Create(
+                System.Globalization.CultureInfo.InvariantCulture,
+                $"Apply Human Review to All {WritableUnitCount}"),
+            CommandAvailability.Enabled,
+            AccessKey: Key);
     }
 
     private static CodeCommand NoReview(string name, string text, char accessKey) =>

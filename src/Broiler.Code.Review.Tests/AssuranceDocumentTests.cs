@@ -399,6 +399,138 @@ public sealed class Thing
         Assert.NotNull(document.Units[1].Annotation);
     }
 
+    /// <summary>
+    /// The whole file in one gesture: every declaration still waiting for a
+    /// human line gets one, and nothing else in the file moves.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Applying_To_All_Signs_Every_Waiting_Declaration()
+    {
+        AssuranceDocument document = AssuranceDocument.Read(Source);
+
+        AssuranceApplyResult result = document.ApproveAll("EB");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(2, result.Signed);
+        Assert.Equal(0, result.AlreadyRecorded);
+        Assert.Equal(0, result.OtherReviewer);
+        Assert.DoesNotContain(AssuranceVocabulary.Pending, result.Text, StringComparison.Ordinal);
+        Assert.Equal(2, Occurrences(result.Text, "// Broiler-Human:        EB"));
+
+        // The machine's lines are untouched, which is the half of the block this
+        // editor has no business writing.
+        Assert.Equal(2, Occurrences(result.Text, "// Broiler-AI:"));
+        Assert.Contains("Fingerprint=BBBBBB", result.Text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The name and nothing else, on every line it writes. A whole-file gesture
+    /// that stamped a fingerprint would be the one thing the policy says no
+    /// automatic step may do, multiplied by the size of the file.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Applying_To_All_Writes_No_Fingerprint()
+    {
+        string after = AssuranceDocument.Read(Source).ApproveAll("EB").Text;
+
+        foreach (string line in after.Split('\n'))
+        {
+            if (line.Contains(AssuranceVocabulary.HumanMarker, StringComparison.Ordinal))
+                Assert.DoesNotContain("Fingerprint=", line, StringComparison.Ordinal);
+        }
+
+        Assert.All(
+            AssuranceDocument.Read(after).Units,
+            unit => Assert.Equal(AssuranceUnitState.HumanApprovedPendingFingerprint, unit.State));
+    }
+
+    /// <summary>
+    /// Somebody else's approval is their reading of a version this reviewer has
+    /// not spoken about. Signing one declaration replaces it deliberately; a
+    /// sweep across a file must not overwrite reviews by the dozen.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Applying_To_All_Leaves_Another_Reviewers_Line_Alone()
+    {
+        AssuranceDocument first = AssuranceDocument.Read(Source);
+        AssuranceDocument signed = AssuranceDocument.Read(first.Approve(first.Units[0], "AV").Text);
+
+        AssuranceApplyResult result = signed.ApproveAll("EB");
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(1, result.Signed);
+        Assert.Equal(1, result.OtherReviewer);
+        Assert.Contains("// Broiler-Human:        AV", result.Text, StringComparison.Ordinal);
+        Assert.Contains("// Broiler-Human:        EB", result.Text, StringComparison.Ordinal);
+        Assert.Contains("left to their own reviewer", result.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>Running it twice changes nothing and says so.</summary>
+    [Fact(Timeout = 600000)]
+    public void Applying_To_All_Twice_Reports_Nothing_To_Do()
+    {
+        string after = AssuranceDocument.Read(Source).ApproveAll("EB").Text;
+
+        AssuranceApplyResult again = AssuranceDocument.Read(after).ApproveAll("EB");
+
+        Assert.False(again.Succeeded);
+        Assert.Equal(AssuranceEditOutcome.NothingToDo, again.Outcome);
+        Assert.Equal(0, again.Signed);
+        Assert.Equal(2, again.AlreadyRecorded);
+        Assert.Equal(after, again.Text);
+    }
+
+    /// <summary>An approval with nobody's name on it is not evidence, in bulk as much as singly.</summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("a;b")]
+    [InlineData("a=b")]
+    [InlineData("a@b")]
+    [InlineData(AssuranceVocabulary.Pending)]
+    public void Applying_To_All_Refuses_A_Name_The_Format_Cannot_Carry(string reviewer)
+    {
+        AssuranceApplyResult result = AssuranceDocument.Read(Source).ApproveAll(reviewer);
+
+        Assert.Equal(AssuranceEditOutcome.NoReviewer, result.Outcome);
+        Assert.Equal(0, result.Signed);
+        Assert.Equal(2, Occurrences(result.Text, "// Broiler-Human:        PENDING"));
+    }
+
+    /// <summary>
+    /// A file the reviewer has no business writing on reports that, rather than
+    /// producing a rewrite with nothing in it.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Applying_To_All_On_An_Unannotated_File_Reports_It()
+    {
+        AssuranceApplyResult result = AssuranceDocument
+            .Read("namespace Sample;\n\npublic sealed class Plain { }\n")
+            .ApproveAll("EB");
+
+        Assert.Equal(AssuranceEditOutcome.NotAnnotated, result.Outcome);
+        Assert.Equal(0, result.Signed);
+    }
+
+    /// <summary>
+    /// A file whose lines end differently has to come back ending the same way.
+    /// Rewriting every human line in one pass is the change most likely to
+    /// normalize a file by accident, and a normalized file is a whole-file diff
+    /// that invalidates every other reviewer's content hash on the way past.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Applying_To_All_Keeps_Every_Line_Ending()
+    {
+        string mixed = Source
+            .Replace("\n", "\r\n", StringComparison.Ordinal)
+            .Replace("public sealed class Thing\r\n", "public sealed class Thing\n", StringComparison.Ordinal);
+
+        string after = AssuranceDocument.Read(mixed).ApproveAll("EB").Text;
+
+        Assert.Contains("public sealed class Thing\n{", after, StringComparison.Ordinal);
+        Assert.Equal(Occurrences(mixed, "\r\n"), Occurrences(after, "\r\n"));
+    }
+
     private static int Occurrences(string text, string value)
     {
         int count = 0;

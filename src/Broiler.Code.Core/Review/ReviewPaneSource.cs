@@ -258,6 +258,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
 
         int relevant = 0;
         int reviewed = 0;
+        int signed = 0;
         foreach (AssuranceUnit unit in assurance.Units)
         {
             if (unit.IsExempt)
@@ -266,12 +267,25 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             relevant++;
             if (unit.State == AssuranceUnitState.Verified)
                 reviewed++;
+            else if (unit.State == AssuranceUnitState.HumanApprovedPendingFingerprint)
+                signed++;
         }
+
+        // Signed units are counted apart from verified ones rather than folded
+        // in, and are said out loud rather than left to be discovered by
+        // expanding the group. A reviewer who has just put their name on every
+        // declaration in the file would otherwise read "0 of 4 reviewed" and
+        // conclude nothing happened — where what actually happened is the whole
+        // of what a person can do, and the remaining step is the owning
+        // component's generator sealing each one with a fingerprint.
+        string counted = string.Create(CultureInfo.InvariantCulture, $"{reviewed} of {relevant} reviewed");
+        if (signed > 0)
+            counted += string.Create(CultureInfo.InvariantCulture, $", {signed} signed and awaiting a fingerprint");
 
         var group = new Row(
             UnitsGroup,
             "Units",
-            string.Create(CultureInfo.InvariantCulture, $"{reviewed} of {relevant} reviewed"),
+            counted,
             "notes",
             TreeNodeDecoration.None);
 
