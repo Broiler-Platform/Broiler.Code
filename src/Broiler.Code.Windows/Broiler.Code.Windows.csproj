@@ -24,6 +24,20 @@
   <ItemGroup>
     <Compile Include="..\Broiler.App\WindowsClipboard.cs" Link="WindowsClipboard.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Broiler.Graphics.Windows" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Button.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.CodeEditor.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.ComboBox.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Edit.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Label.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Menu.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Panel.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Splitter.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.TabView.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Toolbar.Standard" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.TreeView.Standard" Version="0.1.0-preview.4" />
+  </ItemGroup>
 
   <!--
     A thin head: the window, the platform services, and nothing else. Shell and
@@ -46,21 +60,6 @@
     -->
     <ProjectReference Include="..\Broiler.Code.Language.CSharp.Roslyn\Broiler.Code.Language.CSharp.Roslyn.csproj" />
     <ProjectReference Include="..\Broiler.Code.Core\Broiler.Code.Core.csproj" />
-    <ProjectReference Include="..\..\Broiler.Graphics\src\Broiler.Graphics.Windows\Broiler.Graphics.Direct2D.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Text\Broiler.UI.CodeEditor.Standard\Broiler.UI.CodeEditor.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\ValueAndSelection\Broiler.UI.TreeView.Standard\Broiler.UI.TreeView.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Layout\Broiler.UI.TabView.Standard\Broiler.UI.TabView.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Layout\Broiler.UI.Panel.Standard\Broiler.UI.Panel.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Layout\Broiler.UI.Splitter.Standard\Broiler.UI.Splitter.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Commands\Broiler.UI.Button.Standard\Broiler.UI.Button.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\ValueAndSelection\Broiler.UI.ComboBox.Standard\Broiler.UI.ComboBox.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Commands\Broiler.UI.Menu.Standard\Broiler.UI.Menu.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Commands\Broiler.UI.Toolbar.Standard\Broiler.UI.Toolbar.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Content\Broiler.UI.Label.Standard\Broiler.UI.Label.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Implementations\Standard\Text\Broiler.UI.Edit.Standard\Broiler.UI.Edit.Standard.csproj" />
-    <ProjectReference Include="..\..\Broiler.Input\src\Broiler.Input.Keyboard\Broiler.Input.Keyboard.csproj" />
-    <ProjectReference Include="..\..\Broiler.Input\src\Broiler.Input.Mouse\Broiler.Input.Mouse.csproj" />
-    <ProjectReference Include="..\..\Broiler.Input\src\Broiler.Input.Text\Broiler.Input.Text.csproj" />
   </ItemGroup>
 
 </Project>

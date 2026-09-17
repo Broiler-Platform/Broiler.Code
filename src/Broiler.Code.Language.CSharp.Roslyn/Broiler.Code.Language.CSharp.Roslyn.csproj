@@ -22,6 +22,7 @@
       Raising this pin is a reviewed change, not a routine bump: the language
       service and the build worker have to agree about what the language means.
     -->
+    <PackageReference Include="Broiler.UI.CodeEditor" Version="0.1.0-preview.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
   </ItemGroup>
 
@@ -32,7 +33,6 @@
     payload measurements produced.
   -->
   <ItemGroup>
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Text\Broiler.UI.CodeEditor\Broiler.UI.CodeEditor.csproj" />
 
     <!--
       The review model, for the assurance scanner alone. It is the only thing

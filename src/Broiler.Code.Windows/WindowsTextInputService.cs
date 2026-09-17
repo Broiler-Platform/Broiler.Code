@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Broiler.Graphics;
+using Broiler.Graphics.Geometry;
 using Broiler.UI;
 
 namespace Broiler.Code.Windows;

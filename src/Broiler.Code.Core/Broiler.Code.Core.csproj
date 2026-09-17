@@ -22,41 +22,40 @@
   <ItemGroup>
     <ProjectReference Include="..\Broiler.Code.Workspaces\Broiler.Code.Workspaces.csproj" />
     <ProjectReference Include="..\Broiler.Code.Review\Broiler.Code.Review.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Text\Broiler.UI.CodeEditor\Broiler.UI.CodeEditor.csproj" />
 
     <!--
       For the review pane's note-kind picker. The abstraction only: which control
       a head builds is still the head's decision, and a head that supplies none
       composes the pane exactly as it did before.
     -->
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\ValueAndSelection\Broiler.UI.ComboBox\Broiler.UI.ComboBox.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\ValueAndSelection\Broiler.UI.TreeView\Broiler.UI.TreeView.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Layout\Broiler.UI.TabView\Broiler.UI.TabView.csproj" />
     <!--
       Shell composition. Abstractions only: the head chooses implementations,
       which is what keeps the shell hostable anywhere and testable with none.
     -->
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Layout\Broiler.UI.Panel\Broiler.UI.Panel.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Layout\Broiler.UI.Splitter\Broiler.UI.Splitter.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Commands\Broiler.UI.Button\Broiler.UI.Button.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Commands\Broiler.UI.Menu\Broiler.UI.Menu.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Commands\Broiler.UI.Toolbar\Broiler.UI.Toolbar.csproj" />
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Content\Broiler.UI.Label\Broiler.UI.Label.csproj" />
     <!-- The review pane's note field. Single-line; see CodeShellControls.ReviewNoteInput. -->
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Text\Broiler.UI.Edit\Broiler.UI.Edit.csproj" />
     <!--
       Input and Graphics for the shared desktop input routing. Both are
       platform-neutral contract assemblies, not backends: a platform backend
       here would defeat the point of the heads being thin.
     -->
-    <ProjectReference Include="..\..\Broiler.Input\src\Broiler.Input.Keyboard\Broiler.Input.Keyboard.csproj" />
-    <ProjectReference Include="..\..\Broiler.Input\src\Broiler.Input.Mouse\Broiler.Input.Mouse.csproj" />
-    <ProjectReference Include="..\..\Broiler.Input\src\Broiler.Input.Text\Broiler.Input.Text.csproj" />
-    <ProjectReference Include="..\..\Broiler.Graphics\src\Broiler.Graphics\Broiler.Graphics.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Broiler.Code.Core.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Broiler.UI.Button" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.CodeEditor" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.ComboBox" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Edit" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Label" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Menu" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Panel" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Splitter" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.TabView" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Toolbar" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.TreeView" Version="0.1.0-preview.4" />
   </ItemGroup>
 
 </Project>

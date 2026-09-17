@@ -25,6 +25,7 @@ using Broiler.UI.Splitter;
 using Broiler.UI.TabView;
 using Broiler.UI.Toolbar;
 using Broiler.UI.TreeView;
+using Broiler.Graphics.Geometry;
 
 namespace Broiler.Code.Core.Shell;
 
