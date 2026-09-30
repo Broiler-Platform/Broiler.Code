@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   18
+// Annotated:        18/18
+// Exempt:           0
+// Human-reviewed:   0/18
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         14/4
+// Resource impact:  4/10 max
+// Unverified:       18
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,8 +26,12 @@ using Broiler.Code.Review.Assurance;
 namespace Broiler.Code.Review.Cli.Assurance;
 
 /// <summary>Why an assessments file was refused as a whole.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4A8D46
+// Broiler-Human:        PENDING
 internal sealed class AssuranceInputException : Exception
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=8537A3
+    // Broiler-Human:        PENDING
     public AssuranceInputException(string message)
         : base(message)
     {
@@ -18,6 +39,8 @@ internal sealed class AssuranceInputException : Exception
 }
 
 /// <summary>The entries of an assessments file, and those refused before any file was read.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=AD65B8
+// Broiler-Human:        PENDING
 internal sealed record AssessmentInput(
     IReadOnlyList<AssuranceAssessment> Entries,
     IReadOnlyList<AssuranceInsertEntryResult> Refused);
@@ -26,6 +49,8 @@ internal sealed record AssessmentInput(
 /// <param name="File">The file.</param>
 /// <param name="Candidates">Its units, classified. Empty when the file could not be read.</param>
 /// <param name="Problem">Why the file could not be read or scanned, or null.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=27C71F
+// Broiler-Human:        PENDING
 internal sealed record ListedFile(
     ComponentSourceFile File,
     IReadOnlyList<AssuranceCandidate> Candidates,
@@ -39,10 +64,19 @@ internal sealed record ListedFile(
 /// with LF line endings whatever the platform, so a file committed from one
 /// machine does not change on the next.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=007837
+// Broiler-Falsified-If: an assessments entry carrying a field for the human line is read into an assessment instead of refused
+// Broiler-Human:        PENDING
 internal static class AssuranceJson
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=294E7E
+    // Broiler-Falsified-If: the schema number written into a report differs from the one ReadAssessments accepts
+    // Broiler-Human:        PENDING
     public const int Schema = 1;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=62AFDF
+    // Broiler-Falsified-If: the list names a field for the human line, so an assessments entry can set it
+    // Broiler-Human:        PENDING
     private static readonly string[] AssessmentFields =
         ["file", "unit", "fingerprint", "origin", "spec", "ip", "security", "resources", "falsifiedIf", "exempt"];
 
@@ -56,6 +90,9 @@ internal static class AssuranceJson
     /// it does not define is refused rather than read around. That is what makes
     /// the input structurally unable to approve anything.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=04D3A0
+    // Broiler-Falsified-If: a document whose top-level object carries a property other than schema, assessments and $comment is read instead of refused
+    // Broiler-Human:        PENDING
     public static AssessmentInput ReadAssessments(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
@@ -132,6 +169,9 @@ internal static class AssuranceJson
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=E4100D
+    // Broiler-Falsified-If: an entry carrying a property the schema does not define, such as one named for the human line, comes back with no problem
+    // Broiler-Human:        PENDING
     private static (AssuranceAssessment Entry, string? Problem) ReadEntry(JsonElement element, int index)
     {
         var empty = new AssuranceAssessment { Index = index, File = string.Empty, Unit = string.Empty };
@@ -213,6 +253,9 @@ internal static class AssuranceJson
     /// so that a caller confirming that nothing is left can tell "nothing
     /// left" from "nothing matched".
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=4AA282
+    // Broiler-Falsified-If: a unit written under units is missing from the listed count in totals, so a caller reading zero stops with work left
+    // Broiler-Human:        PENDING
     public static string List(
         string component,
         ComponentSourceSet set,
@@ -294,10 +337,16 @@ internal static class AssuranceJson
     /// carry no block the owning component would attach, which is the work left
     /// to do; with <c>--all-units</c>, every unit.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=D07A82
+    // Broiler-Falsified-If: without --all-units, a relevant unit that carries no block is left out of the sequence
+    // Broiler-Human:        PENDING
     public static IEnumerable<AssuranceCandidate> Listed(ListedFile file, bool allUnits) =>
         allUnits ? file.Candidates : file.Candidates.Where(static candidate => candidate.IsRelevant && !candidate.IsAnnotated);
 
     /// <summary>The <c>assurance insert</c> report.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=C69A17
+    // Broiler-Falsified-If: an entry that was refused is counted among the applied entries
+    // Broiler-Human:        PENDING
     public static string InsertReport(IReadOnlyList<AssuranceInsertEntryResult> results, bool dryRun)
     {
         return Write(writer =>
@@ -328,6 +377,9 @@ internal static class AssuranceJson
     }
 
     /// <summary>The <c>assurance check</c> report: every violation, and a count per rule.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=4DBCE4
+    // Broiler-Falsified-If: violationCount differs from the number of objects written under violations
+    // Broiler-Human:        PENDING
     public static string CheckReport(
         string component, bool release, bool sourcesOnly, IReadOnlyList<AssuranceViolation> violations)
     {
@@ -373,6 +425,9 @@ internal static class AssuranceJson
         });
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=D7224A
+    // Broiler-Falsified-If: line or extent.startLine is written zero-based, one less than the line of the declaration in the file
+    // Broiler-Human:        PENDING
     private static void WriteUnit(Utf8JsonWriter writer, ListedFile file, AssuranceCandidate candidate)
     {
         AssuranceScannedUnit unit = candidate.Unit;
@@ -401,6 +456,9 @@ internal static class AssuranceJson
         writer.WriteEndObject();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=100B60
+    // Broiler-Falsified-If: a report written on Windows has CRLF line endings, or lacks its final newline
+    // Broiler-Human:        PENDING
     private static string Write(Action<Utf8JsonWriter> body)
     {
         var buffer = new MemoryStream();
@@ -419,9 +477,15 @@ internal static class AssuranceJson
 }
 
 /// <summary>Unit counts for a list report, for one file or all of them.</summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=DC9C5D
+// Broiler-Falsified-If: an exempt unit is counted as relevant or as unannotated
+// Broiler-Human:        PENDING
 internal readonly record struct ListTotals(
     int Files, int Units, int Relevant, int Exempt, int Annotated, int Unannotated, int Insertable, int Listed, int Unreadable)
 {
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=64D769
+    // Broiler-Falsified-If: an exempt unit is counted as relevant or as unannotated
+    // Broiler-Human:        PENDING
     public static ListTotals Of(IEnumerable<ListedFile> files, bool allUnits)
     {
         int count = 0, units = 0, relevant = 0, exempt = 0, annotated = 0, unannotated = 0, insertable = 0, listed = 0, unreadable = 0;
@@ -456,6 +520,9 @@ internal readonly record struct ListTotals(
         return new ListTotals(count, units, relevant, exempt, annotated, unannotated, insertable, listed, unreadable);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=F8C36B
+    // Broiler-Falsified-If: the per-file totals object carries a files count, or the overall totals object lacks one
+    // Broiler-Human:        PENDING
     public void Write(Utf8JsonWriter writer, bool includeFiles = true)
     {
         if (includeFiles)

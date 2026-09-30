@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   20
+// Annotated:        20/20
+// Exempt:           7
+// Human-reviewed:   0/20
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         12/0
+// Resource impact:  5/10 max
+// Unverified:       20
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +41,9 @@ namespace Broiler.Code.Core.Shell;
 /// rename keeps a node's expansion and selection. Folder rows have no identity
 /// of their own and are keyed by path, which is the only thing they are.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=1E9A8C
+// Broiler-Falsified-If: a source row is badged with the review state of a path other than its own item's, so a changed file shows a clean review badge
+// Broiler-Human:        PENDING
 public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposable
 {
     private readonly CodeWorkspace _workspace;
@@ -31,6 +51,8 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
     private bool _valid;
     private bool _disposed;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=C6AEC7
+    // Broiler-Human:        PENDING
     public SolutionExplorerSource(CodeWorkspace workspace)
     {
         _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
@@ -39,8 +61,12 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
         _workspace.DocumentClosed += OnDocumentClosed;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CFCEED
+    // Broiler-Human:        PENDING
     public event EventHandler<TreeDataChangedEventArgs>? DataChanged;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=9388D2
+    // Broiler-Human:        PENDING
     public TreeNodeId Root => new("root");
 
     /// <summary>
@@ -56,6 +82,9 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
     public Func<string, Broiler.Code.Review.ReviewState>? ReviewStateOf { get; set; }
 
     /// <summary>The workspace item a node stands for, or None for a grouping node.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=F3DE22
+    // Broiler-Falsified-If: a file row returns the item of a different file, so activating it opens another document
+    // Broiler-Human:        PENDING
     public WorkspaceItemId ItemFor(TreeNodeId node)
     {
         EnsureBuilt();
@@ -63,6 +92,9 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
     }
 
     /// <summary>The ancestors of a node, outermost first, for RevealNode.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=188468
+    // Broiler-Falsified-If: a parent chain that revisits a node makes AncestorsOf loop without end
+    // Broiler-Human:        PENDING
     public IReadOnlyList<TreeNodeId> AncestorsOf(TreeNodeId node)
     {
         EnsureBuilt();
@@ -79,6 +111,9 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
     }
 
     /// <summary>Finds the node standing for a workspace item.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=E9006E
+    // Broiler-Falsified-If: an item that has a row maps to TreeNodeId.None or to another item's row
+    // Broiler-Human:        PENDING
     public TreeNodeId NodeFor(WorkspaceItemId item)
     {
         EnsureBuilt();
@@ -91,24 +126,36 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
         return TreeNodeId.None;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=33D5B0
+    // Broiler-Falsified-If: a folder row's child count differs from the number of folders and files placed under it
+    // Broiler-Human:        PENDING
     public int GetChildCount(TreeNodeId node)
     {
         EnsureBuilt();
         return _nodes.TryGetValue(node.Value, out Node? found) ? found.Children.Count : 0;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=9691D2
+    // Broiler-Falsified-If: the child at an index of a folder row is a node recorded under a different folder
+    // Broiler-Human:        PENDING
     public TreeNodeId GetChild(TreeNodeId node, int index)
     {
         EnsureBuilt();
         return new TreeNodeId(_nodes[node.Value].Children[index]);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=DAB745
+    // Broiler-Falsified-If: a file row reports itself expandable
+    // Broiler-Human:        PENDING
     public bool CanExpand(TreeNodeId node)
     {
         EnsureBuilt();
         return _nodes.TryGetValue(node.Value, out Node? found) && found.Children.Count > 0;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=32A5F3
+    // Broiler-Falsified-If: a source row is badged with the review state of a path other than its own item's, so a changed file shows a clean review badge
+    // Broiler-Human:        PENDING
     public TreeNodePresentation GetPresentation(TreeNodeId node)
     {
         EnsureBuilt();
@@ -145,6 +192,8 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
         return new TreeNodePresentation(node, found.Label, secondary, found.IconKey, decoration);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=D98613
+    // Broiler-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -156,6 +205,8 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
     }
 
     /// <summary>Rebuilds from the workspace and tells the view.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=1C7BFE
+    // Broiler-Human:        PENDING
     public void Refresh()
     {
         _valid = false;
@@ -164,12 +215,21 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
 
     private void OnItemChanged(WorkspaceItem item) => Refresh();
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=5; Fingerprint=696657
+    // Broiler-Falsified-If: opening a document raises DataChanged for a row other than that document's
+    // Broiler-Human:        PENDING
     private void OnDocumentChanged(SourceDocument document) =>
         DataChanged?.Invoke(this, new TreeDataChangedEventArgs(NodeFor(document.Id)));
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=5; Fingerprint=C4BCA2
+    // Broiler-Falsified-If: closing a document raises DataChanged for a row other than that document's
+    // Broiler-Human:        PENDING
     private void OnDocumentClosed(WorkspaceItemId id) =>
         DataChanged?.Invoke(this, new TreeDataChangedEventArgs(NodeFor(id)));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=017862
+    // Broiler-Falsified-If: a row's recorded parent does not list it among its children, so AncestorsOf reveals it under a branch that does not show it
+    // Broiler-Human:        PENDING
     private void EnsureBuilt()
     {
         if (_valid)
@@ -251,6 +311,9 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
     /// invisible: opening a component directory produced a tree with nothing in
     /// it to review.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=C9856A
+    // Broiler-Falsified-If: an untitled buffer or a document opened through another grant is placed under the granted directory's folder rows
+    // Broiler-Human:        PENDING
     private void AddFolderTree(Node root)
     {
         var files = new List<WorkspaceItem>();
@@ -334,6 +397,8 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=581906
+    // Broiler-Human:        PENDING
     private static string FolderKey(string relativeDirectory) => $"folder:{relativeDirectory}";
 
     /// <summary>
@@ -344,6 +409,8 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
     /// or an Android document tree is an opaque token, and inventing a folder
     /// name out of one would be a guess shown to the user as a fact.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=C84CF8
+    // Broiler-Human:        PENDING
     private string RootLabel()
     {
         if (_workspace.Storage.GrantedRoots.Count == 0)
@@ -355,6 +422,8 @@ public sealed class SolutionExplorerSource : IObservableTreeDataSource, IDisposa
         return name.Length == 0 ? "Files" : name;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=6FA447
+    // Broiler-Human:        PENDING
     private sealed record Node(
         string Key,
         string? Parent,

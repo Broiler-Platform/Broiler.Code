@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   12
+// Annotated:        12/12
+// Exempt:           1
+// Human-reviewed:   0/12
+// IP risk:          Low
+// Security risk:    Critical
+// Criteria:         7/5
+// Resource impact:  7/10 max
+// Unverified:       12
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -19,6 +36,9 @@ namespace Broiler.Code.Windows;
 /// editor, the workspace, the shell — is built elsewhere; this decides which
 /// platform services back them.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=79386E
+// Broiler-Falsified-If: work posted by the analysis or review layers from a worker thread runs on that thread instead of being queued to the window dispatcher and drained on the message-loop thread
+// Broiler-Human:        PENDING
 [SupportedOSPlatform("windows7.0")]
 internal static class CodeHost
 {
@@ -26,6 +46,9 @@ internal static class CodeHost
     /// The service report without creating a window, so the support claim can
     /// be inspected on a machine with no display.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=0F1C9F
+    // Broiler-Falsified-If: a service this head backs with an in-process substitute is reported with native quality
+    // Broiler-Human:        PENDING
     public static HostServiceReport DescribeServices() => new("Broiler Code (Windows)",
     [
         new HostService(
@@ -50,6 +73,9 @@ internal static class CodeHost
             "the common dialogs, through comdlg32"),
     ]);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=D85FBC
+    // Broiler-Falsified-If: work posted by the analysis or review layers from a worker thread runs on that thread instead of being queued to the window dispatcher and drained on the message-loop thread
+    // Broiler-Human:        PENDING
     public static int Run(CodeWindow window, string? workspacePath = null)
     {
         ArgumentNullException.ThrowIfNull(window);
@@ -108,21 +134,37 @@ internal static class CodeHost
 /// standing in for it, so a missing clipboard is visible rather than silently
 /// working only inside this process.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Critical; Resources=7; Fingerprint=5E5342
+// Broiler-Falsified-If: clipboard text is served from a string held in this process rather than from the Win32 clipboard, so a missing clipboard reads as working
+// Broiler-Human:        PENDING
 [SupportedOSPlatform("windows7.0")]
 internal sealed class CodeUiHost(CodeWindow window) : IUiHost, IUiClipboardHost
 {
     private IUiClipboardHost? _clipboard;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=B1206E
+    // Broiler-Human:        PENDING
     public BSize ViewportSize => window.ClientSize;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7FEB0E
+    // Broiler-Human:        PENDING
     public double Scale => window.DpiScale;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=FF02F4
+    // Broiler-Human:        PENDING
     public void Attach(IUiClipboardHost? clipboard) => _clipboard = clipboard;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=516BFD
+    // Broiler-Human:        PENDING
     public BRenderList CreateRenderList(int capacity = 0) => new(capacity);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4E9908
+    // Broiler-Human:        PENDING
     public void Invalidate(UiInvalidation invalidation) => window.Invalidate();
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E72CAA
+    // Broiler-Falsified-If: a render list passed to Present is submitted to the window, so the same frame is painted twice
+    // Broiler-Human:        PENDING
     public void Present(BRenderList renderList)
     {
         // Presentation belongs to the window: it asks the session for a render
@@ -132,6 +174,9 @@ internal sealed class CodeUiHost(CodeWindow window) : IUiHost, IUiClipboardHost
         ArgumentNullException.ThrowIfNull(renderList);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Critical; Resources=7; Fingerprint=B03E24
+    // Broiler-Falsified-If: a paste with no clipboard attached returns true or text from an in-process store instead of false and an empty string
+    // Broiler-Human:        PENDING
     public bool TryGetText(out string text)
     {
         if (_clipboard is not null)
@@ -141,5 +186,8 @@ internal sealed class CodeUiHost(CodeWindow window) : IUiHost, IUiClipboardHost
         return false;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Critical; Resources=4; Fingerprint=B5EF0D
+    // Broiler-Falsified-If: text set while no clipboard is attached is kept in this process and later returned by TryGetText
+    // Broiler-Human:        PENDING
     public void SetText(string text) => _clipboard?.SetText(text);
 }

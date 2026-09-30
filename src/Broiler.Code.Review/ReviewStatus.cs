@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   8
+// Annotated:        8/8
+// Exempt:           9
+// Human-reviewed:   0/8
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         8/6
+// Resource impact:  0/10 max
+// Unverified:       8
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 
 namespace Broiler.Code.Review;
@@ -11,6 +28,9 @@ namespace Broiler.Code.Review;
 /// <see cref="ReviewState"/>, because a status a tool can silently change is a
 /// status a reviewer cannot be held to.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=864469
+// Broiler-Falsified-If: the zero member is not Unreviewed, so a status left at its default reads as a recorded decision
+// Broiler-Human:        PENDING
 public enum ReviewStatus
 {
     /// <summary>Nobody has looked at this file yet. The default for every file with no record.</summary>
@@ -58,6 +78,9 @@ public enum ReviewStatus
 /// invalidate a review that still describes the code — and a change that is
 /// reverted becomes current again, which is the honest answer.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=5B69A0
+// Broiler-Falsified-If: the zero member is Current, so a Reviewed state whose freshness was left at its default reports IsVerified as true
+// Broiler-Human:        PENDING
 public enum ReviewFreshness
 {
     /// <summary>No review has been recorded, so there is nothing to be stale.</summary>
@@ -93,12 +116,18 @@ public enum ReviewFreshness
 /// <param name="Status">What the reviewer recorded.</param>
 /// <param name="Freshness">How that record relates to the file as it is now.</param>
 /// <param name="OpenNotes">Notes still awaiting an answer, which keep a file visible after it is marked reviewed.</param>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=5F4BB4
+// Broiler-Falsified-If: a state with Status Reviewed and Freshness Stale, Unknown or NotReviewed reports IsVerified as true
+// Broiler-Human:        PENDING
 public readonly record struct ReviewState(
     ReviewStatus Status,
     ReviewFreshness Freshness,
     int OpenNotes = 0)
 {
     /// <summary>A file with no record at all.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=1109EB
+    // Broiler-Falsified-If: ReviewState.None reports IsVerified, IsStaleApproval or IsAttested as true
+    // Broiler-Human:        PENDING
     public static ReviewState None => new(ReviewStatus.Unreviewed, ReviewFreshness.NotReviewed);
 
     /// <summary>
@@ -106,10 +135,16 @@ public readonly record struct ReviewState(
     /// This is what the coverage number counts, and the deliberately strict
     /// reading: a stale approval is not an approval.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=6E7763
+    // Broiler-Falsified-If: a Question, InReview or NeedsChange state with Current freshness reports IsVerified as true
+    // Broiler-Human:        PENDING
     public bool IsVerified =>
         Status == ReviewStatus.Reviewed && Freshness == ReviewFreshness.Current;
 
     /// <summary>True when a reviewer approved this content but it has since changed.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=995F9F
+    // Broiler-Falsified-If: a Reviewed state with Stale freshness reports IsStaleApproval as false, so the stale check passes a changed file
+    // Broiler-Human:        PENDING
     public bool IsStaleApproval =>
         Status == ReviewStatus.Reviewed && Freshness == ReviewFreshness.Stale;
 
@@ -118,6 +153,9 @@ public readonly record struct ReviewState(
     /// open question has been looked at even though it is not approved, and
     /// reporting it as untouched would understate the work done.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=A13D2B
+    // Broiler-Falsified-If: an Unreviewed state reports IsAttested as true
+    // Broiler-Human:        PENDING
     public bool IsAttested => Status != ReviewStatus.Unreviewed;
 
     /// <summary>
@@ -125,6 +163,9 @@ public readonly record struct ReviewState(
     /// it is read in a terminal, in a Markdown table, and in a GitHub annotation
     /// as often as in the editor.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=D6D311
+    // Broiler-Falsified-If: a Reviewed state with Stale or Unknown freshness is labelled plain reviewed
+    // Broiler-Human:        PENDING
     public string ToDisplayString() => (Status, Freshness) switch
     {
         (ReviewStatus.Unreviewed, _) => "needs review",

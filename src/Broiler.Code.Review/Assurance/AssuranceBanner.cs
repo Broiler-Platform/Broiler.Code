@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   21
+// Annotated:        21/21
+// Exempt:           1
+// Human-reviewed:   0/21
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         17/8
+// Resource impact:  3/10 max
+// Unverified:       21
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,6 +35,9 @@ namespace Broiler.Code.Review.Assurance;
 /// <param name="Criteria">Units carrying a falsification criterion.</param>
 /// <param name="CriteriaRequired">Units whose security risk demands one.</param>
 /// <param name="MaxResources">The largest resource score any assessment states, or null.</param>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=13988C
+// Broiler-Falsified-If: a relevant unit in the Stale state is counted toward the header's reviewed numerator instead of the release-blocking count
+// Broiler-Human:        PENDING
 public readonly record struct AssuranceSummary(
     int Relevant,
     int Annotated,
@@ -57,6 +77,9 @@ public readonly record struct AssuranceSummary(
     /// decide what the header states. The invariant culture is used where the
     /// owning component uses the current one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=C6FB42
+    // Broiler-Falsified-If: a relevant unit in the Stale state is counted toward the header's reviewed numerator instead of the release-blocking count
+    // Broiler-Human:        PENDING
     public static AssuranceSummary Of(IEnumerable<AssuranceCorpusUnit> units)
     {
         ArgumentNullException.ThrowIfNull(units);
@@ -133,20 +156,41 @@ public readonly record struct AssuranceSummary(
 /// header, and therefore never touches it. See
 /// <see cref="AssuranceDocument.BannerIsReproducible"/>.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=D473DF
+// Broiler-Falsified-If: a comment below the header opening with '// Unverified:' is not reported as a summary line
+// Broiler-Human:        PENDING
 public static class AssuranceBanner
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=7156DE
+    // Broiler-Falsified-If: a file whose first line is '// SPDX-FileCopyrightText: 2026 Broiler Platform contributors' is treated as carrying no generated header
+    // Broiler-Human:        PENDING
     public const string SpdxCopyrightPrefix = "// SPDX-FileCopyrightText:";
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=E40FCE
+    // Broiler-Falsified-If: the marker line that closes a header Broiler.VM wrote is not recognised as the end of that header
+    // Broiler-Human:        PENDING
     public const string GeneratedMarker = "// GENERATED - DO NOT EDIT MANUALLY";
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=BBCDE0
+    // Broiler-Falsified-If: a second copy of the banner line pasted below the header is not counted as a duplicate banner
+    // Broiler-Human:        PENDING
     public const string Banner = "// Broiler Code Assurance";
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=59EB43
+    // Broiler-Falsified-If: the dashed rule line of a header Broiler.VM wrote is refused by the strip as a line the generator does not write
+    // Broiler-Human:        PENDING
     public const string BannerRule = "// ----------------------";
 
     /// <summary>The width every label is padded to, so every value starts in the same column.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=AA4B86
+    // Broiler-Falsified-If: rows are padded to a width other than the 18 characters Broiler.VM pads its labels to
+    // Broiler-Human:        PENDING
     public const int LabelWidth = 18;
 
     /// <summary>What a row reports when nothing in the file states a value for it.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0859F7
+    // Broiler-Falsified-If: a row with no stated value prints text other than the 'not assessed' Broiler.VM prints
+    // Broiler-Human:        PENDING
     public const string NotAssessed = "not assessed";
 
     /// <summary>
@@ -154,6 +198,9 @@ public static class AssuranceBanner
     /// value therefore starts at the same column, which is the only reason the
     /// block reads as a table.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=86E303
+    // Broiler-Falsified-If: a label longer than the padding width is cut short instead of being written whole
+    // Broiler-Human:        PENDING
     public static string Row(string label, string value)
     {
         ArgumentNullException.ThrowIfNull(label);
@@ -170,6 +217,8 @@ public static class AssuranceBanner
     /// disappears when it has nothing to say makes the reader work out whether
     /// the value was zero or the tool forgot.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=8447B3
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Render(AssuranceSummary summary, string copyright, string licence)
     {
         ArgumentNullException.ThrowIfNull(copyright);
@@ -183,6 +232,8 @@ public static class AssuranceBanner
     /// the SPDX lines of <paramref name="spdx"/>: one or more copyright lines
     /// and one licence line, for code that carries more than one holder.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=621C9F
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Render(AssuranceSummary summary, AssuranceSpdx spdx)
     {
         ArgumentNullException.ThrowIfNull(spdx);
@@ -194,6 +245,9 @@ public static class AssuranceBanner
     /// The SPDX lines of a header: one <c>// SPDX-FileCopyrightText:</c> line
     /// per holder, then one <c>// SPDX-License-Identifier:</c> line.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=3DD50B
+    // Broiler-Falsified-If: a copyright holder stated in the configuration is missing from the returned lines
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> SpdxLines(AssuranceSpdx spdx)
     {
         ArgumentNullException.ThrowIfNull(spdx);
@@ -207,12 +261,21 @@ public static class AssuranceBanner
     }
 
     /// <summary>The licence line's prefix.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=AFD5B4
+    // Broiler-Falsified-If: the licence line of a header Broiler.VM wrote is refused by the strip as a line the generator does not write
+    // Broiler-Human:        PENDING
     public const string SpdxLicensePrefix = "// SPDX-License-Identifier:";
 
     /// <summary>The prefix every SPDX line shares, which is how a header is recognized at all.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=5707F3
+    // Broiler-Falsified-If: a file opening with '// SPDX-License-Identifier: MIT' and no generated header gets a second header stacked above that line instead of a refusal
+    // Broiler-Human:        PENDING
     public const string SpdxPrefix = "// SPDX-";
 
     /// <summary>The nine row labels, in the order the block writes them.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=60C2A1
+    // Broiler-Falsified-If: a comment below the header opening with '// Unverified:' is not reported as a summary line
+    // Broiler-Human:        PENDING
     public static readonly IReadOnlyList<string> RowLabels =
     [
         "Relevant units:",
@@ -226,6 +289,9 @@ public static class AssuranceBanner
         "Unverified:",
     ];
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=2F8FED
+    // Broiler-Falsified-If: a row is left out of the block when its count is zero or its value is not stated
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<string> Render(AssuranceSummary summary, IReadOnlyList<string> spdxLines)
     {
         return
@@ -262,6 +328,9 @@ public static class AssuranceBanner
     /// comment is left alone, because a header this editor did not recognize is
     /// a header it must not delete.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=55C543
+    // Broiler-Falsified-If: a file whose leading comment run is broken by a code line before the marker reports a header that runs past that code line
+    // Broiler-Human:        PENDING
     public static int Length(AssuranceLines lines)
     {
         ArgumentNullException.ThrowIfNull(lines);
@@ -291,6 +360,9 @@ public static class AssuranceBanner
     /// the vocabulary does not name is ignored rather than ranked, so a typo
     /// cannot silently become the file's headline number.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=AA1B71
+    // Broiler-Falsified-If: a value outside the vocabulary, such as a misspelt Critcal, is reported as the file's worst value
+    // Broiler-Human:        PENDING
     public static string? Worst(
         IEnumerable<AssuranceAnnotation> assessed, string field, IReadOnlyList<string> vocabulary)
     {
@@ -314,9 +386,13 @@ public static class AssuranceBanner
         return worst < 0 ? null : vocabulary[worst];
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=469EDA
+    // Broiler-Human:        PENDING
     private static string Count(int value) =>
         value.ToString(CultureInfo.InvariantCulture);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=7656D5
+    // Broiler-Human:        PENDING
     private static string Fraction(int numerator, int denominator) =>
         string.Create(CultureInfo.InvariantCulture, $"{numerator}/{denominator}");
 }

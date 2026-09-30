@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   32
+// Annotated:        32/32
+// Exempt:           10
+// Human-reviewed:   0/32
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         25/0
+// Resource impact:  4/10 max
+// Unverified:       32
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -23,12 +40,25 @@ namespace Broiler.Code.Core.Review;
 /// every other review action, so there is still one path that writes a record
 /// and one place that decides whether a write is allowed.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=F1FB49
+// Broiler-Falsified-If: a Stale, New or Unknown unit is counted in the pane's reviewed total or given the Information decoration of a unit whose signature still matches its fingerprint
+// Broiler-Human:        PENDING
 public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=DC24BC
+    // Broiler-Human:        PENDING
     private const string StatusGroup = "group:status";
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=B8E44B
+    // Broiler-Human:        PENDING
     private const string NotesGroup = "group:notes";
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=2E7AF5
+    // Broiler-Human:        PENDING
     private const string UnitGroup = "group:unit";
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=1B7DFD
+    // Broiler-Human:        PENDING
     private const string UnitsGroup = "group:units";
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=FCE5F9
+    // Broiler-Human:        PENDING
     private const string ExemptGroup = "group:units.exempt";
 
     private readonly ReviewController _controller;
@@ -44,6 +74,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// files that carry no assurance annotations is the normal case, and the two
     /// sections it adds simply do not appear.
     /// </param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=9837B1
+    // Broiler-Falsified-If: a null controller is accepted and the first rebuild throws NullReferenceException instead of the constructor throwing ArgumentNullException
+    // Broiler-Human:        PENDING
     public ReviewPaneSource(ReviewController controller, AssuranceController? assurance = null)
     {
         _controller = controller ?? throw new ArgumentNullException(nameof(controller));
@@ -54,11 +87,19 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             _assurance.Changed += OnControllerChanged;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=CFCEED
+    // Broiler-Human:        PENDING
     public event EventHandler<TreeDataChangedEventArgs>? DataChanged;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=8F478C
+    // Broiler-Falsified-If: a row key equal to the root id makes GetChildCount answer that row with the group count
+    // Broiler-Human:        PENDING
     public TreeNodeId Root => new("review");
 
     /// <summary>The note a row stands for, or null for a heading or a status row.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=134AE9
+    // Broiler-Falsified-If: a heading, status or unit row returns a note, so activating it moves the caret to code the row does not describe
+    // Broiler-Human:        PENDING
     public AnchoredNote? NoteFor(TreeNodeId node)
     {
         EnsureBuilt();
@@ -69,18 +110,27 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// The code unit a row stands for, or null. Activating one of these rows is
     /// how a reviewer walks a file declaration by declaration.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=42A63A
+    // Broiler-Falsified-If: a row for one declaration returns the unit of another, so activating it moves the caret to the wrong declaration
+    // Broiler-Human:        PENDING
     public AssuranceUnit? UnitFor(TreeNodeId node)
     {
         EnsureBuilt();
         return _rows.TryGetValue(node.Value, out Row? row) ? row.Unit : null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=1C7BFE
+    // Broiler-Falsified-If: after a controller change the next query returns rows built for the previous file because the cache was not invalidated
+    // Broiler-Human:        PENDING
     public void Refresh()
     {
         _valid = false;
         DataChanged?.Invoke(this, new TreeDataChangedEventArgs(TreeNodeId.None));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=EC9767
+    // Broiler-Falsified-If: a node id with no row reports a nonzero child count
+    // Broiler-Human:        PENDING
     public int GetChildCount(TreeNodeId node)
     {
         EnsureBuilt();
@@ -89,14 +139,23 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         return _rows.TryGetValue(node.Value, out Row? row) ? row.Children.Count : 0;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=062381
+    // Broiler-Falsified-If: an index below GetChildCount for the same node throws or yields an id that has no row
+    // Broiler-Human:        PENDING
     public TreeNodeId GetChild(TreeNodeId node, int index)
     {
         EnsureBuilt();
         return new TreeNodeId(node.Value == Root.Value ? _groups[index] : _rows[node.Value].Children[index]);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=C07485
+    // Broiler-Falsified-If: a group with child rows reports that it cannot expand
+    // Broiler-Human:        PENDING
     public bool CanExpand(TreeNodeId node) => GetChildCount(node) > 0;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=0FA67C
+    // Broiler-Falsified-If: an id with no row throws instead of being presented under its own key
+    // Broiler-Human:        PENDING
     public TreeNodePresentation GetPresentation(TreeNodeId node)
     {
         EnsureBuilt();
@@ -105,6 +164,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             : new TreeNodePresentation(node, node.Value);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=D2D5E4
+    // Broiler-Falsified-If: after Dispose a Changed event from either controller still raises DataChanged
+    // Broiler-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -127,6 +189,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// relevant declaration carrying no assessment at all, and a state this build
     /// cannot establish.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=5CD55F
+    // Broiler-Falsified-If: a Stale or Unknown unit state maps to Information or None, the weight given to a signature whose fingerprint still matches
+    // Broiler-Human:        PENDING
     public static TreeNodeDecoration DecorationFor(AssuranceUnitState state) => state switch
     {
         AssuranceUnitState.New => TreeNodeDecoration.Error,
@@ -147,6 +212,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// stale approval and Error for a demanded change carry the right weight
     /// without inventing anything.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=4C572B
+    // Broiler-Falsified-If: a Reviewed record whose freshness is Unknown maps to Information, the same decoration as one whose content hash still matches
+    // Broiler-Human:        PENDING
     public static TreeNodeDecoration DecorationFor(ReviewState state) => state switch
     {
         { Status: ReviewStatus.NeedsChange } => TreeNodeDecoration.Error,
@@ -158,6 +226,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
 
     private void OnControllerChanged(object? sender, EventArgs e) => Refresh();
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=162AF5
+    // Broiler-Falsified-If: rows or groups from the previous build survive a rebuild because the tables are not cleared first
+    // Broiler-Human:        PENDING
     private void EnsureBuilt()
     {
         if (_valid)
@@ -186,6 +257,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// most files. A section that appeared everywhere saying "not applicable"
     /// would be noise on every other file in the workspace.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=BAAA62
+    // Broiler-Falsified-If: a machine line that repeats a key shows the later value on two rows while the annotation's Field lookup reads the first
+    // Broiler-Human:        PENDING
     private void BuildUnit()
     {
         if (_assurance is not { IsAnnotatedFile: true } assurance)
@@ -252,6 +326,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// declaration by declaration is the task this whole workspace exists for,
     /// and a list is what makes it a list of things to do rather than a hunt.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=8D6C63
+    // Broiler-Falsified-If: a Stale, New, Unknown or signed-without-fingerprint unit is counted in the 'of M reviewed' total, or an exempt unit is counted in M
+    // Broiler-Human:        PENDING
     private void BuildUnits()
     {
         if (_assurance is not { IsAnnotatedFile: true } assurance || assurance.Units.Count == 0)
@@ -340,6 +417,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// agreeing with the exemption and going to look at it — and a reviewer who
     /// cannot tell has to open the other tool's report to find out.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=BD3E89
+    // Broiler-Falsified-If: a non-exempt unit is summarised as exempt, or an exempt one shows its state text instead of its exemption
+    // Broiler-Human:        PENDING
     private static string UnitSummary(AssuranceUnit unit)
     {
         if (!unit.IsExempt)
@@ -364,6 +444,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// reading <c>exempt: SomeNewCase</c> is true and searchable, where "exempt"
     /// alone would have quietly dropped the answer.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=590B02
+    // Broiler-Falsified-If: a unit whose source states its own exemption reason is shown with the scanner's case text instead
+    // Broiler-Human:        PENDING
     private static string? ExemptionReason(AssuranceUnit unit)
     {
         if (unit.Annotation?.ExemptReason is { Length: > 0 } stated)
@@ -389,6 +472,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// A field key as a row label. The format's keys are terse because they are
     /// written inside a comment; a pane has room for the words.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=435DB7
+    // Broiler-Falsified-If: a key the table does not list is shown as something other than the key itself
+    // Broiler-Human:        PENDING
     private static string Humanize(string key) => key switch
     {
         "IP" => "IP risk",
@@ -399,6 +485,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         _ => key,
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=8FB5BB
+    // Broiler-Falsified-If: a record whose freshness is Stale is shown without the 'Changed since' warning row
+    // Broiler-Human:        PENDING
     private void BuildStatus()
     {
         FileReview review = _controller.CurrentReview;
@@ -437,6 +526,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             Add(group, "empty", "Nothing recorded yet", "mark it reviewed, or add a note");
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=BA11E2
+    // Broiler-Falsified-If: an orphaned or ambiguous note is listed without its warning row, so its line number reads as trustworthy
+    // Broiler-Human:        PENDING
     private void BuildNotes()
     {
         IReadOnlyList<AnchoredNote> notes = _controller.CurrentNotes;
@@ -488,6 +580,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=1F29C6
+    // Broiler-Falsified-If: an orphaned or ambiguous note is labelled with a line number or symbol instead of its anchor state
+    // Broiler-Human:        PENDING
     private static string PositionOf(AnchoredNote note) => note.Status switch
     {
         ReviewAnchorStatus.FileLevel => "whole file",
@@ -499,6 +594,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         _ => string.Create(CultureInfo.InvariantCulture, $"lines {note.StartLine + 1}–{note.EndLine + 1}"),
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=486417
+    // Broiler-Falsified-If: an unresolved Concern note gets Warning, Information or None instead of Error
+    // Broiler-Human:        PENDING
     private static TreeNodeDecoration NoteDecoration(AnchoredNote note)
     {
         if (note.Note.Resolution is not null)
@@ -512,6 +610,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         };
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=191384
+    // Broiler-Falsified-If: a Concern, Todo or Observation note is given the question icon
+    // Broiler-Human:        PENDING
     private static string KindIcon(ReviewNoteKind kind) => kind switch
     {
         ReviewNoteKind.Concern => "concern",
@@ -520,6 +621,9 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         _ => "question",
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=46C1C3
+    // Broiler-Falsified-If: a key that already has a row is replaced in the table and listed a second time under its parent
+    // Broiler-Human:        PENDING
     private void Add(
         Row parent,
         string key,
@@ -531,6 +635,8 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         parent.Children.Add(key);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=944ECD
+    // Broiler-Human:        PENDING
     private sealed record Row(
         string Key,
         string Label,

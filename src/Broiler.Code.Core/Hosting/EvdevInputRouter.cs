@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   13
+// Annotated:        13/13
+// Exempt:           7
+// Human-reviewed:   0/13
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         13/7
+// Resource impact:  1/10 max
+// Unverified:       13
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using Broiler.Graphics;
 using Broiler.Graphics.Geometry;
@@ -33,6 +50,9 @@ namespace Broiler.Code.Core.Hosting;
 /// It lives in Core rather than the head so it can be tested on any operating
 /// system — none of it needs a device, a display, or Linux.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=54F756
+// Broiler-Falsified-If: pointer updates from two threads interleave so that PointerPosition reports a coordinate outside the current viewport
+// Broiler-Human:        PENDING
 public sealed class EvdevInputRouter
 {
     private readonly object _gate = new();
@@ -44,6 +64,9 @@ public sealed class EvdevInputRouter
 
     public EvdevInputRouter(BSize viewport) => _viewport = viewport;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=58D12E
+    // Broiler-Falsified-If: a read during a concurrent move returns the X of one update together with the Y of another
+    // Broiler-Human:        PENDING
     public BPoint PointerPosition
     {
         get
@@ -58,6 +81,9 @@ public sealed class EvdevInputRouter
     /// afterwards a resize only clamps it — recentring on every resize would
     /// move the cursor out from under the user's hand.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=1420B9
+    // Broiler-Falsified-If: after the pointer has been placed, a resize to a smaller viewport leaves it beyond the new width or height minus one
+    // Broiler-Human:        PENDING
     public void SetViewport(BSize viewport)
     {
         if (viewport.Width <= 0 || viewport.Height <= 0)
@@ -84,6 +110,9 @@ public sealed class EvdevInputRouter
     /// cursor is. Preferred over accumulated motion when it is available: it
     /// keeps this pointer and the X11 cursor the user can see in agreement.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=AD971D
+    // Broiler-Falsified-If: an absolute position outside the viewport is emitted without being clamped to it
+    // Broiler-Human:        PENDING
     public UiInputEvent? SetAbsolutePointer(double x, double y, InputDeviceId device, long sequence)
     {
         lock (_gate)
@@ -112,6 +141,9 @@ public sealed class EvdevInputRouter
     }
 
     /// <summary>Relative device motion, accumulated into the tracked position.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=BD2522
+    // Broiler-Falsified-If: relative motion past the viewport edge yields a position below zero or above the extent minus one
+    // Broiler-Human:        PENDING
     public UiInputEvent FromMouseMove(MouseMoveEvent motion)
     {
         lock (_gate)
@@ -127,6 +159,9 @@ public sealed class EvdevInputRouter
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=11A5E4
+    // Broiler-Falsified-If: a button event that arrives before any motion is emitted at a position other than the viewport centre
+    // Broiler-Human:        PENDING
     public UiInputEvent FromMouseButton(MouseButtonEvent button)
     {
         lock (_gate)
@@ -143,6 +178,9 @@ public sealed class EvdevInputRouter
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=43AFDC
+    // Broiler-Falsified-If: a wheel event carrying Shift in its Modifiers is emitted with no modifiers
+    // Broiler-Human:        PENDING
     public UiInputEvent FromWheel(MouseWheelEvent wheel)
     {
         lock (_gate)
@@ -164,6 +202,9 @@ public sealed class EvdevInputRouter
     /// shortcuts and caret movement, the text drives insertion, and a head that
     /// sent only one of them would have either no typing or no shortcuts.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=26C213
+    // Broiler-Falsified-If: a KeyA press with Control held returns a text event alongside the key event
+    // Broiler-Human:        PENDING
     public (UiInputEvent Key, UiInputEvent? Text) FromKey(KeyboardKeyEvent key)
     {
         KeyboardKeyEvent normalized = key with
@@ -185,6 +226,9 @@ public sealed class EvdevInputRouter
     /// codes; a key arriving under an unexpected name is a shortcut that does
     /// nothing with no way to see why.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=3C89C9
+    // Broiler-Falsified-If: a name longer than four characters that starts with Key, such as Keypad, is shortened to a single character
+    // Broiler-Human:        PENDING
     public static string NormalizeKeyName(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
@@ -206,6 +250,9 @@ public sealed class EvdevInputRouter
     /// other layouts, dead keys, composition — needs a real input method, which
     /// is the gap this head reports rather than papers over.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=244F02
+    // Broiler-Falsified-If: a key pressed with Control, Alt or a Windows key held produces text
+    // Broiler-Human:        PENDING
     public static bool TryComposeText(KeyboardKeyEvent key, out string text)
     {
         text = string.Empty;
@@ -261,6 +308,9 @@ public sealed class EvdevInputRouter
         return text.Length > 0;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=3E4419
+    // Broiler-Falsified-If: Place moves a pointer that has already been placed
+    // Broiler-Human:        PENDING
     private void Place()
     {
         if (_pointerPlaced)
@@ -271,12 +321,18 @@ public sealed class EvdevInputRouter
         _pointerPlaced = true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=6D2F1D
+    // Broiler-Falsified-If: a value greater than extent minus one is returned above that bound
+    // Broiler-Human:        PENDING
     private static double Clamp(double value, double extent)
     {
         double max = Math.Max(0, extent - 1);
         return value < 0 ? 0 : value > max ? max : value;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=1AC1FD
+    // Broiler-Falsified-If: a shifted digit maps to a character other than the US-layout symbol on that key
+    // Broiler-Human:        PENDING
     private static char ShiftedDigit(char digit) => digit switch
     {
         '1' => '!',

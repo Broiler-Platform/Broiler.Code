@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   19
+// Annotated:        19/19
+// Exempt:           9
+// Human-reviewed:   0/19
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         17/2
+// Resource impact:  7/10 max
+// Unverified:       19
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +27,8 @@ namespace Broiler.Code.Workspaces.Projects;
 /// Which of the four mutation classes a construct falls into. Frozen by
 /// docs/architecture/broiler-code-project-mutations.md.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=2955E5
+// Broiler-Human:        PENDING
 public enum MutationClass
 {
     /// <summary>Read and round-tripped byte-identically; not offered for edit.</summary>
@@ -25,6 +44,8 @@ public enum MutationClass
     Unsupported,
 }
 
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F76646
+// Broiler-Human:        PENDING
 public sealed record ProjectConstruct(
     string Description,
     MutationClass Class,
@@ -40,6 +61,9 @@ public sealed record ProjectConstruct(
 /// IDE that reformats it on open makes every future diff unreadable, which is
 /// a worse outcome than not supporting the edit at all.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=B06DBD
+// Broiler-Falsified-If: a project file whose DOCTYPE declares an external entity gets the contents of the file or URL it names substituted into the parsed values
+// Broiler-Human:        PENDING
 public sealed class DeclaredProjectFile
 {
     private readonly string _text;
@@ -68,9 +92,15 @@ public sealed class DeclaredProjectFile
     /// applied around the unknown part, because "edit the bits I understood"
     /// is exactly how a construct gets half-rewritten.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=4CF2C0
+    // Broiler-Falsified-If: a project containing a Choose, Target or UsingTask element reports false, so AddProjectReference edits it
+    // Broiler-Human:        PENDING
     public bool HasUnsupportedConstructs =>
         Constructs.Any(construct => construct.Class == MutationClass.Unsupported);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=F5EDED
+    // Broiler-Falsified-If: a project file whose internal DTD expands its entities past ten million characters is parsed instead of failing with an XmlException
+    // Broiler-Human:        PENDING
     public static DeclaredProjectFile Parse(string relativePath, string text)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
@@ -86,8 +116,14 @@ public sealed class DeclaredProjectFile
     /// The original text, unchanged. A save that has applied no edit writes
     /// exactly what was read, down to the byte.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=B7515B
+    // Broiler-Falsified-If: the returned text differs from the text given to Parse although no edit was applied
+    // Broiler-Human:        PENDING
     public override string ToString() => _text;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=DF85CB
+    // Broiler-Falsified-If: a project with two unconditional PropertyGroups that each set TargetFramework reports the first value, although the build uses the later one
+    // Broiler-Human:        PENDING
     public IReadOnlyList<string> GetTargetFrameworks()
     {
         // Both spellings, in declared order. An unconditional group only: a
@@ -109,6 +145,9 @@ public sealed class DeclaredProjectFile
         return [];
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=789909
+    // Broiler-Falsified-If: a ProjectReference whose Include uses backslashes is returned with a backslash, so the duplicate check in AddProjectReference misses it
+    // Broiler-Human:        PENDING
     public IReadOnlyList<string> GetProjectReferences() =>
     [
         .. _document.Descendants()
@@ -124,6 +163,9 @@ public sealed class DeclaredProjectFile
     /// a property of the filesystem, not of this file, and only an evaluation
     /// can say what it is.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=A5F5AA
+    // Broiler-Falsified-If: a Compile Include holding a wildcard or a semicolon-separated list, such as '..\Shared\**\*.cs', is returned as one literal path
+    // Broiler-Human:        PENDING
     public IReadOnlyList<(string Include, string? Link)> GetExplicitCompileItems() =>
     [
         .. _document.Descendants()
@@ -140,6 +182,9 @@ public sealed class DeclaredProjectFile
     /// untouched by construction. It is refused outright when the project holds
     /// an unsupported construct.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=F92C92
+    // Broiler-Falsified-If: a project whose last ProjectReference sits in an ItemGroup with a Condition receives the new reference inside that conditional group
+    // Broiler-Human:        PENDING
     public ProjectEditResult AddProjectReference(string includePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(includePath);
@@ -177,6 +222,9 @@ public sealed class DeclaredProjectFile
         return ProjectEditResult.Applied(_text.Insert(closing, group));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=0BA5D2
+    // Broiler-Falsified-If: when the last ProjectReference element spans several lines, the returned offset falls inside that element, before its closing tag
+    // Broiler-Human:        PENDING
     private int FindProjectReferenceInsertionPoint()
     {
         // The line after the last ProjectReference element, found in the text
@@ -189,8 +237,14 @@ public sealed class DeclaredProjectFile
         return lineEnd < 0 ? -1 : lineEnd + 1;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=3; Fingerprint=D21237
+    // Broiler-Falsified-If: a file with CRLF line endings gets the inserted reference terminated by a bare LF
+    // Broiler-Human:        PENDING
     private string DetectNewLine() => _text.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=1A5BF5
+    // Broiler-Falsified-If: a file indented with tabs gets the new element indented with spaces
+    // Broiler-Human:        PENDING
     private string DetectIndent()
     {
         // Whatever the file already uses. Imposing two spaces on a file indented
@@ -208,11 +262,17 @@ public sealed class DeclaredProjectFile
         return "  ";
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=03B477
+    // Broiler-Falsified-If: a PropertyGroup nested in a Choose or Target, or one carrying a Condition, is returned as unconditional
+    // Broiler-Human:        PENDING
     private IEnumerable<XElement> UnconditionalPropertyGroups() =>
         _document.Root?.Elements()
             .Where(e => e.Name.LocalName == "PropertyGroup" && e.Attribute("Condition") is null)
         ?? [];
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=0A9D0F
+    // Broiler-Falsified-If: a double quote, an ampersand or an angle bracket in the include path survives unescaped in the inserted attribute
+    // Broiler-Human:        PENDING
     private static string Escape(string value) =>
         new StringBuilder(value)
             .Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;")
@@ -223,6 +283,9 @@ public sealed class DeclaredProjectFile
     /// the matrix in executable form; a construct not listed here is
     /// Unsupported by the escalation rule, not by omission.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=5469EB
+    // Broiler-Falsified-If: a project whose only construct outside the matrix is an unknown top-level element, such as ItemDefinitionGroup or ProjectExtensions, gets no Unsupported construct
+    // Broiler-Human:        PENDING
     private static List<ProjectConstruct> Classify(XDocument document)
     {
         var constructs = new List<ProjectConstruct>();
@@ -319,14 +382,23 @@ public sealed class DeclaredProjectFile
 /// because "nothing happened" is the least useful thing an IDE can tell
 /// someone who just clicked Add Reference.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=62DF41
+// Broiler-Falsified-If: a refused result reports Accepted true or carries new text
+// Broiler-Human:        PENDING
 public readonly record struct ProjectEditResult(
     bool Accepted,
     string? NewText,
     string? Code,
     string? Message)
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A9F88A
+    // Broiler-Falsified-If: a result made by Applied reports Accepted false or drops the new text
+    // Broiler-Human:        PENDING
     public static ProjectEditResult Applied(string newText) => new(true, newText, null, null);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F7BFFD
+    // Broiler-Falsified-If: a result made by Refused reports Accepted true or carries new text
+    // Broiler-Human:        PENDING
     public static ProjectEditResult Refused(string code, string message) =>
         new(false, null, code, message);
 }

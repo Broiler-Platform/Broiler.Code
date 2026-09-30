@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   13
+// Annotated:        13/13
+// Exempt:           1
+// Human-reviewed:   0/13
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         12/10
+// Resource impact:  7/10 max
+// Unverified:       13
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -25,6 +42,9 @@ namespace Broiler.Code.Review;
 /// touch the roots the user granted, and the same store works on a desktop
 /// filesystem, on Android's document tree, and over a browser directory handle.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=A6B16F
+// Broiler-Falsified-If: a record is written for a source path whose .. segments climb out of the workspace, placing the file outside .broiler-review
+// Broiler-Human:        PENDING
 public sealed class ReviewStore
 {
     /// <summary>
@@ -36,13 +56,22 @@ public sealed class ReviewStore
     /// <c>docs/architecture/broiler-code-review.md</c>. A review record that is
     /// not committed proves nothing to anyone but its author.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=13B8F2
+    // Broiler-Falsified-If: a record written by WriteAsync lands outside the directory ReadAllAsync walks, so it is never read back
+    // Broiler-Human:        PENDING
     public const string ReviewDirectory = ".broiler-review";
 
     /// <summary>The suffix appended to a source path to name its record.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=027EB4
+    // Broiler-Falsified-If: a record path built by RecordPathFor does not end with the suffix SourcePathFor requires, so ReadAllAsync skips the record
+    // Broiler-Human:        PENDING
     public const string RecordSuffix = ".review.json";
 
     private readonly IWorkspaceStorage _storage;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=85B656
+    // Broiler-Falsified-If: a null storage is accepted and the first read throws NullReferenceException instead of the constructor throwing ArgumentNullException
+    // Broiler-Human:        PENDING
     public ReviewStore(IWorkspaceStorage storage) =>
         _storage = storage ?? throw new ArgumentNullException(nameof(storage));
 
@@ -59,6 +88,9 @@ public sealed class ReviewStore
     /// already inside the review directory, so a record can never acquire a
     /// record of its own.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=88489F
+    // Broiler-Falsified-If: a source path whose .. segments climb out of the workspace, or one that normalizes to a path under .broiler-review/, gets a record path instead of null
+    // Broiler-Human:        PENDING
     public static string? RecordPathFor(string sourcePath)
     {
         ArgumentNullException.ThrowIfNull(sourcePath);
@@ -71,6 +103,9 @@ public sealed class ReviewStore
     }
 
     /// <summary>The source path a record path describes, or null when it is not a record path.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=B68AE4
+    // Broiler-Falsified-If: a path outside .broiler-review, or one without the .review.json suffix, is given a source path instead of null
+    // Broiler-Human:        PENDING
     public static string? SourcePathFor(string recordPath)
     {
         ArgumentNullException.ThrowIfNull(recordPath);
@@ -87,6 +122,9 @@ public sealed class ReviewStore
     }
 
     /// <summary>True when a path is inside the review directory.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=0BC6D8
+    // Broiler-Falsified-If: a path such as .broiler-review2/x.cs, which only begins with the directory name, is reported as a record path
+    // Broiler-Human:        PENDING
     public static bool IsRecordPath(string path) =>
         path.Equals(ReviewDirectory, StringComparison.Ordinal) ||
         path.StartsWith(ReviewDirectory + "/", StringComparison.Ordinal);
@@ -101,6 +139,9 @@ public sealed class ReviewStore
     /// corrupt record as "unreviewed" would erase a reviewer's work without
     /// telling anyone.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=0824A1
+    // Broiler-Falsified-If: a record file that exists but does not parse is returned as an empty Unreviewed record instead of a failure
+    // Broiler-Human:        PENDING
     public async ValueTask<StorageResult<FileReview>> ReadAsync(
         string sourcePath, CancellationToken cancellationToken = default)
     {
@@ -138,6 +179,9 @@ public sealed class ReviewStore
     /// anybody ever opened would make the directory as large as the source tree
     /// and tell a reader nothing.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=4F7F3A
+    // Broiler-Falsified-If: a record whose path climbs out of the workspace or normalizes under .broiler-review/ is written to storage instead of refused
+    // Broiler-Human:        PENDING
     public async ValueTask<StorageResult<bool>> WriteAsync(
         FileReview review, CancellationToken cancellationToken = default)
     {
@@ -195,6 +239,8 @@ public sealed class ReviewStore
     /// one failure mode this whole store exists to prevent, so it is a value the
     /// caller has to look at rather than a log line.
     /// </param>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=18FF22
+    // Broiler-Human:        PENDING
     public readonly record struct ReviewRecordSet(
         IReadOnlyDictionary<string, FileReview> Reviews,
         IReadOnlyList<StorageFailure> Unreadable);
@@ -211,6 +257,9 @@ public sealed class ReviewStore
     /// Records that could not be read are reported separately rather than
     /// dropped — see <see cref="ReviewRecordSet.Unreadable"/>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=170E96
+    // Broiler-Falsified-If: a record that fails to parse is dropped without an entry in Unreadable, so its file reads as unreviewed with no warning
+    // Broiler-Human:        PENDING
     public async ValueTask<ReviewRecordSet> ReadAllAsync(
         CancellationToken cancellationToken = default)
     {
@@ -220,6 +269,9 @@ public sealed class ReviewStore
         return new ReviewRecordSet(reviews, unreadable);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=7816B9
+    // Broiler-Falsified-If: a record in a nested subdirectory of .broiler-review is missing from the result or keyed by its record path instead of its source path
+    // Broiler-Human:        PENDING
     private async ValueTask CollectAsync(
         string directory,
         Dictionary<string, FileReview> into,
@@ -267,5 +319,8 @@ public sealed class ReviewStore
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=B64AA6
+    // Broiler-Falsified-If: a path that normalizes is returned in its unnormalized form
+    // Broiler-Human:        PENDING
     private static string NormalizeOrSelf(string path) => WorkspacePath.Normalize(path) ?? path;
 }

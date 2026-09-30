@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   57
+// Annotated:        57/57
+// Exempt:           11
+// Human-reviewed:   0/57
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         56/45
+// Resource impact:  6/10 max
+// Unverified:       57
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,6 +73,9 @@ namespace Broiler.Code.Language.CSharp.Assurance;
 /// That is why it sits in an assembly whose only package is Roslyn, apart from
 /// the language service and its UI dependencies.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=BB1981
+// Broiler-Falsified-If: under the owning component's predicate, a file with no directive, top-level statement, multi-line literal or repeated name yields a unit whose name, exemption answer or fingerprint differs from what the owning component's scanner reports for it
+// Broiler-Human:        PENDING
 public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
 {
     /// <summary>
@@ -66,6 +86,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// of its own — so a scanner using the defaults would leave shipping code
     /// out of every unit boundary and would agree with nobody.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=75F133
+    // Broiler-Falsified-If: a symbol a net10.0 build defines, or one of DEBUG, RELEASE and TRACE, is missing from the list, so code under it scans as disabled text that belongs to no unit
+    // Broiler-Human:        PENDING
     private static readonly string[] DefaultSymbols =
     [
         "NET",
@@ -89,12 +112,18 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         "TRACE",
     ];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=B30BF9
+    // Broiler-Falsified-If: the parameterless scanner or FingerprintOfFile parses under preprocessor symbols other than DefaultSymbols
+    // Broiler-Human:        PENDING
     private static readonly CSharpParseOptions DefaultParseOptions = OptionsFor(DefaultSymbols);
 
     private readonly CSharpParseOptions _parseOptions;
     private readonly AssuranceExemptionPredicate _predicate;
 
     /// <summary>A scanner parsing under <see cref="DefaultPreprocessorSymbols"/>, with the owning component's predicate.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=B10EBD
+    // Broiler-Falsified-If: the parameterless scanner applies the strict predicate instead of the owning component's
+    // Broiler-Human:        PENDING
     public CSharpAssuranceScanner()
         : this(null)
     {
@@ -113,6 +142,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// Which exemption predicate to apply. The owning component's by default,
     /// because the editor shows that component's files as its tools see them.
     /// </param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=FA2E25
+    // Broiler-Falsified-If: an empty symbol list is treated like null and parses under the default symbols instead of under none
+    // Broiler-Human:        PENDING
     public CSharpAssuranceScanner(
         IEnumerable<string>? preprocessorSymbols,
         AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent)
@@ -127,9 +159,15 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// The symbols the owning component parses under: every symbol a net10.0
     /// build defines, plus DEBUG, RELEASE and TRACE.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=81A57E
+    // Broiler-Falsified-If: the list it returns differs from the symbols the default parse options were built from
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> DefaultPreprocessorSymbols => DefaultSymbols;
 
     /// <inheritdoc/>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=6E1B5A
+    // Broiler-Falsified-If: a file of about 20,000 nested parentheses ends the process with a stack overflow while it is parsed instead of returning units or throwing
+    // Broiler-Human:        PENDING
     public IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -140,6 +178,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     }
 
     /// <summary>Parse options for one set of preprocessor symbols.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=C3F494
+    // Broiler-Falsified-If: the options it returns parse under a language version other than Latest, so a file using current syntax loses declarations to error recovery
+    // Broiler-Human:        PENDING
     internal static CSharpParseOptions OptionsFor(IEnumerable<string> preprocessorSymbols) =>
         CSharpParseOptions.Default
             .WithLanguageVersion(LanguageVersion.Latest)
@@ -150,6 +191,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// is pre-order and does not descend into trivia, so a type comes before its
     /// members and a declaration in disabled text is not found.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=FAC37C
+    // Broiler-Falsified-If: a member of a nested type, or a declaration inside a file-scoped namespace, is not yielded and so belongs to no unit
+    // Broiler-Human:        PENDING
     internal static IEnumerable<MemberDeclarationSyntax> CodeUnits(SyntaxNode root) =>
         root.DescendantNodes().OfType<MemberDeclarationSyntax>().Where(IsCodeUnit);
 
@@ -161,6 +205,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// Both scanners enumerate through here, so the editor and the command-line
     /// tool cannot name, bound or fingerprint a unit differently.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=25C70B
+    // Broiler-Falsified-If: two units of one file are returned under the same name
+    // Broiler-Human:        PENDING
     internal static IReadOnlyList<ScannedDeclaration> Units(SyntaxTree tree, AssuranceExemptionPredicate predicate)
     {
         SyntaxNode root = tree.GetRoot();
@@ -179,6 +226,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     }
 
     /// <summary>One unit as <see cref="IAssuranceUnitScanner"/> reports it, under its plain name.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=5A3822
+    // Broiler-Falsified-If: a declaration with attributes reports its start line at its first modifier or keyword instead of at its first attribute, so its block would land between the attribute and the declaration
+    // Broiler-Human:        PENDING
     private static AssuranceScannedUnit Describe(
         SyntaxTree tree, MemberDeclarationSyntax declaration, AssuranceExemptionPredicate predicate)
     {
@@ -210,6 +260,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// block goes above the first, and its fingerprint covers all of them,
     /// local functions included, because those are statements too.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=93C0F6
+    // Broiler-Falsified-If: editing a local function declared among a file's top-level statements leaves the top-level unit's fingerprint unchanged
+    // Broiler-Human:        PENDING
     private static ScannedDeclaration TopLevel(SyntaxTree tree, IReadOnlyList<GlobalStatementSyntax> statements)
     {
         FileLinePositionSpan first = tree.GetLineSpan(statements[0].Span);
@@ -247,6 +300,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// occurrence. A file where no name repeats keeps the plain names, which
     /// are the owning component's.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=04675B
+    // Broiler-Falsified-If: a unit whose plain name is not repeated in its file is renamed, so a manifest entry naming it no longer matches
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<ScannedDeclaration> Disambiguated(List<ScannedDeclaration> found)
     {
         HashSet<string> repeated = Repeated(found);
@@ -306,6 +362,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// The declaration kind in lower-case words. A type declaration Roslyn adds
     /// later (C# 14's extension block is one) is named by its own keyword.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=BD1553
+    // Broiler-Falsified-If: a record struct declaration is reported with the kind record
+    // Broiler-Human:        PENDING
     private static string KindOf(MemberDeclarationSyntax declaration) => declaration switch
     {
         RecordDeclarationSyntax record =>
@@ -346,6 +405,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// working tree of an LF blob would otherwise compute a different value
     /// from the same commit.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=F25577
+    // Broiler-Falsified-If: changing any token of a declaration, or code under an inactive #if branch inside it, leaves its fingerprint unchanged
+    // Broiler-Human:        PENDING
     public static string Fingerprint(SyntaxNode declaration)
     {
         ArgumentNullException.ThrowIfNull(declaration);
@@ -368,6 +430,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// the trivia before its first token is not its own (a block or a region
     /// above it) and is left out; for a whole file nothing is.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=F05AC3
+    // Broiler-Falsified-If: editing only a comment, whitespace or the annotation block above a declaration changes its token stream
+    // Broiler-Human:        PENDING
     public static string TokenStream(SyntaxNode declaration)
     {
         ArgumentNullException.ThrowIfNull(declaration);
@@ -383,6 +448,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// separator is not, so every file's stream ends with a space. It looks like
     /// a defect and is load-bearing: drop it and no file fingerprint matches.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=2EDB57
+    // Broiler-Falsified-If: one file checked out with CRLF line endings and with LF line endings gets two different file fingerprints
+    // Broiler-Human:        PENDING
     public static string FingerprintOfFile(string text, string path)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -391,6 +459,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         return Fingerprint(CSharpSyntaxTree.ParseText(text, DefaultParseOptions, path: path).GetRoot());
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=992CC1
+    // Broiler-Falsified-If: an edited declaration found by trying on average about 17 million token-level variants, such as a changed numeric literal, hashes to the same six characters as the original, so the decision recorded against that value still applies
+    // Broiler-Human:        PENDING
     private static string Hash(string stream)
     {
         byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(stream));
@@ -402,6 +473,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// leading trivia hides (directives and disabled text), except the first
     /// token's unless <paramref name="includeFirstLeading"/>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=76B8D7
+    // Broiler-Falsified-If: a directive or disabled text in the leading trivia of a declaration's second or later token is left out of its stream
+    // Broiler-Human:        PENDING
     private static string StreamOf(IEnumerable<SyntaxToken> tokens, bool includeFirstLeading)
     {
         var parts = new List<string>();
@@ -424,6 +498,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// tokens of each run of disabled text. Comments, whitespace and a
     /// directive's message text are not code and are not here.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=3C5CFB
+    // Broiler-Falsified-If: rewriting code inside an inactive #else branch within a method leaves the method's fingerprint unchanged
+    // Broiler-Human:        PENDING
     private static IEnumerable<string> HiddenCode(SyntaxTriviaList trivia)
     {
         foreach (SyntaxTrivia item in trivia)
@@ -445,6 +522,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     }
 
     /// <summary>A token's text with every line break inside it as LF.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=B4B560
+    // Broiler-Falsified-If: a verbatim or raw string that spans lines gets a different fingerprint in a CRLF checkout than in an LF checkout of the same commit
+    // Broiler-Human:        PENDING
     private static string Normalized(string text) =>
         text.Contains('\r', StringComparison.Ordinal)
             ? text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n')
@@ -459,6 +539,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// a type declaration in this sense and contributes everything: its members
     /// are its content, and the vocabulary is the reviewable thing.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=7FD968
+    // Broiler-Falsified-If: adding, removing or renaming a member of an enum leaves the enum's fingerprint unchanged
+    // Broiler-Human:        PENDING
     private static IEnumerable<SyntaxToken> Tokens(SyntaxNode declaration) => declaration switch
     {
         TypeDeclarationSyntax type => HeaderTokens(type),
@@ -471,6 +554,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// correct, and is why this takes while rather than searching for a brace it
     /// would then fail to find.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=B6F075
+    // Broiler-Falsified-If: changing a type's attributes, base list or type-parameter constraints leaves the type's fingerprint unchanged
+    // Broiler-Human:        PENDING
     private static IEnumerable<SyntaxToken> HeaderTokens(TypeDeclarationSyntax type) =>
         type.ChildNodesAndTokens()
             .TakeWhile(static child => !child.IsKind(SyntaxKind.OpenBraceToken))
@@ -492,6 +578,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// A namespace is deliberately absent. It declares nothing, and its leading
     /// trivia is where the generated file header lives.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=33CB75
+    // Broiler-Falsified-If: a declaration kind that carries executable code (a method, constructor, operator, conversion, indexer or event with accessors) is answered false and so belongs to no unit
+    // Broiler-Human:        PENDING
     private static bool IsCodeUnit(MemberDeclarationSyntax member) => member switch
     {
         MethodDeclarationSyntax or
@@ -529,6 +618,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// that reason after attaching the block, so there is one place that knows
     /// about annotations and one that knows about syntax.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=23CB77
+    // Broiler-Falsified-If: an expression-bodied method that calls another member of its type with a literal argument, such as Run(true), is reported exempt
+    // Broiler-Human:        PENDING
     private static AssuranceExemption ExemptionFor(MemberDeclarationSyntax declaration, bool strict)
     {
         // Case 6 — inside a marker type. A property of where the member lives
@@ -608,6 +700,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// A field whose value is the reviewable thing: const, or static readonly,
     /// and stating a value.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=EA2CF4
+    // Broiler-Falsified-If: a const or static readonly field with an initializer is answered not fixed and reported exempt as storage
+    // Broiler-Human:        PENDING
     private static bool IsFixedValue(FieldDeclarationSyntax field)
     {
         bool isConstant = field.Modifiers.Any(SyntaxKind.ConstKeyword);
@@ -630,6 +725,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// there. What is not inert is code that belongs to no other unit: a call,
     /// a lambda, an assignment, an object built from arguments.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=224F23
+    // Broiler-Falsified-If: under the strict predicate, an instance field whose initializer is a chain of about 20,000 binary operators ends the process with a stack overflow instead of being answered
+    // Broiler-Human:        PENDING
     private static bool IsInert(ExpressionSyntax? expression) => expression switch
     {
         null => true,
@@ -665,11 +763,17 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     };
 
     /// <summary>A <c>throw new X(...)</c> whose arguments and initializer are inert.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=CFDF20
+    // Broiler-Falsified-If: a throw expression whose exception is built from a call, such as throw new X(Describe()), is answered inert
+    // Broiler-Human:        PENDING
     private static bool ThrowsInertly(ExpressionSyntax expression) =>
         Unwrap(expression) is ThrowExpressionSyntax { Expression: BaseObjectCreationExpressionSyntax creation } &&
         (creation.ArgumentList is null || creation.ArgumentList.Arguments.All(static argument => IsInert(argument.Expression))) &&
         creation.Initializer is null;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=4CF9C4
+    // Broiler-Falsified-If: a property whose accessors return or assign a field whose name does not correspond to the property, such as Count returning _total, is answered trivial
+    // Broiler-Human:        PENDING
     private static bool IsTrivialProperty(BasePropertyDeclarationSyntax property)
     {
         string? name = SimpleNameOf(property);
@@ -713,11 +817,17 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// decision, and a decision is what this system exists to put in front of a
     /// person.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=3D126E
+    // Broiler-Falsified-If: an expression that calls, indexes or applies an operator to the corresponding member, such as _count + 1 or _items[0], is answered a corresponding member access
+    // Broiler-Human:        PENDING
     private static bool IsCorrespondingMemberAccess(ExpressionSyntax expression, string? name) =>
         name is not null &&
         IsSingleMemberAccess(expression) &&
         Corresponds(AssignedMemberName(expression), name);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=F310E9
+    // Broiler-Falsified-If: a setter that assigns anything other than the implicit value to the corresponding field, such as _count = value + 1, is answered a plain assignment
+    // Broiler-Human:        PENDING
     private static bool IsFieldAssignmentFromValue(ExpressionSyntax expression, string? name) =>
         expression is AssignmentExpressionSyntax assignment &&
         assignment.IsKind(SyntaxKind.SimpleAssignmentExpression) &&
@@ -730,6 +840,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// nothing corresponds to them and every borderline shape on them is
     /// answered relevant.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=0537AB
+    // Broiler-Falsified-If: a constructor, operator, indexer or destructor is given a simple name, so a body returning a same-named member is answered trivial
+    // Broiler-Human:        PENDING
     private static string? SimpleNameOf(MemberDeclarationSyntax declaration) => declaration switch
     {
         MethodDeclarationSyntax method => method.Identifier.ValueText,
@@ -746,6 +859,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// permutes two assignments is exactly the change this case would otherwise
     /// stop anyone from checking.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=F5A703
+    // Broiler-Falsified-If: a constructor that assigns a parameter to a member whose name does not correspond to it, such as _count = total, is answered parameter-assigning
+    // Broiler-Human:        PENDING
     private static bool AssignsParametersOnly(ConstructorDeclarationSyntax constructor)
     {
         // A chained constructor runs code this predicate is not looking at. An
@@ -811,6 +927,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     }
 
     /// <summary>The last identifier of <c>X</c>, <c>this.X</c> or <c>A.B.X</c>.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=40A850
+    // Broiler-Falsified-If: for x, this.x or A.B.x it yields something other than the last identifier x
+    // Broiler-Human:        PENDING
     private static string AssignedMemberName(ExpressionSyntax left) => Unwrap(left) switch
     {
         IdentifierNameSyntax identifier => identifier.Identifier.ValueText,
@@ -824,6 +943,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// a casing rule. Anything the convention does not cover is answered
     /// relevant.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=2203E1
+    // Broiler-Falsified-If: a property FooBar returning _foobar is answered corresponding although only a leading underscore and the first letter's case are the convention, so a property re-pointed at a field that differs only in inner letter case stays exempt
+    // Broiler-Human:        PENDING
     private static bool Corresponds(string member, string parameter) =>
         member.Length > 0 &&
         parameter.Length > 0 &&
@@ -833,6 +955,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
             StringComparison.OrdinalIgnoreCase);
 
     /// <summary>A name, a <c>this</c>, or a dotted chain of them. No call, no operator, no argument.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=7FC203
+    // Broiler-Falsified-If: an expression-bodied property returning a member access chain of about 20,000 segments ends the process with a stack overflow instead of being answered
+    // Broiler-Human:        PENDING
     private static bool IsSingleMemberAccess(ExpressionSyntax expression) => Unwrap(expression) switch
     {
         IdentifierNameSyntax => true,
@@ -851,6 +976,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// and a delegation that supplies a value is reviewed like any other. Only a
     /// member that hands its own arguments on unchanged decides nothing.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=ABA696
+    // Broiler-Falsified-If: an expression body forwarding its parameters to a method imported with using static, such as Kill(string path) calling Delete(path) from System.IO.File, is answered a delegation to its own type and reported exempt
+    // Broiler-Human:        PENDING
     private static bool IsDelegationToOwnMember(ExpressionSyntax expression, SyntaxNode declaration)
     {
         if (Unwrap(expression) is not InvocationExpressionSyntax invocation)
@@ -875,6 +1003,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         };
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=6BF7D2
+    // Broiler-Falsified-If: a literal argument, or an expression over a parameter such as path + suffix, is answered a forwarded parameter
+    // Broiler-Human:        PENDING
     private static bool IsForwardedParameter(ExpressionSyntax expression, SyntaxNode declaration)
     {
         ExpressionSyntax unwrapped = Unwrap(expression);
@@ -904,6 +1035,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
             parameter.Identifier.ValueText, identifier.Identifier.ValueText, StringComparison.Ordinal));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=CAE7B9
+    // Broiler-Falsified-If: an expression body returning a field or a computed value, such as _limit * 2, is answered constant
+    // Broiler-Human:        PENDING
     private static bool IsConstant(ExpressionSyntax expression) => Unwrap(expression) switch
     {
         LiteralExpressionSyntax => true,
@@ -914,9 +1048,15 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         _ => false,
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=08E5C9
+    // Broiler-Falsified-If: an expression body that throws an existing exception object, such as throw _error, is answered a throw of a new exception
+    // Broiler-Human:        PENDING
     private static bool IsThrowNew(ExpressionSyntax expression) =>
         Unwrap(expression) is ThrowExpressionSyntax { Expression: BaseObjectCreationExpressionSyntax };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=271DCC
+    // Broiler-Falsified-If: a method named other than ToString, GetHashCode or Equals, and not an operator or conversion, is answered true
+    // Broiler-Human:        PENDING
     private static bool IsOverrideOrOperator(MemberDeclarationSyntax declaration) => declaration switch
     {
         MethodDeclarationSyntax method =>
@@ -935,6 +1075,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// not a delegation to Equals, it is the opposite decision, and which way
     /// round it is is the whole content of an inequality operator.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=4206CB
+    // Broiler-Falsified-If: a ToString or GetHashCode whose expression body calls an outside API with a literal argument, such as Process.Start of a literal command followed by ToString(), is answered only-delegating and reported exempt
+    // Broiler-Human:        PENDING
     private static bool OnlyDelegates(MemberDeclarationSyntax declaration)
     {
         ExpressionSyntax? expression = ArrowBody(declaration) ?? SingleReturnedExpression(declaration);
@@ -961,6 +1104,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         return permitted && expression.DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>().Any();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=19406A
+    // Broiler-Falsified-If: a block-bodied member is given an arrow body, so a body of several statements is judged as a single expression
+    // Broiler-Human:        PENDING
     private static ExpressionSyntax? ArrowBody(MemberDeclarationSyntax declaration) => declaration switch
     {
         MethodDeclarationSyntax method => method.ExpressionBody?.Expression,
@@ -973,6 +1119,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         _ => null,
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=7B4228
+    // Broiler-Falsified-If: a block body with any statement before its return is answered as that return's expression
+    // Broiler-Human:        PENDING
     private static ExpressionSyntax? SingleReturnedExpression(MemberDeclarationSyntax declaration) =>
         declaration switch
         {
@@ -988,6 +1137,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// does. Strictly, a property initializer that runs code is also the
     /// source's, as a field's initializer always is.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=3436F1
+    // Broiler-Falsified-If: a record property with a block-bodied or expression-bodied accessor is answered compiler-supplied and reported exempt
+    // Broiler-Human:        PENDING
     private static bool SuppliesAnImplementation(MemberDeclarationSyntax declaration, bool strict)
     {
         if (ArrowBody(declaration) is not null)
@@ -1014,11 +1166,17 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
                 accessor.Body is not null || accessor.ExpressionBody is not null);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=941528
+    // Broiler-Falsified-If: an expression other than a parenthesized one, such as a cast or a checked expression, is unwrapped to its operand
+    // Broiler-Human:        PENDING
     private static ExpressionSyntax Unwrap(ExpressionSyntax expression) =>
         expression is ParenthesizedExpressionSyntax parenthesized
             ? Unwrap(parenthesized.Expression)
             : expression;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=4ECA50
+    // Broiler-Falsified-If: a declaration's containing types are yielded outermost first, so the record-member case judges a member by its outermost type
+    // Broiler-Human:        PENDING
     private static IEnumerable<BaseTypeDeclarationSyntax> ContainingTypes(SyntaxNode node) =>
         node.Ancestors().OfType<BaseTypeDeclarationSyntax>();
 
@@ -1034,6 +1192,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// only a repeated name needs: the containing types' type parameters, and
     /// an indexer's parameter types.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=84E669
+    // Broiler-Falsified-If: a member of a nested type is named without one of its enclosing types, or with them innermost first
+    // Broiler-Human:        PENDING
     private static string NameOf(MemberDeclarationSyntax declaration, bool detailed)
     {
         string owner = string.Join(
@@ -1060,6 +1221,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// make a CRLF tree and an LF tree name the unit differently. The owning
     /// component has no name that spans lines, so its names are unchanged.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=E87E2F
+    // Broiler-Falsified-If: a name whose parameter type spans lines keeps a line break or the indentation that followed it
+    // Broiler-Human:        PENDING
     private static string OneLine(string name)
     {
         if (name.AsSpan().IndexOfAny('\r', '\n') < 0)
@@ -1087,6 +1251,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         return line.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=334656
+    // Broiler-Falsified-If: a generic containing type is named without its type parameters when the detailed name is asked for
+    // Broiler-Human:        PENDING
     private static string TypeNameOf(BaseTypeDeclarationSyntax type) => type is TypeDeclarationSyntax generic
         ? generic.Identifier.ValueText + Generics(generic.TypeParameterList)
         : type.Identifier.ValueText;
@@ -1099,6 +1266,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// by the specifier would otherwise be indistinguishable in a report and
     /// unaddressable in a manifest.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=513EA2
+    // Broiler-Falsified-If: two members of one type differing only by an explicit interface specifier get the same member name
+    // Broiler-Human:        PENDING
     private static string MemberNameOf(MemberDeclarationSyntax declaration, bool detailed) => declaration switch
     {
         MethodDeclarationSyntax method =>
@@ -1132,11 +1302,17 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// overloads differing only by <c>out</c> are two units, and a name that
     /// dropped the keyword would make one of them unreachable.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=6A1E59
+    // Broiler-Falsified-If: a property, field or type declaration is given a parameter list in its name
+    // Broiler-Human:        PENDING
     private static string ParametersOf(MemberDeclarationSyntax declaration) =>
         declaration is BaseMethodDeclarationSyntax method
             ? "(" + ParameterTypes(method.ParameterList.Parameters) + ")"
             : string.Empty;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=B9F38A
+    // Broiler-Falsified-If: a parameter's ref, out, in or params modifier is dropped from its rendered type, so two overloads differing only by it share a name
+    // Broiler-Human:        PENDING
     private static string ParameterTypes(SeparatedSyntaxList<ParameterSyntax> parameters) =>
         string.Join(
             ", ",
@@ -1144,10 +1320,16 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
                 parameter.Modifiers.Select(static modifier => modifier.ValueText + " ")) +
                 (parameter.Type?.ToString() ?? "?")));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=9A8C64
+    // Broiler-Falsified-If: type parameters are rendered with a separator other than a bare comma, so a generic name differs from the owning component's
+    // Broiler-Human:        PENDING
     private static string Generics(TypeParameterListSyntax? parameters) => parameters is null
         ? string.Empty
         : "<" + string.Join(",", parameters.Parameters.Select(static p => p.Identifier.ValueText)) + ">";
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=6CF1F5
+    // Broiler-Falsified-If: an explicit interface implementation is named without its interface qualifier and the dot after it
+    // Broiler-Human:        PENDING
     private static string Explicit(ExplicitInterfaceSpecifierSyntax? specifier) =>
         specifier is null ? string.Empty : specifier.Name.ToString() + ".";
 
@@ -1156,6 +1338,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// owning component's, so a reader can hold the two against each other one
     /// line at a time.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CBFE6C
+    // Broiler-Falsified-If: a member name differs from the owning component's exemption reason identifier, so the reason shown for an exempt unit matches neither tool
+    // Broiler-Human:        PENDING
     private enum AssuranceExemption
     {
         None = 0,
@@ -1174,4 +1359,6 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
 /// One unit and the syntax it was read from: its declaration, or for the
 /// top-level unit the first statement, whose leading trivia holds its block.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=E9431D
+// Broiler-Human:        PENDING
 internal sealed record ScannedDeclaration(MemberDeclarationSyntax Declaration, AssuranceScannedUnit Unit, bool IsTopLevel);

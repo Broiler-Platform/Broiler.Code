@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   1
+// Annotated:        1/1
+// Exempt:           0
+// Human-reviewed:   0/1
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         1/1
+// Resource impact:  7/10 max
+// Unverified:       1
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,6 +34,9 @@ using Broiler.Code.Review.Cli.Assurance;
 // the project can publish beside its Test262 and WPT rates, and a warning when a
 // pull request changes a file somebody had already approved.
 
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=01FBE8
+// Broiler-Falsified-If: a stale review of Broiler.CSS/src/Broiler.CSS/Parsing/Tokenizer.cs is dropped from check's warnings when the changed-paths file lists only the Broiler.CSS gitlink
+// Broiler-Human:        PENDING
 if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
 {
     PrintUsage();

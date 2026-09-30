@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   20
+// Annotated:        20/20
+// Exempt:           4
+// Human-reviewed:   0/20
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         17/14
+// Resource impact:  6/10 max
+// Unverified:       20
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,6 +23,8 @@ using System.Linq;
 namespace Broiler.Code.Review.Assurance;
 
 /// <summary>Which of the generated artefacts one is.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=FAC5E3
+// Broiler-Human:        PENDING
 public enum AssuranceArtefactKind
 {
     /// <summary>A covered source file: its header and its annotation blocks.</summary>
@@ -27,10 +46,16 @@ public enum AssuranceArtefactKind
 /// <param name="Exists">Whether the file is there at all.</param>
 /// <param name="Current">Its text now; empty when it does not exist.</param>
 /// <param name="Desired">Its text as the generator would write it.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=C97211
+// Broiler-Falsified-If: an artefact that does not exist on disk reports IsCurrent true
+// Broiler-Human:        PENDING
 public sealed record AssuranceArtefact(
     string RelativePath, AssuranceArtefactKind Kind, bool Exists, string Current, string Desired)
 {
     /// <summary>True when the artefact is already what the generator would write.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=3794DB
+    // Broiler-Falsified-If: an artefact whose text on disk differs from the desired text only in its line endings reports IsCurrent true
+    // Broiler-Human:        PENDING
     public bool IsCurrent => Exists && string.Equals(Current, Desired, StringComparison.Ordinal);
 }
 
@@ -45,6 +70,8 @@ public sealed record AssuranceArtefact(
 /// False when the parser and the line model count lines differently, so no
 /// block could be read by line number. Such a file is left as it is.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E4B655
+// Broiler-Human:        PENDING
 public sealed record AssurancePlannedFile(
     AssuranceSource Source,
     AssuranceScannedFile Scan,
@@ -71,6 +98,9 @@ public sealed record AssurancePlannedFile(
 /// applied: the refused files are carried through unchanged, and writing the
 /// rest would leave a record that disagrees with them.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=938B0D
+// Broiler-Falsified-If: a plan with a refused file lists that file among Changes
+// Broiler-Human:        PENDING
 public sealed record AssurancePlan(
     AssuranceReportContext Context,
     IReadOnlyList<AssuranceArtefact> Artefacts,
@@ -80,6 +110,9 @@ public sealed record AssurancePlan(
     IReadOnlyList<AssuranceViolation> Problems)
 {
     /// <summary>The artefacts the generator would change or create.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=3E9313
+    // Broiler-Falsified-If: an artefact whose text on disk differs from its desired text is left out of Changes
+    // Broiler-Human:        PENDING
     public IEnumerable<AssuranceArtefact> Changes => Artefacts.Where(static artefact => !artefact.IsCurrent);
 }
 
@@ -104,12 +137,21 @@ public sealed record AssurancePlan(
 /// why, or leaves the comment where it is; nothing is written while any
 /// refusal stands.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=049625
+// Broiler-Falsified-If: Plan gives a file a desired text whose human line names an alias the line as read did not carry
+// Broiler-Human:        PENDING
 public static class AssuranceGenerator
 {
     /// <summary>The line a generated report, record or manifest carries, and a hand-written one does not.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=D36857
+    // Broiler-Falsified-If: the notice is not how the report, record and manifest renderers open their text, so a regenerated artefact reads as hand-written to IsGenerated
+    // Broiler-Human:        PENDING
     public const string GeneratedNotice = "GENERATED - DO NOT EDIT MANUALLY";
 
     /// <summary>Computes the plan. Reads nothing but its arguments and writes nothing.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=EBE9B5
+    // Broiler-Falsified-If: a plan in which a file was refused carries for that file a desired text other than the text as read
+    // Broiler-Human:        PENDING
     public static AssurancePlan Plan(AssuranceCorpus corpus, IAssuranceFileScanner scanner, AssuranceComponentConfig config)
     {
         ArgumentNullException.ThrowIfNull(corpus);
@@ -167,6 +209,9 @@ public static class AssuranceGenerator
     /// component-level artefact without it was written by a person, and the
     /// generator does not replace it unless told to adopt it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=25C109
+    // Broiler-Falsified-If: a text whose only notice line is its eleventh line is reported as generated
+    // Broiler-Human:        PENDING
     public static bool IsGenerated(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -182,6 +227,8 @@ public static class AssuranceGenerator
     }
 
     /// <summary>The <c>artefacts</c> property of the configuration that names an artefact of this kind.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=42208E
+    // Broiler-Human:        PENDING
     public static string ConfigKey(AssuranceArtefactKind kind) => kind switch
     {
         AssuranceArtefactKind.Report => "report",
@@ -199,6 +246,9 @@ public static class AssuranceGenerator
     /// 1, nothing on disk); a line saying that the file is missing follows,
     /// because an empty "on disk" does not say it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=E7400C
+    // Broiler-Falsified-If: a missing artefact is described without the line saying that it does not exist
+    // Broiler-Human:        PENDING
     public static string Describe(AssuranceArtefact artefact, string generateCommand)
     {
         ArgumentNullException.ThrowIfNull(artefact);
@@ -216,6 +266,9 @@ public static class AssuranceGenerator
     /// comparison of part of a file, and <paramref name="note"/>, when given,
     /// as a line of its own before the command.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=E22FEB
+    // Broiler-Falsified-If: a first difference at line 5 of a part compared at offset 10 is reported at a line other than 15
+    // Broiler-Human:        PENDING
     internal static string Describe(
         string path, string current, string desired, int lineOffset, string generateCommand, string? note = null)
     {
@@ -246,6 +299,9 @@ public static class AssuranceGenerator
     }
 
     /// <summary>The 1-based line of the first difference between two texts, or null.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=05B59E
+    // Broiler-Falsified-If: a desired text equal to the text on disk plus one more line returns null
+    // Broiler-Human:        PENDING
     internal static int? FirstDifference(string current, string desired)
     {
         var onDisk = new AssuranceLines(current);
@@ -263,6 +319,9 @@ public static class AssuranceGenerator
         return null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=CF0CB4
+    // Broiler-Falsified-If: a component artefact absent from the corpus is built with Exists true, or with the desired text as its current text
+    // Broiler-Human:        PENDING
     private static AssuranceArtefact Artefact(
         AssuranceCorpus corpus, string path, AssuranceArtefactKind kind, string desired)
     {
@@ -270,6 +329,9 @@ public static class AssuranceGenerator
         return new AssuranceArtefact(path, kind, exists, current ?? string.Empty, desired);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=50FC57
+    // Broiler-Falsified-If: a file whose code units or file fingerprint differ between the text as read and the desired text is planned with that desired text instead of refused
+    // Broiler-Human:        PENDING
     private static AssurancePlannedFile PlanFile(
         AssuranceSource source,
         IAssuranceFileScanner scanner,
@@ -372,6 +434,9 @@ public static class AssuranceGenerator
     /// one the generator must not rewrite, with the reason added to
     /// <paramref name="problems"/>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=FF9BF1
+    // Broiler-Falsified-If: a file with a human line that Refreshed or RefuseInventedApproval refuses comes back as text instead of null
+    // Broiler-Human:        PENDING
     private static string? Refresh(string text, IReadOnlyList<AssuranceCorpusUnit> units, List<AssuranceViolation> problems)
     {
         var lines = new AssuranceLines(text);
@@ -416,6 +481,9 @@ public static class AssuranceGenerator
     /// order. A block with no Fingerprint field does not get one: it stays
     /// assessed but unbound until someone adds the field.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=C74CFD
+    // Broiler-Falsified-If: a machine line with no fingerprint field comes back with one added
+    // Broiler-Human:        PENDING
     public static IEnumerable<AssuranceField> RefreshedFields(AssuranceAnnotation annotation, string currentFingerprint)
     {
         ArgumentNullException.ThrowIfNull(annotation);
@@ -427,11 +495,17 @@ public static class AssuranceGenerator
                 : field);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=57D97E
+    // Broiler-Falsified-If: a returned unit carries a file path or assembly other than the source's
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<AssuranceCorpusUnit> Units(
         AssuranceSource source, AssuranceLines lines, AssuranceScannedFile scan) =>
         [.. AssuranceCandidates.Classify(lines, scan)
             .Select(candidate => new AssuranceCorpusUnit(source.RelativePath, source.Assembly, candidate))];
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=EE73F6
+    // Broiler-Falsified-If: two scans whose units match in name and fingerprint but differ in exemption return null
+    // Broiler-Human:        PENDING
     private static string? ChangedCode(AssuranceScannedFile before, AssuranceScannedFile after, AssuranceLines lines)
     {
         if (after.LineCount != lines.Count)

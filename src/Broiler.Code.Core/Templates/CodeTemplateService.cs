@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   13
+// Annotated:        13/13
+// Exempt:           3
+// Human-reviewed:   0/13
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         9/3
+// Resource impact:  7/10 max
+// Unverified:       13
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,19 +24,28 @@ using Broiler.Code.Workspaces.Storage;
 
 namespace Broiler.Code.Core.Templates;
 
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=C99AEE
+// Broiler-Human:        PENDING
 public enum ProjectTemplateKind
 {
     ConsoleApplication,
     ClassLibrary,
 }
 
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=A50916
+// Broiler-Human:        PENDING
 public sealed record TemplateFile(string RelativePath, string Content);
 
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=7B4872
+// Broiler-Human:        PENDING
 public sealed record TemplateResult(
     bool Succeeded,
     IReadOnlyList<TemplateFile> Files,
     string? Message = null)
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=2858F7
+    // Broiler-Falsified-If: a result made by Fail reports Succeeded true or carries files that WriteAsync would write
+    // Broiler-Human:        PENDING
     public static TemplateResult Fail(string message) => new(false, [], message);
 }
 
@@ -32,10 +58,15 @@ public sealed record TemplateResult(
 /// here has to remain a workspace anyone can open with any tool, including
 /// after Broiler Code is uninstalled.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=3AC707
+// Broiler-Falsified-If: WriteAsync replaces a file that already existed at a planned path when the call began instead of refusing the plan
+// Broiler-Human:        PENDING
 public sealed class CodeTemplateService
 {
     private readonly IWorkspaceStorage _storage;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=398525
+    // Broiler-Human:        PENDING
     public CodeTemplateService(IWorkspaceStorage storage) =>
         _storage = storage ?? throw new ArgumentNullException(nameof(storage));
 
@@ -43,6 +74,9 @@ public sealed class CodeTemplateService
     /// The files a new solution consists of, without writing them, so a caller
     /// can preview or test the output.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=AD8446
+    // Broiler-Falsified-If: a project path containing a double quote or an angle bracket reaches the .slnx text without being turned into an entity
+    // Broiler-Human:        PENDING
     public static TemplateResult PlanSolution(string solutionName, IReadOnlyList<string> projectPaths)
     {
         if (!IsValidIdentifier(solutionName))
@@ -67,6 +101,9 @@ public sealed class CodeTemplateService
         return new TemplateResult(true, [new TemplateFile($"{solutionName}.slnx", builder.ToString())]);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=687E2D
+    // Broiler-Falsified-If: a project reference or target framework containing a double quote or an angle bracket adds markup to the generated project file
+    // Broiler-Human:        PENDING
     public static TemplateResult PlanProject(
         string projectName,
         ProjectTemplateKind kind,
@@ -116,6 +153,9 @@ public sealed class CodeTemplateService
         return new TemplateResult(true, files);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7243AF
+    // Broiler-Falsified-If: a namespace name containing a semicolon or a brace is written into the generated source verbatim, so the file declares code beyond the requested type
+    // Broiler-Human:        PENDING
     public static TemplateResult PlanSourceFile(string relativePath, string? namespaceName, string typeName)
     {
         if (!IsValidIdentifier(typeName))
@@ -132,6 +172,9 @@ public sealed class CodeTemplateService
     /// existing file turns "new project" into data loss, and the caller has
     /// more context than this does about what the user meant.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=B2F7A2
+    // Broiler-Falsified-If: a plan whose later file is refused by storage returns a failure after its earlier files were already written
+    // Broiler-Human:        PENDING
     public async ValueTask<TemplateResult> WriteAsync(
         TemplateResult plan, CancellationToken cancellationToken = default)
     {
@@ -168,6 +211,9 @@ public sealed class CodeTemplateService
     /// Adds a project reference to an existing project, going through the
     /// lossless provider so the rest of the file is untouched.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=BA3BFC
+    // Broiler-Falsified-If: a project file that is not well-formed XML makes the call throw instead of returning a failed TemplateResult
+    // Broiler-Human:        PENDING
     public async ValueTask<TemplateResult> AddProjectReferenceAsync(
         string projectRelativePath, string referenceInclude, CancellationToken cancellationToken = default)
     {
@@ -194,6 +240,9 @@ public sealed class CodeTemplateService
             : TemplateResult.Fail(write.Failure!.Message);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=DA3C0F
+    // Broiler-Falsified-If: a name ending in a dot or with a digit after a dot is accepted, although storage refuses the directory or C# refuses the namespace it becomes
+    // Broiler-Human:        PENDING
     private static bool IsValidIdentifier(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -211,6 +260,9 @@ public sealed class CodeTemplateService
         return char.IsLetter(name[0]) || name[0] == '_';
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=6F0057
+    // Broiler-Falsified-If: a double quote, an ampersand or an angle bracket survives unescaped in the returned attribute text
+    // Broiler-Human:        PENDING
     private static string Escape(string value) => value
         .Replace("&", "&amp;", StringComparison.Ordinal)
         .Replace("<", "&lt;", StringComparison.Ordinal)

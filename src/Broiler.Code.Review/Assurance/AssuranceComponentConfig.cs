@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   32
+// Annotated:        32/32
+// Exempt:           25
+// Human-reviewed:   0/32
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         22/20
+// Resource impact:  7/10 max
+// Unverified:       32
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +23,8 @@ using System.Text.Json;
 namespace Broiler.Code.Review.Assurance;
 
 /// <summary>Who writes a component's assurance artefacts.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E57DA4
+// Broiler-Human:        PENDING
 public enum AssuranceMode
 {
     /// <summary>This tool writes them. The write commands are allowed.</summary>
@@ -19,6 +38,8 @@ public enum AssuranceMode
 }
 
 /// <summary>Which words mark a comment as a forged assurance summary.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=2E0594
+// Broiler-Human:        PENDING
 public enum AssuranceForgeryVocabulary
 {
     /// <summary>
@@ -36,6 +57,8 @@ public enum AssuranceForgeryVocabulary
 }
 
 /// <summary>Which exemption predicate decides that a unit needs no review.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=022A7C
+// Broiler-Human:        PENDING
 public enum AssuranceExemptionPredicate
 {
     /// <summary>
@@ -60,6 +83,8 @@ public enum AssuranceExemptionPredicate
 /// <summary>A file pattern the component leaves out of the covered set, and why.</summary>
 /// <param name="Glob">The pattern.</param>
 /// <param name="Reason">Why, in words a report can print beside each file it excludes.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=58D106
+// Broiler-Human:        PENDING
 public sealed record AssuranceExclusion(AssuranceGlob Glob, string Reason);
 
 /// <summary>
@@ -70,12 +95,19 @@ public sealed record AssuranceExclusion(AssuranceGlob Glob, string Reason);
 /// <c>2026 Broiler Platform contributors</c>.
 /// </param>
 /// <param name="License">One SPDX licence expression: <c>Apache-2.0 AND BSD-3-Clause</c>.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4A048D
+// Broiler-Human:        PENDING
 public sealed record AssuranceSpdx(IReadOnlyList<string> Copyright, string License);
 
 /// <summary>SPDX lines for the files one pattern matches, in place of the component default.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=C40E62
+// Broiler-Human:        PENDING
 public sealed record AssuranceSpdxOverride(AssuranceGlob Glob, AssuranceSpdx Spdx);
 
 /// <summary>Where the component-level artefacts are written, relative to the component root.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=35C1E6
+// Broiler-Falsified-If: a default artefact path is rooted or has a '..' or '.git' segment, which reaches the writer unchecked because only configured values pass CheckRelative
+// Broiler-Human:        PENDING
 public sealed record AssuranceArtefactPaths
 {
     public string Report { get; init; } = "CODE-ASSURANCE.md";
@@ -86,13 +118,19 @@ public sealed record AssuranceArtefactPaths
 }
 
 /// <summary>Why a configuration file was refused.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A55C0E
+// Broiler-Human:        PENDING
 public sealed class AssuranceConfigException : Exception
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=50D11C
+    // Broiler-Human:        PENDING
     public AssuranceConfigException(string message)
         : base(message)
     {
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=BF0C01
+    // Broiler-Human:        PENDING
     public AssuranceConfigException(string message, Exception inner)
         : base(message, inner)
     {
@@ -109,12 +147,21 @@ public sealed class AssuranceConfigException : Exception
 /// than ignored, because a misspelled <c>exclude</c> would otherwise cover
 /// exactly the files it was written to leave out.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=E258A8
+// Broiler-Falsified-If: an artefacts path whose segment Windows resolves to '.git', such as '.git./info/x', is accepted by Parse, so generate on Windows writes inside the git directory
+// Broiler-Human:        PENDING
 public sealed record AssuranceComponentConfig
 {
     /// <summary>The configuration's file name, at the component root.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=AF4861
+    // Broiler-Falsified-If: the opt-in file name matches a file components carry for another reason, so insert and generate write to a component that never opted in
+    // Broiler-Human:        PENDING
     public const string FileName = "assurance.config.json";
 
     /// <summary>The only schema version this build reads.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=0498C8
+    // Broiler-Falsified-If: Parse accepts a schema number other than the one whose properties it defines
+    // Broiler-Human:        PENDING
     public const int CurrentSchema = 1;
 
     /// <summary>The component's name, for generated prose.</summary>
@@ -195,6 +242,9 @@ public sealed record AssuranceComponentConfig
     /// The SPDX lines for <paramref name="relativePath"/>: the first override
     /// whose pattern matches, else the default. Null when neither is configured.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=8EDAAD
+    // Broiler-Falsified-If: a file matched by two spdxOverrides globs receives the second override's lines instead of the first's
+    // Broiler-Human:        PENDING
     public AssuranceSpdx? SpdxFor(string relativePath)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
@@ -212,6 +262,9 @@ public sealed record AssuranceComponentConfig
     /// The exclusion that leaves <paramref name="relativePath"/> out, or null.
     /// The first matching pattern gives the reason.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=899C44
+    // Broiler-Falsified-If: an exclude glob of eight '*a' steps makes matching one 40-character file name take seconds, because the glob's regex runs with no match timeout
+    // Broiler-Human:        PENDING
     public AssuranceExclusion? ExclusionFor(string relativePath)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
@@ -230,6 +283,9 @@ public sealed record AssuranceComponentConfig
     /// the file is written by hand. Throws <see cref="AssuranceConfigException"/>
     /// naming the property at fault.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=5C8EC7
+    // Broiler-Falsified-If: a top-level property this schema does not define, such as a misspelled exclude, is accepted instead of raising AssuranceConfigException
+    // Broiler-Human:        PENDING
     public static AssuranceComponentConfig Parse(string json)
     {
         ArgumentNullException.ThrowIfNull(json);
@@ -378,6 +434,9 @@ public sealed record AssuranceComponentConfig
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=54B79C
+    // Broiler-Falsified-If: a project path with a '..' segment, a leading slash or a drive letter is returned instead of refused
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<string> ProjectList(JsonElement value, string path)
     {
         IReadOnlyList<string> projects = StringList(value, path);
@@ -394,6 +453,9 @@ public sealed record AssuranceComponentConfig
         return projects;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=4CD578
+    // Broiler-Falsified-If: an exclude object with no glob, or with a property other than glob and reason, is accepted instead of refused
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<AssuranceExclusion> Exclusions(JsonElement value, string path)
     {
         if (value.ValueKind != JsonValueKind.Array)
@@ -442,6 +504,9 @@ public sealed record AssuranceComponentConfig
         return exclusions;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=035C64
+    // Broiler-Falsified-If: an spdxOverrides entry with no glob is accepted instead of raising AssuranceConfigException
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<AssuranceSpdxOverride> Overrides(JsonElement value, string path)
     {
         if (value.ValueKind != JsonValueKind.Array)
@@ -459,6 +524,9 @@ public sealed record AssuranceComponentConfig
         return overrides;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=FD6E84
+    // Broiler-Falsified-If: a copyright value that already carries its comment prefix, or spans two lines, is accepted into the generated header
+    // Broiler-Human:        PENDING
     private static (AssuranceSpdx Spdx, AssuranceGlob? Glob) SpdxOf(JsonElement value, string path, bool allowGlob)
     {
         if (value.ValueKind != JsonValueKind.Object)
@@ -509,6 +577,9 @@ public sealed record AssuranceComponentConfig
         return (new AssuranceSpdx(copyright, license), glob);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=F7B64B
+    // Broiler-Falsified-If: an artefacts entry with a '..' segment or a leading slash is accepted, so generate writes outside the component root
+    // Broiler-Human:        PENDING
     private static AssuranceArtefactPaths ArtefactPaths(JsonElement value, string path)
     {
         if (value.ValueKind != JsonValueKind.Object)
@@ -535,6 +606,9 @@ public sealed record AssuranceComponentConfig
     }
 
     /// <summary>Lines of prose, where an empty string is a blank line.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=A15C57
+    // Broiler-Falsified-If: a manifestComment whose first line lacks the generator's recognition prefix is accepted, so the next generate refuses to replace the manifest it wrote
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<string> CommentLines(JsonElement value, string path)
     {
         if (value.ValueKind != JsonValueKind.Array)
@@ -559,6 +633,9 @@ public sealed record AssuranceComponentConfig
         return lines;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=CFB2D5
+    // Broiler-Falsified-If: a preprocessor symbol holding a space or punctuation other than underscore is returned instead of refused
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<string> Symbols(JsonElement value, string path)
     {
         IReadOnlyList<string> symbols = StringList(value, path);
@@ -572,11 +649,17 @@ public sealed record AssuranceComponentConfig
         return symbols;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=1E3147
+    // Broiler-Falsified-If: a glob that AssuranceGlob.TryParse refuses, such as one with a backslash or a '..' segment, is returned instead of raising AssuranceConfigException
+    // Broiler-Human:        PENDING
     private static AssuranceGlob Glob(string pattern, string path) =>
         AssuranceGlob.TryParse(pattern, out AssuranceGlob? glob, out string? problem)
             ? glob!
             : throw Error(path, problem!);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=0F58E7
+    // Broiler-Falsified-If: an array element that is not a string, or is blank, is added to the list instead of refused
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<string> StringList(JsonElement value, string path)
     {
         if (value.ValueKind != JsonValueKind.Array)
@@ -590,9 +673,15 @@ public sealed record AssuranceComponentConfig
         return list;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=8513F6
+    // Broiler-Falsified-If: an adrDirectory or artefacts value with a '..' segment is returned without passing CheckRelative
+    // Broiler-Human:        PENDING
     private static string RelativePath(JsonElement value, string path) =>
         CheckRelative(RequiredString(value, path), path);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=56B0EB
+    // Broiler-Falsified-If: a segment that Windows resolves to '.git', such as '.git.' in '.git./hooks/x', is accepted, so an artefact path lands inside the git directory
+    // Broiler-Human:        PENDING
     private static string CheckRelative(string value, string path)
     {
         if (value.Contains('\\', StringComparison.Ordinal))
@@ -612,9 +701,15 @@ public sealed record AssuranceComponentConfig
         return value;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=BE0454
+    // Broiler-Falsified-If: a component, reason, license or regenerateCommand value holding a line feed is returned instead of refused
+    // Broiler-Human:        PENDING
     private static string SingleLine(JsonElement value, string path) =>
         CheckSingleLine(RequiredString(value, path), path);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=5B6EAE
+    // Broiler-Falsified-If: a value containing a carriage return, U+0085, U+2028 or U+2029 is returned instead of raising AssuranceConfigException
+    // Broiler-Human:        PENDING
     private static string CheckSingleLine(string value, string path)
     {
         if (value.AsSpan().IndexOfAny("\r\n\u0085\u2028\u2029") >= 0)
@@ -623,6 +718,9 @@ public sealed record AssuranceComponentConfig
         return value;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=EBCC94
+    // Broiler-Falsified-If: a JSON number, or a string of only spaces, is returned as a value instead of refused
+    // Broiler-Human:        PENDING
     private static string RequiredString(JsonElement value, string path)
     {
         if (value.ValueKind != JsonValueKind.String)
@@ -635,6 +733,9 @@ public sealed record AssuranceComponentConfig
         return text;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=B489D0
+    // Broiler-Falsified-If: the JSON string "false" or a number is read as a boolean instead of raising AssuranceConfigException
+    // Broiler-Human:        PENDING
     private static bool RequiredBool(JsonElement value, string path) => value.ValueKind switch
     {
         JsonValueKind.True => true,
@@ -642,6 +743,8 @@ public sealed record AssuranceComponentConfig
         _ => throw Error(path, "must be true or false"),
     };
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=BD9ECA
+    // Broiler-Human:        PENDING
     private static AssuranceConfigException Error(string path, string message) =>
         new($"{FileName}: {path} {message}");
 }

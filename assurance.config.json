@@ -1,0 +1,31 @@
+{
+  "$comment": "Per-declaration assurance for Broiler.Code. Product projects only: the src/*.Tests suites and the tests/broiler-code-phase0 harnesses, fixtures and payload probes are not listed, so they are not covered. src/Broiler.App/*.cs has no project of its own and is covered through the literal <Compile Include> in the Windows and Linux heads. No source here is third-party-derived, so there are no spdxOverrides.",
+  "schema": 1,
+  "component": "Broiler.Code",
+  "projects": [
+    "src/Broiler.Code.Core/Broiler.Code.Core.csproj",
+    "src/Broiler.Code.Language.CSharp.Assurance/Broiler.Code.Language.CSharp.Assurance.csproj",
+    "src/Broiler.Code.Language.CSharp.Roslyn/Broiler.Code.Language.CSharp.Roslyn.csproj",
+    "src/Broiler.Code.Language.CSharp.Syntax/Broiler.Code.Language.CSharp.Syntax.csproj",
+    "src/Broiler.Code.Linux/Broiler.Code.Linux.csproj",
+    "src/Broiler.Code.Review/Broiler.Code.Review.csproj",
+    "src/Broiler.Code.Review.Cli/Broiler.Code.Review.Cli.csproj",
+    "src/Broiler.Code.Windows/Broiler.Code.Windows.csproj",
+    "src/Broiler.Code.Workspaces/Broiler.Code.Workspaces.csproj"
+  ],
+  "exclude": [],
+  "exemptionPredicate": "owning-component",
+  "spdx": {
+    "copyright": [ "2026 Broiler Platform contributors" ],
+    "license": "Apache-2.0"
+  },
+  "spdxOverrides": [],
+  "artefacts": {
+    "report": "CODE-ASSURANCE.md",
+    "humanReview": "HUMAN_REVIEW.md",
+    "manifest": "assurance.manifest.json"
+  },
+  "forbidDirectives": false,
+  "forgeryVocabulary": "narrow",
+  "regenerateCommand": "dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance generate --root Broiler.Code"
+}

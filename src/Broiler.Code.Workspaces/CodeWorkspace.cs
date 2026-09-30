@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   37
+// Annotated:        37/37
+// Exempt:           18
+// Human-reviewed:   0/37
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         26/13
+// Resource impact:  4/10 max
+// Unverified:       37
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,6 +27,8 @@ using Broiler.Code.Workspaces.Text;
 
 namespace Broiler.Code.Workspaces;
 
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=26878C
+// Broiler-Human:        PENDING
 public enum SaveOutcomeKind
 {
     Saved,
@@ -31,12 +50,18 @@ public enum SaveOutcomeKind
     Failed,
 }
 
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=5A8FEF
+// Broiler-Falsified-If: an outcome of kind NeedsLocation, Conflict or Failed reports Succeeded true, so a dirty tab is closed although its text was not written
+// Broiler-Human:        PENDING
 public sealed record SaveOutcome(
     WorkspaceItemId Id,
     string RelativePath,
     SaveOutcomeKind Kind,
     string? Message = null)
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=B4996A
+    // Broiler-Falsified-If: an outcome of kind NeedsLocation, Conflict or Failed reports Succeeded true, so a dirty tab is closed although its text was not written
+    // Broiler-Human:        PENDING
     public bool Succeeded => Kind is SaveOutcomeKind.Saved or SaveOutcomeKind.NotDirty;
 }
 
@@ -45,12 +70,24 @@ public sealed record SaveOutcome(
 /// every outcome is reported: a Save All that stops at the first failure leaves
 /// the user with some files written and no idea which.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=09C72A
+// Broiler-Falsified-If: a report holding a Conflict outcome reports AllSucceeded true or leaves that outcome out of Failures
+// Broiler-Human:        PENDING
 public sealed record SaveAllReport(IReadOnlyList<SaveOutcome> Outcomes)
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=3E55D8
+    // Broiler-Falsified-If: a report holding a NeedsLocation or Conflict outcome reports AllSucceeded true
+    // Broiler-Human:        PENDING
     public bool AllSucceeded => Outcomes.All(outcome => outcome.Succeeded);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=006B3F
+    // Broiler-Falsified-If: a NeedsLocation or Conflict outcome is missing from Failures
+    // Broiler-Human:        PENDING
     public IEnumerable<SaveOutcome> Failures => Outcomes.Where(outcome => !outcome.Succeeded);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=9608EA
+    // Broiler-Falsified-If: a NotDirty outcome is counted as a saved document
+    // Broiler-Human:        PENDING
     public int SavedCount => Outcomes.Count(outcome => outcome.Kind == SaveOutcomeKind.Saved);
 }
 
@@ -58,6 +95,8 @@ public sealed record SaveAllReport(IReadOnlyList<SaveOutcome> Outcomes)
 /// A workspace-level problem the user has to be told about: a construct the
 /// declared model cannot edit, a path outside the grant, a collision.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DBBD52
+// Broiler-Human:        PENDING
 public sealed record WorkspaceDiagnostic(
     string Code,
     string Message,
@@ -72,6 +111,9 @@ public sealed record WorkspaceDiagnostic(
 /// rename changes an item's path and keeps its ID, so the open tab, the undo
 /// history, and the per-user state stay attached to it.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=85D810
+// Broiler-Falsified-If: an operation on a document opened through a file-dialog grant reaches the file at the same relative path under the workspace root instead of the granted file
+// Broiler-Human:        PENDING
 public sealed class CodeWorkspace
 {
     private readonly IWorkspaceStorage _storage;
@@ -88,6 +130,9 @@ public sealed class CodeWorkspace
     private readonly List<CodeProject> _projects = [];
     private readonly List<CodeSolution> _solutions = [];
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=AFFEC6
+    // Broiler-Falsified-If: on a storage provider that reports CaseInsensitivePaths, 'Src/A.cs' and 'src/a.cs' are registered as two items over one file
+    // Broiler-Human:        PENDING
     public CodeWorkspace(IWorkspaceStorage storage, WorkspaceIdFactory? ids = null)
     {
         _storage = storage ?? throw new ArgumentNullException(nameof(storage));
@@ -97,10 +142,16 @@ public sealed class CodeWorkspace
                 storage.Capabilities.HasFlag(StorageCapabilities.CaseInsensitivePaths)));
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E5167B
+    // Broiler-Human:        PENDING
     public event Action<SourceDocument>? DocumentOpened;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A11D6F
+    // Broiler-Human:        PENDING
     public event Action<WorkspaceItemId>? DocumentClosed;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=54B25B
+    // Broiler-Human:        PENDING
     public event Action<WorkspaceItem>? ItemChanged;
 
     public IWorkspaceStorage Storage => _storage;
@@ -109,9 +160,14 @@ public sealed class CodeWorkspace
     /// The storage a document's bytes actually go through: its own grant when it
     /// came from a file dialog, the workspace's otherwise.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=A07458
+    // Broiler-Falsified-If: a document opened through a file-dialog grant resolves to the workspace's own storage, so its reads and saves use the same relative path under the workspace root
+    // Broiler-Human:        PENDING
     public IWorkspaceStorage StorageFor(WorkspaceItemId id) =>
         _grants.TryGetValue(id, out IWorkspaceStorage? granted) ? granted : _storage;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3749A5
+    // Broiler-Human:        PENDING
     public IReadOnlyCollection<WorkspaceItem> Items => _items.Values;
 
     public IReadOnlyList<CodeProject> Projects => _projects;
@@ -120,8 +176,13 @@ public sealed class CodeWorkspace
 
     public IReadOnlyList<WorkspaceDiagnostic> Diagnostics => _diagnostics;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=D9B9FC
+    // Broiler-Human:        PENDING
     public IReadOnlyCollection<SourceDocument> OpenDocuments => _open.Values;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=FCC1F3
+    // Broiler-Falsified-If: a workspace whose only dirty document is untitled or granted reports no unsaved changes
+    // Broiler-Human:        PENDING
     public bool HasUnsavedChanges => _open.Values.Any(document => document.IsDirty);
 
     /// <summary>
@@ -129,6 +190,9 @@ public sealed class CodeWorkspace
     /// the same file discovered through two projects is one item with one
     /// identity rather than two that disagree about whether it is dirty.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=6CF57B
+    // Broiler-Falsified-If: a Compile Include that climbs above the workspace root with '..' is registered with a usable ID instead of being refused with BRW0001
+    // Broiler-Human:        PENDING
     public WorkspaceItem AddItem(
         string relativePath,
         WorkspaceItemKind kind,
@@ -187,6 +251,9 @@ public sealed class CodeWorkspace
         return item;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=BBB0F9
+    // Broiler-Falsified-If: a project whose HasUnsupportedConstructs is set is added without a BRW0100 diagnostic
+    // Broiler-Human:        PENDING
     public void AddProject(CodeProject project)
     {
         ArgumentNullException.ThrowIfNull(project);
@@ -202,15 +269,22 @@ public sealed class CodeWorkspace
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=8E8454
+    // Broiler-Human:        PENDING
     public void AddSolution(CodeSolution solution)
     {
         ArgumentNullException.ThrowIfNull(solution);
         _solutions.Add(solution);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3FCB7F
+    // Broiler-Human:        PENDING
     public WorkspaceItem? FindItem(WorkspaceItemId id) =>
         _items.TryGetValue(id, out WorkspaceItem? item) ? item : null;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=382E6B
+    // Broiler-Falsified-If: a path that normalizes to a registered item's path, such as 'src/./A.cs' for 'src/A.cs', returns null instead of that item
+    // Broiler-Human:        PENDING
     public WorkspaceItem? FindItem(string relativePath)
     {
         string? normalized = WorkspacePath.Normalize(relativePath);
@@ -219,6 +293,8 @@ public sealed class CodeWorkspace
             : null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=2C0ED0
+    // Broiler-Human:        PENDING
     public SourceDocument? FindOpenDocument(WorkspaceItemId id) =>
         _open.TryGetValue(id, out SourceDocument? document) ? document : null;
 
@@ -227,6 +303,9 @@ public sealed class CodeWorkspace
     /// the existing instance — a second buffer over the same file would give
     /// the user two views that disagree and two undo histories that fight.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=A611DA
+    // Broiler-Falsified-If: opening an item that is already open returns a new SourceDocument with a second buffer instead of the open instance
+    // Broiler-Human:        PENDING
     public async ValueTask<StorageResult<SourceDocument>> OpenDocumentAsync(
         WorkspaceItemId id, CancellationToken cancellationToken = default)
     {
@@ -272,6 +351,9 @@ public sealed class CodeWorkspace
     /// no file behind it. This is what makes an empty editor usable: a caret in
     /// a real buffer rather than a read-only surface waiting for a workspace.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=9E1B2F
+    // Broiler-Falsified-If: an untitled document named like a workspace file, such as 'Program.cs', is returned by FindItem('Program.cs') in place of the workspace's own item
+    // Broiler-Human:        PENDING
     public SourceDocument CreateUntitledDocument(string displayName, string text = "")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
@@ -299,6 +381,9 @@ public sealed class CodeWorkspace
     /// would reuse a name as soon as one is closed, and two tabs called
     /// "Untitled1.cs" are two things the user cannot tell apart.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=1F05B6
+    // Broiler-Falsified-If: a name held by an untitled document that is still open is returned again
+    // Broiler-Human:        PENDING
     public string NextUntitledName(string extension = ".cs")
     {
         for (int index = 1; ; index++)
@@ -316,6 +401,9 @@ public sealed class CodeWorkspace
     /// same storage rather than resolving against a root that never contained
     /// it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=50FFC1
+    // Broiler-Falsified-If: a path that climbs out of the granted directory with '..' is read through the grant instead of failing with OutsideGrant
+    // Broiler-Human:        PENDING
     public async ValueTask<StorageResult<SourceDocument>> OpenGrantedDocumentAsync(
         IWorkspaceStorage storage,
         string relativePath,
@@ -371,6 +459,9 @@ public sealed class CodeWorkspace
     /// undo history follow it — a Save As is a new location for the same
     /// document, not a new document.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=E518E5
+    // Broiler-Falsified-If: a Save As onto a path whose key another open document already holds re-points that key to this document without refusing, leaving two open documents over one file
+    // Broiler-Human:        PENDING
     public async ValueTask<SaveOutcome> SaveDocumentAsAsync(
         WorkspaceItemId id,
         IWorkspaceStorage storage,
@@ -433,6 +524,9 @@ public sealed class CodeWorkspace
     /// <paramref name="discardChanges"/> says the user chose to lose them; the
     /// workspace never decides that on its own.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=427A23
+    // Broiler-Falsified-If: a dirty document is removed from the open set when discardChanges is false
+    // Broiler-Human:        PENDING
     public bool CloseDocument(WorkspaceItemId id, bool discardChanges = false)
     {
         if (!_open.TryGetValue(id, out SourceDocument? document))
@@ -445,6 +539,9 @@ public sealed class CodeWorkspace
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=FA6A8B
+    // Broiler-Falsified-If: an edit accepted while the storage write is still pending is marked saved, so the document reports clean although the file lacks that edit
+    // Broiler-Human:        PENDING
     public async ValueTask<SaveOutcome> SaveDocumentAsync(
         WorkspaceItemId id, bool overwriteConflict = false, CancellationToken cancellationToken = default)
     {
@@ -493,6 +590,9 @@ public sealed class CodeWorkspace
     /// Saves every dirty document, attempting all of them. Text is never
     /// dropped: a document whose save failed stays dirty and stays open.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=59626B
+    // Broiler-Falsified-If: a document whose save failed or conflicted stops Save All, so dirty documents after it are neither attempted nor reported
+    // Broiler-Human:        PENDING
     public async ValueTask<SaveAllReport> SaveAllAsync(CancellationToken cancellationToken = default)
     {
         var outcomes = new List<SaveOutcome>();
@@ -510,6 +610,9 @@ public sealed class CodeWorkspace
     /// Renames an item, keeping its identity. The ID does not change, so an
     /// open tab, its undo history, and its per-user state follow the file.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=806AE0
+    // Broiler-Falsified-If: renaming a document opened through a file-dialog grant renames the file at the same relative path under the workspace root instead of the granted file
+    // Broiler-Human:        PENDING
     public async ValueTask<StorageResult<WorkspaceItem>> RenameItemAsync(
         WorkspaceItemId id, string newRelativePath, CancellationToken cancellationToken = default)
     {
@@ -562,6 +665,9 @@ public sealed class CodeWorkspace
     /// the open document. Checked before a save and when the window regains
     /// focus; a provider with change notification calls it from the event.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=076D96
+    // Broiler-Falsified-If: for a document opened through a file-dialog grant the revision is read from the same relative path under the workspace root instead of from the granted file
+    // Broiler-Human:        PENDING
     public async ValueTask<bool> HasExternalChangeAsync(
         WorkspaceItemId id, CancellationToken cancellationToken = default)
     {
@@ -576,6 +682,8 @@ public sealed class CodeWorkspace
         return !string.Equals(stat.Value!.ExternalRevision, item.ExternalRevision, StringComparison.Ordinal);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=A6B429
+    // Broiler-Human:        PENDING
     public void AddDiagnostic(WorkspaceDiagnostic diagnostic)
     {
         ArgumentNullException.ThrowIfNull(diagnostic);
@@ -589,11 +697,17 @@ public sealed class CodeWorkspace
     /// "Program.cs" in two granted directories are two documents, and keying
     /// them the same would silently make them one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=EA8EF3
+    // Broiler-Falsified-If: an item opened through a grant is keyed on its bare relative path, so it collides with the workspace item at the same relative path
+    // Broiler-Human:        PENDING
     private string KeyFor(WorkspaceItemId id, string normalizedPath) =>
         _grants.TryGetValue(id, out IWorkspaceStorage? granted)
             ? GrantKey(granted, normalizedPath)
             : normalizedPath;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=322DBF
+    // Broiler-Falsified-If: two grants whose storages list different first roots produce the same key for one relative path, so opening the second returns the first's open document
+    // Broiler-Human:        PENDING
     private static string GrantKey(IWorkspaceStorage storage, string normalizedPath) =>
         storage.GrantedRoots.Count == 0
             ? normalizedPath
@@ -601,5 +715,8 @@ public sealed class CodeWorkspace
 
     // A separate namespace from any real path, so an untitled document called
     // "Program.cs" never collides with the workspace's own Program.cs.
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=F83AF9
+    // Broiler-Falsified-If: the key of an untitled document named 'Program.cs' equals the key of the workspace file 'Program.cs' or of a granted file, so one is found in place of the other
+    // Broiler-Human:        PENDING
     private static string UntitledKey(string displayName) => $" untitled {displayName}";
 }

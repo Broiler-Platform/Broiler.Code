@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   4
+// Annotated:        4/4
+// Exempt:           1
+// Human-reviewed:   0/4
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         4/2
+// Resource impact:  3/10 max
+// Unverified:       4
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,13 +42,22 @@ namespace Broiler.Code.Core.Review;
 /// want it and neither should own it. A host whose platform has no process API
 /// simply never constructs one.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=25855C
+// Broiler-Falsified-If: git output other than a single hexadecimal object name of 7 to 64 digits is returned as the current revision
+// Broiler-Human:        PENDING
 public sealed class GitRevisionProvider : IRevisionProvider
 {
     private readonly string _workingDirectory;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=5E3AD9
+    // Broiler-Falsified-If: a null working directory is accepted and the first revision lookup starts git in the editor's own current directory
+    // Broiler-Human:        PENDING
     public GitRevisionProvider(string workingDirectory) =>
         _workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=71534B
+    // Broiler-Falsified-If: rev-parse output with a warning line before the object name is returned as the current revision
+    // Broiler-Human:        PENDING
     public async ValueTask<string?> GetCurrentRevisionAsync(CancellationToken cancellationToken = default)
     {
         string? revision = await GitCommand
@@ -44,6 +70,9 @@ public sealed class GitRevisionProvider : IRevisionProvider
         return revision is not null && IsHex(revision) ? revision : null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=723854
+    // Broiler-Falsified-If: a string shorter than 7 or longer than 64 characters, or one holding a character outside 0-9, a-f and A-F, is accepted
+    // Broiler-Human:        PENDING
     private static bool IsHex(string value)
     {
         if (value.Length is < 7 or > 64)

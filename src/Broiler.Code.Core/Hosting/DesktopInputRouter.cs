@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   14
+// Annotated:        14/14
+// Exempt:           4
+// Human-reviewed:   0/14
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         14/2
+// Resource impact:  1/10 max
+// Unverified:       14
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Threading;
 using Broiler.Graphics;
@@ -23,6 +40,9 @@ namespace Broiler.Code.Core.Hosting;
 /// It lives in Core rather than in each head so the two heads share one
 /// translation. A copy in each is what the Phase 2 architecture test forbids.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=062099
+// Broiler-Falsified-If: two events built concurrently by one router carry the same sequence number
+// Broiler-Human:        PENDING
 public sealed class DesktopInputRouter
 {
     private readonly InputDeviceId _pointerDevice;
@@ -30,6 +50,9 @@ public sealed class DesktopInputRouter
     private readonly string _clockName;
     private long _sequence;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=F88592
+    // Broiler-Falsified-If: the pointer and keyboard device identities built from one host name compare equal
+    // Broiler-Human:        PENDING
     public DesktopInputRouter(string hostName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(hostName);
@@ -38,6 +61,9 @@ public sealed class DesktopInputRouter
         _clockName = hostName;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=278214
+    // Broiler-Falsified-If: a button release is emitted with MouseButtonTransition.Down
+    // Broiler-Human:        PENDING
     public UiInputEvent FromPointerButton(BPointerEventArgs args, bool pressed) =>
         UiInputEvent.FromMouseButton(new MouseButtonEvent(
             Header(_pointerDevice),
@@ -47,6 +73,9 @@ public sealed class DesktopInputRouter
             pressed ? MouseButtonTransition.Down : MouseButtonTransition.Up,
             InputEventSource.Raw));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=3FDFE9
+    // Broiler-Falsified-If: a move is emitted at a position other than the window event's position
+    // Broiler-Human:        PENDING
     public UiInputEvent FromPointerMove(BPointerEventArgs args) =>
         UiInputEvent.FromMouseMove(new MouseMoveEvent(
             Header(_pointerDevice),
@@ -63,6 +92,9 @@ public sealed class DesktopInputRouter
     /// shift-and-wheel — which is how every editor scrolls sideways on a mouse
     /// with one wheel — without the modifiers.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=391CB6
+    // Broiler-Falsified-If: a horizontal wheel notch is emitted on MouseWheelAxis.Vertical
+    // Broiler-Human:        PENDING
     public UiInputEvent FromWheel(BMouseWheelEventArgs args) =>
         UiInputEvent.FromMouseWheel(new MouseWheelEvent(
             Header(_pointerDevice),
@@ -73,6 +105,9 @@ public sealed class DesktopInputRouter
             InputEventSource.Raw,
             WheelModifiers(args)));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=4B61A5
+    // Broiler-Falsified-If: a wheel notch turned with Shift held produces modifiers without Shift
+    // Broiler-Human:        PENDING
     private static InputModifiers WheelModifiers(BMouseWheelEventArgs args)
     {
         InputModifiers modifiers = InputModifiers.None;
@@ -86,6 +121,9 @@ public sealed class DesktopInputRouter
         return modifiers;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=5F378B
+    // Broiler-Falsified-If: a key release is emitted with KeyboardKeyTransition.Down
+    // Broiler-Human:        PENDING
     public UiInputEvent FromKey(BKeyEventArgs args, bool pressed) =>
         UiInputEvent.FromKeyboardKey(new KeyboardKeyEvent(
             Header(_keyboardDevice),
@@ -99,6 +137,9 @@ public sealed class DesktopInputRouter
             false,
             Source: InputEventSource.Raw));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=50108C
+    // Broiler-Falsified-If: the emitted text input carries the pointer device identity instead of the keyboard one
+    // Broiler-Human:        PENDING
     public UiInputEvent FromText(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -111,6 +152,9 @@ public sealed class DesktopInputRouter
     /// composition ended without a commit, which the editor has to treat as a
     /// cancellation rather than as committing an empty string.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=D4E10B
+    // Broiler-Falsified-If: a null composition text is emitted as Committed or Updated rather than Cancelled
+    // Broiler-Human:        PENDING
     public UiInputEvent FromComposition(string? text, bool committed) =>
         UiInputEvent.FromTextComposition(new TextCompositionEvent(
             Header(_keyboardDevice),
@@ -126,6 +170,9 @@ public sealed class DesktopInputRouter
     /// opaque, and a key that silently arrives under an unexpected name is a
     /// shortcut that does nothing with no way to see why.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=C69D01
+    // Broiler-Falsified-If: a virtual-key code between 0x70 and 0x87 maps to a name other than F1 through F24
+    // Broiler-Human:        PENDING
     public static string MapVirtualKey(int virtualKey) => virtualKey switch
     {
         BVirtualKey.Back => "Backspace",
@@ -152,11 +199,17 @@ public sealed class DesktopInputRouter
     /// A monotonic header per event. The sequence is what lets a consumer order
     /// two events from one device; without it they are indistinguishable.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=695AF6
+    // Broiler-Falsified-If: two events built concurrently by one router receive the same sequence number, or a later event a smaller one
+    // Broiler-Human:        PENDING
     private InputEventHeader Header(InputDeviceId device) => new(
         device,
         new InputTimestamp(Environment.TickCount64, 1000, _clockName),
         Interlocked.Increment(ref _sequence));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=D7F0BC
+    // Broiler-Falsified-If: a change of the middle button maps to a button other than MouseButton.Middle
+    // Broiler-Human:        PENDING
     private static MouseButton MapButton(BMouseButtons button) => button switch
     {
         BMouseButtons.Right => MouseButton.Right,
@@ -165,6 +218,9 @@ public sealed class DesktopInputRouter
         _ => MouseButton.None,
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=E57B7B
+    // Broiler-Falsified-If: the left and right buttons held together map to a set missing one of them
+    // Broiler-Human:        PENDING
     private static MouseButtons MapButtons(BMouseButtons buttons)
     {
         MouseButtons mapped = MouseButtons.None;
@@ -177,6 +233,9 @@ public sealed class DesktopInputRouter
         return mapped;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=090AD1
+    // Broiler-Falsified-If: a key pressed with Control held produces modifiers without Control
+    // Broiler-Human:        PENDING
     private static KeyboardModifierState MapModifiers(BKeyEventArgs args)
     {
         KeyboardModifierState modifiers = KeyboardModifierState.None;

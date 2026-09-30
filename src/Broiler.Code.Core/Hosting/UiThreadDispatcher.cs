@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   6
+// Annotated:        6/6
+// Exempt:           4
+// Human-reviewed:   0/6
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         6/6
+// Resource impact:  4/10 max
+// Unverified:       6
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -18,6 +35,9 @@ namespace Broiler.Code.Core.Hosting;
 /// explicit that Writer's dispatcher must not be carried into the Code support
 /// claim, and this is why.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=08954B
+// Broiler-Falsified-If: a callback passed to Post from a worker thread runs on that worker thread rather than on the thread that constructed the dispatcher
+// Broiler-Human:        PENDING
 public sealed class UiThreadDispatcher : IUiDispatcher
 {
     private readonly Queue<Action> _pending = new();
@@ -28,6 +48,9 @@ public sealed class UiThreadDispatcher : IUiDispatcher
     /// Asks the host to drain soon. A windowed host posts a message; a polling
     /// host can leave it null and drain on its next tick.
     /// </param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=089C6F
+    // Broiler-Falsified-If: UiThreadId differs from the managed thread id of the thread that ran the constructor
+    // Broiler-Human:        PENDING
     public UiThreadDispatcher(Action? wake = null)
     {
         _uiThreadId = Environment.CurrentManagedThreadId;
@@ -37,6 +60,9 @@ public sealed class UiThreadDispatcher : IUiDispatcher
     /// <summary>The thread this dispatcher considers the UI thread.</summary>
     public int UiThreadId => _uiThreadId;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=040E0B
+    // Broiler-Falsified-If: a read concurrent with Post throws or returns a count the queue never held
+    // Broiler-Human:        PENDING
     public int PendingCount
     {
         get
@@ -46,8 +72,14 @@ public sealed class UiThreadDispatcher : IUiDispatcher
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=BE395E
+    // Broiler-Falsified-If: CheckAccess returns true on a thread other than the one that constructed the dispatcher
+    // Broiler-Human:        PENDING
     public bool CheckAccess() => Environment.CurrentManagedThreadId == _uiThreadId;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=EE0A23
+    // Broiler-Falsified-If: a callback posted concurrently with another Post or with a Drain is lost and never runs
+    // Broiler-Human:        PENDING
     public void Post(Action callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -61,6 +93,9 @@ public sealed class UiThreadDispatcher : IUiDispatcher
     /// host's loop; throws if called from anywhere else, because running UI
     /// work off the UI thread is the failure this type exists to prevent.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=7BE455
+    // Broiler-Falsified-If: a callback posted while Drain runs is executed within that same Drain call
+    // Broiler-Human:        PENDING
     public int Drain()
     {
         if (!CheckAccess())

@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   33
+// Annotated:        33/33
+// Exempt:           0
+// Human-reviewed:   0/33
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         17/12
+// Resource impact:  6/10 max
+// Unverified:       33
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -25,32 +42,65 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// could not be written), 2 a usage or configuration error, before anything
 /// was written.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=CCE5C4
+// Broiler-Falsified-If: an insert entry naming a path outside the root, or a file the component does not cover, gets a block written into that file
+// Broiler-Human:        PENDING
 internal static partial class AssuranceCommand
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=734E8F
+    // Broiler-Falsified-If: Done equals Refused or UsageError, so the exit code cannot tell a clean check from one that found a violation
+    // Broiler-Human:        PENDING
     public const int Done = 0;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=7C5B04
+    // Broiler-Falsified-If: Refused is zero, so a check that found a violation exits as a success and the gate passes
+    // Broiler-Human:        PENDING
     public const int Refused = 1;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=8285EA
+    // Broiler-Falsified-If: UsageError is zero, so a check given an unknown option exits as a success having applied no rule
+    // Broiler-Human:        PENDING
     public const int UsageError = 2;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=A71BA9
+    // Broiler-Human:        PENDING
     private static readonly string[] ListOptions = ["--root", "--files", "--json"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=D1764A
+    // Broiler-Human:        PENDING
     private static readonly string[] ListFlags = ["--all-units", "--strict"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=6F1CA6
+    // Broiler-Human:        PENDING
     private static readonly string[] InsertOptions = ["--root", "--assessments", "--json"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=7499AB
+    // Broiler-Human:        PENDING
     private static readonly string[] InsertFlags = ["--dry-run"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=4F6E0B
+    // Broiler-Human:        PENDING
     private static readonly string[] GenerateOptions = ["--root"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=74287F
+    // Broiler-Human:        PENDING
     private static readonly string[] GenerateFlags = ["--dry-run", "--adopt"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=DA0CC7
+    // Broiler-Human:        PENDING
     private static readonly string[] CheckOptions = ["--root", "--config", "--json", "--annotation-prefix", "--annotation-limit"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=C4F71A
+    // Broiler-Human:        PENDING
     private static readonly string[] CheckFlags = ["--release", "--sources-only"];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=6FCA8D
+    // Broiler-Human:        PENDING
     private static readonly string[] StatusOptions = ["--root", "--config"];
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=C41609
+    // Broiler-Falsified-If: an unknown subcommand, or an option the subcommand does not accept, exits 0
+    // Broiler-Human:        PENDING
     public static int Run(IReadOnlyList<string> args, TextWriter output, TextWriter error)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -95,11 +145,17 @@ internal static partial class AssuranceCommand
     }
 
     /// <summary>The file scanner a configuration asks for: its symbols and its exemption predicate.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=15C578
+    // Broiler-Falsified-If: with no configuration the scanner is built with a predicate other than the strict one, so a unit the strict predicate counts as relevant is listed as exempt
+    // Broiler-Human:        PENDING
     internal static CSharpAssuranceFileScanner ScannerFor(AssuranceComponentConfig? config) =>
         config is null
             ? new CSharpAssuranceFileScanner(null, AssuranceExemptionPredicate.Strict)
             : new CSharpAssuranceFileScanner(config.PreprocessorSymbols, config.ExemptionPredicate);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=2ADA2B
+    // Broiler-Falsified-If: a run in which a covered file could not be read, or a --strict run whose --files list names an uncovered path, exits 0
+    // Broiler-Human:        PENDING
     private static int List(Options options, TextWriter output, TextWriter error)
     {
         string root = RootOf(options);
@@ -155,6 +211,9 @@ internal static partial class AssuranceCommand
         return exit;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=8A1CEC
+    // Broiler-Falsified-If: a file whose read failed is left out of the text report instead of being printed with its problem
+    // Broiler-Human:        PENDING
     private static void WriteListText(
         string component, ComponentSourceSet set, IReadOnlyList<ListedFile> files, bool allUnits, TextWriter output)
     {
@@ -202,6 +261,9 @@ internal static partial class AssuranceCommand
             output.WriteLine($"{excluded.RelativePath}  not covered: {excluded.Reason}");
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=AAA6E4
+    // Broiler-Falsified-If: with --dry-run, a file with applied entries is still written to disk
+    // Broiler-Human:        PENDING
     private static int Insert(Options options, TextWriter output, TextWriter error)
     {
         string root = RootOf(options);
@@ -299,6 +361,9 @@ internal static partial class AssuranceCommand
         return exit;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7211F1
+    // Broiler-Falsified-If: an entry whose file could not be written is counted as applied in the summary line
+    // Broiler-Human:        PENDING
     private static void WriteInsertText(IReadOnlyList<AssuranceInsertEntryResult> results, bool dryRun, TextWriter output)
     {
         foreach (AssuranceInsertEntryResult result in results)
@@ -323,6 +388,9 @@ internal static partial class AssuranceCommand
             (dryRun ? " (dry run: nothing was written)" : string.Empty));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=D4F931
+    // Broiler-Falsified-If: an assurance.config.json at the root that fails to parse comes back as null instead of stopping the run with a configuration error
+    // Broiler-Human:        PENDING
     private static AssuranceComponentConfig? LoadConfig(string root)
     {
         string path = Path.Combine(root, AssuranceComponentConfig.FileName);
@@ -334,14 +402,23 @@ internal static partial class AssuranceCommand
     /// that names no component is the component its root directory is, so the
     /// generated titles never come out as "#  Code Assurance".
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=9595FA
+    // Broiler-Falsified-If: a configuration that names no component comes back with an empty component name
+    // Broiler-Human:        PENDING
     private static AssuranceComponentConfig Named(AssuranceComponentConfig config, string root) =>
         config.Component.Length > 0 ? config : config with { Component = ComponentName(root, null) };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=51D934
+    // Broiler-Falsified-If: a root given with a trailing directory separator yields an empty component name
+    // Broiler-Human:        PENDING
     private static string ComponentName(string root, AssuranceComponentConfig? config) =>
         config is { Component.Length: > 0 }
             ? config.Component
             : Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=9BD9C8
+    // Broiler-Falsified-If: a --root that names a file or a missing path is returned instead of raising a usage error
+    // Broiler-Human:        PENDING
     private static string RootOf(Options options)
     {
         string root = options.Value("--root") ?? Directory.GetCurrentDirectory();
@@ -357,6 +434,9 @@ internal static partial class AssuranceCommand
     /// never leaves an insert applied with no report of it. A file that did
     /// not exist is created to find out, and removed again.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=AC1291
+    // Broiler-Falsified-If: probing an existing --json target truncates it or deletes it
+    // Broiler-Human:        PENDING
     private static void PrepareOut(string? path)
     {
         if (path is null or "-")
@@ -386,6 +466,9 @@ internal static partial class AssuranceCommand
     }
 
     /// <summary>Writes a report, and says so; false, with the reason on standard error, when it cannot.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=E2CFD9
+    // Broiler-Falsified-If: a report that could not be written returns true and prints that it was written
+    // Broiler-Human:        PENDING
     private static bool WriteOut(string path, string content, TextWriter output, TextWriter error)
     {
         if (path == "-")
@@ -412,6 +495,9 @@ internal static partial class AssuranceCommand
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=D4FBB8
+    // Broiler-Falsified-If: a flag the subcommand accepts, such as --release for check, is dropped instead of set, so the run applies fewer rules than it was asked to
+    // Broiler-Human:        PENDING
     private static Options Parse(IReadOnlyList<string> args, string[] valued, string[] flags)
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -441,8 +527,12 @@ internal static partial class AssuranceCommand
         return new Options(values, set);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=434BE1
+    // Broiler-Human:        PENDING
     private static string Invariant(FormattableString text) => text.ToString(CultureInfo.InvariantCulture);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=1D6A63
+    // Broiler-Human:        PENDING
     private const string Usage =
         """
         Usage:
@@ -489,15 +579,25 @@ internal static partial class AssuranceCommand
 
         """;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=9CF15D
+    // Broiler-Human:        PENDING
     private sealed record Options(IReadOnlyDictionary<string, string> Values, IReadOnlySet<string> Flags)
     {
+        // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1E731F
+        // Broiler-Human:        PENDING
         public string? Value(string name) => Values.TryGetValue(name, out string? value) ? value : null;
 
+        // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3C9931
+        // Broiler-Human:        PENDING
         public bool Has(string name) => Flags.Contains(name);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DA32AF
+    // Broiler-Human:        PENDING
     private sealed class UsageException : Exception
     {
+        // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=9AC89E
+        // Broiler-Human:        PENDING
         public UsageException(string message)
             : base(message)
         {

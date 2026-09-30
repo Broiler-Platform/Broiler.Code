@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   24
+// Annotated:        24/24
+// Exempt:           13
+// Human-reviewed:   0/24
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         22/13
+// Resource impact:  6/10 max
+// Unverified:       24
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,6 +23,8 @@ using System.Text;
 namespace Broiler.Code.Review.Assurance;
 
 /// <summary>Why a source rewrite was refused, or that it was applied.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=8BF80C
+// Broiler-Human:        PENDING
 public enum AssuranceEditOutcome
 {
     Applied = 0,
@@ -34,12 +53,18 @@ public enum AssuranceEditOutcome
 /// Whether the generated file header was recounted as part of the same edit.
 /// False is normal and not a failure — see <see cref="AssuranceDocument.BannerIsReproducible"/>.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=749709
+// Broiler-Falsified-If: a result built for a refusal reports Succeeded, so the controller writes its text into the buffer
+// Broiler-Human:        PENDING
 public readonly record struct AssuranceEditResult(
     AssuranceEditOutcome Outcome,
     string Text,
     string Message,
     bool HeaderUpdated)
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=C9514B
+    // Broiler-Falsified-If: an outcome of NothingToDo, NoReviewer, Exempt or NotAnnotated reports Succeeded true
+    // Broiler-Human:        PENDING
     public bool Succeeded => Outcome == AssuranceEditOutcome.Applied;
 }
 
@@ -62,6 +87,9 @@ public readonly record struct AssuranceEditResult(
 /// decision — which is the whole of what a human writes — and it is not enough
 /// to recount the generated header, so it does not.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=59E35A
+// Broiler-Falsified-If: signing a unit writes a body carrying a fingerprint part that the unit's human line did not already hold
+// Broiler-Human:        PENDING
 public sealed class AssuranceDocument
 {
     private readonly AssuranceLines _lines;
@@ -69,6 +97,9 @@ public sealed class AssuranceDocument
     private readonly IAssuranceUnitScanner? _scanner;
     private readonly string _path;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=112B63
+    // Broiler-Falsified-If: a document constructed with a null scanner reports HasUnitScanner true
+    // Broiler-Human:        PENDING
     private AssuranceDocument(
         AssuranceLines lines,
         IReadOnlyList<AssuranceUnit> units,
@@ -94,9 +125,15 @@ public sealed class AssuranceDocument
     public bool HasUnitScanner { get; }
 
     /// <summary>True when the file carries a generated assurance header.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4185AF
+    // Broiler-Falsified-If: a file with no generated header reports HasBanner true
+    // Broiler-Human:        PENDING
     public bool HasBanner => _bannerLength > 0;
 
     /// <summary>True when the file carries anything this pane can talk about.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DF5A05
+    // Broiler-Falsified-If: a file with neither annotated units nor a header reports IsAnnotated true
+    // Broiler-Human:        PENDING
     public bool IsAnnotated => Units.Count > 0 || HasBanner;
 
     /// <summary>
@@ -133,6 +170,9 @@ public sealed class AssuranceDocument
     /// not a degraded one to be warned about: most hosts this shell is meant to
     /// run on cannot carry a C# parser at all.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=EB72F1
+    // Broiler-Falsified-If: Read with no scanner yields a Summary or sets BannerIsReproducible true
+    // Broiler-Human:        PENDING
     public static AssuranceDocument Read(
         string text, IAssuranceUnitScanner? scanner = null, string path = "")
     {
@@ -160,6 +200,9 @@ public sealed class AssuranceDocument
     /// answered with null rather than with the nearest, which would put the pane
     /// on a declaration the reviewer is not looking at.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=EA36A9
+    // Broiler-Falsified-If: a caret on a line inside a member's body returns the enclosing type rather than the member
+    // Broiler-Human:        PENDING
     public AssuranceUnit? UnitAt(int line)
     {
         AssuranceUnit? found = null;
@@ -176,6 +219,9 @@ public sealed class AssuranceDocument
     }
 
     /// <summary>The unit with this qualified name, or null.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=162D55
+    // Broiler-Falsified-If: a name that matches a unit only when case is ignored returns that unit
+    // Broiler-Human:        PENDING
     public AssuranceUnit? UnitNamed(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
@@ -213,6 +259,9 @@ public sealed class AssuranceDocument
     /// the name alone would delete the very field that records which version was
     /// approved, turning a second signature into an act that withdraws the first.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=7D6D15
+    // Broiler-Falsified-If: for a unit whose line names a different alias beside a fingerprint part, the returned body still carries a fingerprint part
+    // Broiler-Human:        PENDING
     public static string ApprovalBody(AssuranceUnit unit, string reviewer)
     {
         ArgumentNullException.ThrowIfNull(unit);
@@ -239,6 +288,9 @@ public sealed class AssuranceDocument
     /// Records <paramref name="reviewer"/> as having reviewed
     /// <paramref name="unit"/>, and recounts the header when it may.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=D1F2FB
+    // Broiler-Falsified-If: signing an exempt unit, or signing with a placeholder name such as TODO, returns Applied
+    // Broiler-Human:        PENDING
     public AssuranceEditResult Approve(AssuranceUnit unit, string reviewer)
     {
         ArgumentNullException.ThrowIfNull(unit);
@@ -290,6 +342,9 @@ public sealed class AssuranceDocument
     /// withdrawing takes one back, and a review recorded before the declaration
     /// became exempt has to have a way out.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=C57ABC
+    // Broiler-Falsified-If: Withdraw leaves a name or a fingerprint part on the human line instead of the bare pending word
+    // Broiler-Human:        PENDING
     public AssuranceEditResult Withdraw(AssuranceUnit unit)
     {
         ArgumentNullException.ThrowIfNull(unit);
@@ -308,12 +363,20 @@ public sealed class AssuranceDocument
             $"{unit.DisplayName} set back to {AssuranceVocabulary.Pending}.");
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=65405D
+    // Broiler-Human:        PENDING
     private static string Approved(AssuranceUnit unit, string reviewer) =>
         $"{unit.DisplayName} signed by {reviewer.Trim()}; the assurance generator fills the fingerprint in.";
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=3; Fingerprint=EEC5C4
+    // Broiler-Falsified-If: a refusal carries text other than the document's lines as they stand
+    // Broiler-Human:        PENDING
     private AssuranceEditResult Refused(AssuranceEditOutcome outcome, string message) =>
         new(outcome, _lines.Render(), message, false);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=614506
+    // Broiler-Falsified-If: a rewrite changes a line other than the annotation's human line and the header's own lines
+    // Broiler-Human:        PENDING
     private AssuranceEditResult Rewrite(
         AssuranceUnit unit, AssuranceAnnotation annotation, string body, string message)
     {
@@ -344,6 +407,9 @@ public sealed class AssuranceDocument
     /// writes: the header describes the file as it will be, and deriving it from
     /// the file as it was is how a generator stops being a fixed point.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=6D4DDE
+    // Broiler-Falsified-If: header lines are replaced in a document whose header did not reproduce when it was read
+    // Broiler-Human:        PENDING
     private bool RecountBanner()
     {
         if (!BannerIsReproducible || _bannerLength == 0)
@@ -384,6 +450,9 @@ public sealed class AssuranceDocument
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=707900
+    // Broiler-Falsified-If: a unit whose criterion line is present but empty is left out of the Criteria count that AssuranceSummary.Of includes it in
+    // Broiler-Human:        PENDING
     private void Summarize()
     {
         if (!HasUnitScanner)
@@ -457,6 +526,9 @@ public sealed class AssuranceDocument
         BannerIsReproducible = ReproducesBanner(summary);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=08F3BE
+    // Broiler-Falsified-If: a header that differs from the rendered block in one row, or carries a second copyright line, is reported as reproduced
+    // Broiler-Human:        PENDING
     private bool ReproducesBanner(AssuranceSummary summary)
     {
         if (_bannerLength < 2)
@@ -479,6 +551,9 @@ public sealed class AssuranceDocument
     /// Units as a language service found them, with the annotation above each
     /// one attached.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=75DC54
+    // Broiler-Falsified-If: a unit whose block is an exemption line is returned with IsExempt false
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<AssuranceUnit> FromScanner(
         AssuranceLines lines, IAssuranceUnitScanner scanner, string text, string path)
     {
@@ -524,6 +599,9 @@ public sealed class AssuranceDocument
     /// would leave a reviewer clicking into their own code and being told they
     /// are nowhere.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=63D0DF
+    // Broiler-Falsified-If: a machine line with no human line under it, directly or after one criterion line, is returned as a unit
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<AssuranceUnit> FromAnnotations(AssuranceLines lines)
     {
         var found = new List<AssuranceAnnotation>();
@@ -563,6 +641,9 @@ public sealed class AssuranceDocument
         return units;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=65ECB4
+    // Broiler-Falsified-If: a block separated from the declaration by an attribute line that is not the declaration's own, such as an assembly attribute, is attached to that declaration
+    // Broiler-Human:        PENDING
     private static AssuranceAnnotation? AnnotationAbove(AssuranceLines lines, int declarationLine)
     {
         // Upwards from the declaration, over the doc comment, the block comments
@@ -624,6 +705,9 @@ public sealed class AssuranceDocument
     /// declaration itself, shortened, which cannot be wrong about which line it
     /// came from.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=283F26
+    // Broiler-Falsified-If: a declaration preceded by an attribute line is named after the attribute
+    // Broiler-Human:        PENDING
     private static string DeclarationName(AssuranceLines lines, int declarationLine)
     {
         for (int line = declarationLine; line < lines.Count && line <= declarationLine + 3; line++)
@@ -641,6 +725,9 @@ public sealed class AssuranceDocument
         return string.Create(CultureInfo.InvariantCulture, $"line {declarationLine + 1}");
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=4E0307
+    // Broiler-Falsified-If: a declaration longer than 72 characters comes back longer than 72 characters
+    // Broiler-Human:        PENDING
     private static string Shorten(string declaration)
     {
         string text = declaration.TrimEnd('{', ' ', '\t');

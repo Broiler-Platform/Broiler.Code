@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   12
+// Annotated:        12/12
+// Exempt:           4
+// Human-reviewed:   0/12
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         11/5
+// Resource impact:  4/10 max
+// Unverified:       12
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -17,6 +34,9 @@ namespace Broiler.Code.Language.CSharp.Syntax;
 /// Its approximations are documented on <see cref="CSharpLineLexer"/>. Where
 /// they differ from the semantic service, the semantic service is right.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=0CE6B3
+// Broiler-Falsified-If: GetLineSpans returns a span that extends past the length of that line in the snapshot it was classified from
+// Broiler-Human:        PENDING
 public sealed class PortableCSharpClassifier : ICodeClassifier
 {
     /// <summary>
@@ -26,6 +46,9 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
     /// </summary>
     public int LastLinesLexed { get; private set; }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=5AD983
+    // Broiler-Falsified-If: a previous result whose snapshot version is not exactly one less than the new snapshot's is reused incrementally
+    // Broiler-Human:        PENDING
     public CodeClassificationResult Classify(
         ICodeTextSnapshot snapshot,
         CodeClassificationResult? previous,
@@ -40,6 +63,9 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
             : Full(snapshot, cancellationToken);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=E6389C
+    // Broiler-Falsified-If: a line is lexed with a start state other than the end state returned for the line before it
+    // Broiler-Human:        PENDING
     private Result Full(ICodeTextSnapshot snapshot, CancellationToken cancellationToken)
     {
         var lines = new Line[snapshot.LineCount];
@@ -64,6 +90,9 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
     /// affected: lines before it directly, and lines after it as soon as the
     /// recomputed start state matches what the old result recorded.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=DC561E
+    // Broiler-Falsified-If: after an edit, some line's spans differ from what a full classification of the new snapshot gives that line
+    // Broiler-Human:        PENDING
     private Result Incremental(
         ICodeTextSnapshot snapshot,
         Result previous,
@@ -114,6 +143,9 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
         return new Result(snapshot, lines);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C720EA
+    // Broiler-Falsified-If: spans of the previous line remain in the scratch list and are returned among this line's spans
+    // Broiler-Human:        PENDING
     private static Line ClassifyLine(
         ICodeTextSnapshot snapshot,
         int line,
@@ -134,10 +166,16 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
     /// so classifying a hundred thousand lines allocates one buffer, not a
     /// hundred thousand strings.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=1F637B
+    // Broiler-Falsified-If: a span returned by Read refers to a buffer that has already been returned to the shared pool
+    // Broiler-Human:        PENDING
     private struct LineReader
     {
         private char[]? _buffer;
 
+        // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=674B71
+        // Broiler-Falsified-If: a line longer than the current buffer is copied into that buffer or truncated to its length instead of into a larger one
+        // Broiler-Human:        PENDING
         public ReadOnlySpan<char> Read(ICodeTextSnapshot snapshot, int line)
         {
             int length = snapshot.GetLineLength(line);
@@ -155,6 +193,9 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
             return _buffer.AsSpan(0, length);
         }
 
+        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=077478
+        // Broiler-Falsified-If: a second Dispose returns the same array to the shared pool again
+        // Broiler-Human:        PENDING
         public void Dispose()
         {
             if (_buffer is not null)
@@ -163,8 +204,13 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=6BA638
+    // Broiler-Human:        PENDING
     private readonly record struct Line(LineState StartState, CodeClassificationSpan[] Spans);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=A9AC6B
+    // Broiler-Falsified-If: GetLineSpans for a negative line or one at LineCount throws instead of returning an empty span
+    // Broiler-Human:        PENDING
     private sealed class Result(ICodeTextSnapshot snapshot, PortableCSharpClassifier.Line[] lines)
         : CodeClassificationResult
     {
@@ -172,8 +218,14 @@ public sealed class PortableCSharpClassifier : ICodeClassifier
 
         public override ICodeTextSnapshot Snapshot { get; } = snapshot;
 
+        // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7701EE
+        // Broiler-Falsified-If: LineCount differs from the number of lines the result holds spans for
+        // Broiler-Human:        PENDING
         public override int LineCount => Lines.Length;
 
+        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=5E2E45
+        // Broiler-Falsified-If: GetLineSpans for a negative line or one at LineCount throws instead of returning an empty span
+        // Broiler-Human:        PENDING
         public override ReadOnlySpan<CodeClassificationSpan> GetLineSpans(int line) =>
             line >= 0 && line < Lines.Length ? Lines[line].Spans : default;
     }

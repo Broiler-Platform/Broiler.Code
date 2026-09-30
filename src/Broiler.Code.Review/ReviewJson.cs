@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   15
+// Annotated:        15/15
+// Exempt:           0
+// Human-reviewed:   0/15
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         15/9
+// Resource impact:  4/10 max
+// Unverified:       15
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -24,8 +41,14 @@ namespace Broiler.Code.Review;
 /// * <b>A record must be readable in a pull-request diff.</b> That is, after
 ///   all, the entire point of committing it.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=565A83
+// Broiler-Falsified-If: Read returns ReviewStatus.Reviewed for a record whose status field is missing, misspelled or not a string
+// Broiler-Human:        PENDING
 public static class ReviewJson
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=3FA6EB
+    // Broiler-Falsified-If: a note text holding a double quote, a backslash or a control character is written unescaped, so the record no longer parses
+    // Broiler-Human:        PENDING
     private static readonly JsonWriterOptions WriterOptions = new()
     {
         Indented = true,
@@ -37,9 +60,15 @@ public static class ReviewJson
     };
 
     /// <summary>The timestamp shape: UTC, seconds, no offset, so records sort as text.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=ACBAA9
+    // Broiler-Falsified-If: a timestamp written in this format reads back through GetTimestamp as a different second, or with an offset other than UTC
+    // Broiler-Human:        PENDING
     private const string TimestampFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
     /// <summary>Serializes a record. The result ends with a newline, as a text file should.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=22AD25
+    // Broiler-Falsified-If: a record with a declared status and a non-empty content hash, written by Write and read back by Read, comes back with a different status, content hash or number of notes
+    // Broiler-Human:        PENDING
     public static string Write(FileReview review)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -86,6 +115,9 @@ public static class ReviewJson
     /// returned with those values defaulted, because dropping the file would
     /// destroy a reviewer's work over a spelling.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=9F281D
+    // Broiler-Falsified-If: a record whose JSON repeats a property name in one object makes Read throw instead of returning null or a record
+    // Broiler-Human:        PENDING
     public static FileReview? Read(string json, string path)
     {
         ArgumentNullException.ThrowIfNull(json);
@@ -153,9 +185,15 @@ public static class ReviewJson
         };
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=B278D0
+    // Broiler-Falsified-If: a value with a non-zero offset is written as its local clock time instead of converted to UTC
+    // Broiler-Human:        PENDING
     private static string Stamp(DateTimeOffset value) =>
         value.ToUniversalTime().ToString(TimestampFormat, CultureInfo.InvariantCulture);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=0FE5A3
+    // Broiler-Falsified-If: a note anchored on a line is written without its anchor text, or with its zero-based line numbers
+    // Broiler-Human:        PENDING
     private static void WriteNote(Utf8JsonWriter writer, ReviewNote note)
     {
         writer.WriteStartObject();
@@ -193,6 +231,9 @@ public static class ReviewJson
         writer.WriteEndObject();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=39D936
+    // Broiler-Falsified-If: a startLine of int.MinValue wraps to int.MaxValue when converted to zero-based instead of being clamped to line 0
+    // Broiler-Human:        PENDING
     private static ReviewNote? ReadNote(JsonObject note, string id)
     {
         string? text = GetString(note, "text");
@@ -231,6 +272,9 @@ public static class ReviewJson
         };
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=86FF42
+    // Broiler-Falsified-If: a Question, NeedsChange or InReview status is written as reviewed
+    // Broiler-Human:        PENDING
     private static string ToWire(ReviewStatus status) => status switch
     {
         ReviewStatus.InReview => "in-review",
@@ -240,6 +284,9 @@ public static class ReviewJson
         _ => "unreviewed",
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=52FF2D
+    // Broiler-Falsified-If: a status string other than exactly reviewed, such as Reviewed in capitals or with a trailing space, is read as ReviewStatus.Reviewed
+    // Broiler-Human:        PENDING
     private static ReviewStatus FromWire(string? wire) => wire switch
     {
         "in-review" => ReviewStatus.InReview,
@@ -249,6 +296,9 @@ public static class ReviewJson
         _ => ReviewStatus.Unreviewed,
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=EF0715
+    // Broiler-Falsified-If: a Question, Concern or Todo note is written as observation, so it stops counting as open after a reload
+    // Broiler-Human:        PENDING
     private static string ToWire(ReviewNoteKind kind) => kind switch
     {
         ReviewNoteKind.Concern => "concern",
@@ -257,6 +307,9 @@ public static class ReviewJson
         _ => "question",
     };
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=B96E72
+    // Broiler-Falsified-If: an unrecognized kind string is read as Observation, so the note never counts as open
+    // Broiler-Human:        PENDING
     private static ReviewNoteKind FromWireKind(string? wire) => wire switch
     {
         "concern" => ReviewNoteKind.Concern,
@@ -265,12 +318,21 @@ public static class ReviewJson
         _ => ReviewNoteKind.Question,
     };
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=E6D89B
+    // Broiler-Falsified-If: a property holding a number, a boolean or an object is returned as a string instead of null
+    // Broiler-Human:        PENDING
     private static string? GetString(JsonObject node, string name) =>
         node[name] is JsonValue value && value.TryGetValue(out string? text) ? text : null;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=290BFD
+    // Broiler-Falsified-If: a number outside the int range or with a fraction, such as 1.5, is returned as a truncated or wrapped int instead of null
+    // Broiler-Human:        PENDING
     private static int? GetInt(JsonObject node, string name) =>
         node[name] is JsonValue value && value.TryGetValue(out int number) ? number : null;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C313DC
+    // Broiler-Falsified-If: a timestamp with an explicit offset such as +02:00 is returned without being converted to UTC
+    // Broiler-Human:        PENDING
     private static DateTimeOffset? GetTimestamp(JsonObject node, string name) =>
         GetString(node, name) is { } text &&
         DateTimeOffset.TryParse(

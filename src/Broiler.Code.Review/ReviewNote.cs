@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   11
+// Annotated:        11/11
+// Exempt:           16
+// Human-reviewed:   0/11
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         9/0
+// Resource impact:  0/10 max
+// Unverified:       11
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 
@@ -11,6 +28,9 @@ namespace Broiler.Code.Review;
 /// would make the count of open notes meaningless, and that count is what keeps
 /// a file visible after somebody marks it reviewed.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=091B43
+// Broiler-Falsified-If: the zero member is Observation, so a note built without a kind never counts as open
+// Broiler-Human:        PENDING
 public enum ReviewNoteKind
 {
     /// <summary>Something the reviewer does not understand and needs answered.</summary>
@@ -36,6 +56,8 @@ public enum ReviewNoteKind
 /// under every edit above them. What is stored is the text the note was written
 /// against; where that text is found now is recomputed on load.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E3BB80
+// Broiler-Human:        PENDING
 public enum ReviewAnchorStatus
 {
     /// <summary>The recorded text is still at the recorded line.</summary>
@@ -87,6 +109,9 @@ public enum ReviewAnchorStatus
 /// A fully-qualified declaration name, when something could supply one.
 /// Display and search only.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=2A1B50
+// Broiler-Falsified-If: an anchor with a line number and empty anchor text reports IsFileLevel as true and is written with no anchor
+// Broiler-Human:        PENDING
 public sealed record ReviewAnchor(
     int StartLine,
     int EndLine,
@@ -94,6 +119,9 @@ public sealed record ReviewAnchor(
     string? Symbol = null)
 {
     /// <summary>An anchor for the file as a whole.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=23FDC6
+    // Broiler-Falsified-If: ReviewAnchor.File reports IsFileLevel as false
+    // Broiler-Human:        PENDING
     public static ReviewAnchor File => new(-1, -1);
 
     /// <summary>
@@ -109,9 +137,15 @@ public sealed record ReviewAnchor(
     /// matched by content is a matching problem, and
     /// <see cref="NoteAnchoring"/> says so; it is not a different kind of note.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=48559B
+    // Broiler-Falsified-If: an anchor on line 0 with empty anchor text reports IsFileLevel as true
+    // Broiler-Human:        PENDING
     public bool IsFileLevel => StartLine < 0;
 
     /// <summary>The lines this anchor covers, for a caller sizing a selection.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=024713
+    // Broiler-Falsified-If: an anchor whose EndLine precedes its StartLine reports a LineCount below one
+    // Broiler-Human:        PENDING
     public int LineCount => IsFileLevel ? 0 : Math.Max(1, (EndLine - StartLine) + 1);
 }
 
@@ -122,6 +156,8 @@ public sealed record ReviewAnchor(
 /// The answer. Required, because "resolved" with no answer records that somebody
 /// clicked a button, not that anybody found out.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=262AB0
+// Broiler-Human:        PENDING
 public sealed record ReviewResolution(
     DateTimeOffset ResolvedAt,
     string ResolvedBy,
@@ -137,6 +173,9 @@ public sealed record ReviewResolution(
 /// question into something that reads like documentation, and leaves it there
 /// long after it is answered.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=45A069
+// Broiler-Falsified-If: a resolved note, or an unresolved Observation, counts as open
+// Broiler-Human:        PENDING
 public sealed record ReviewNote
 {
     /// <summary>
@@ -170,6 +209,9 @@ public sealed record ReviewNote
     /// never does, which is what lets a reviewer leave one behind on a file they
     /// are approving.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=62EC31
+    // Broiler-Falsified-If: an unresolved Question, Concern or Todo reports IsOpen as false
+    // Broiler-Human:        PENDING
     public bool IsOpen => Resolution is null && Kind != ReviewNoteKind.Observation;
 }
 
@@ -182,6 +224,9 @@ public sealed record ReviewNote
 /// <param name="Status">How its anchor fared against the current content.</param>
 /// <param name="StartLine">Where to show it now, zero-based; the recorded line when it could not be placed.</param>
 /// <param name="EndLine">Inclusive end of the same.</param>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=175181
+// Broiler-Falsified-If: an Orphaned or Ambiguous note reports NeedsAttention as false
+// Broiler-Human:        PENDING
 public readonly record struct AnchoredNote(
     ReviewNote Note,
     ReviewAnchorStatus Status,
@@ -196,6 +241,9 @@ public readonly record struct AnchoredNote(
     /// excluded: following its code down the file is the anchoring working, not
     /// something to warn about.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=781C23
+    // Broiler-Falsified-If: an Orphaned or Ambiguous note reports NeedsAttention as false
+    // Broiler-Human:        PENDING
     public bool NeedsAttention =>
         Status is ReviewAnchorStatus.Orphaned or ReviewAnchorStatus.Ambiguous;
 }

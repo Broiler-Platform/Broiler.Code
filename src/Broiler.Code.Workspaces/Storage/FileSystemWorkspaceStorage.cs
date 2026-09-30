@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   16
+// Annotated:        16/16
+// Exempt:           3
+// Human-reviewed:   0/16
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         16/10
+// Resource impact:  5/10 max
+// Unverified:       16
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,10 +34,16 @@ namespace Broiler.Code.Workspaces.Storage;
 /// leaves the previous file intact rather than a truncated one. That is the
 /// difference between losing an edit and losing the file.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=EAF628
+// Broiler-Falsified-If: a relative path that names or passes through a symbolic link inside the granted root reads or writes a file outside that root
+// Broiler-Human:        PENDING
 public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
 {
     private readonly string _root;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=914CC6
+    // Broiler-Falsified-If: on a case-sensitive volume under macOS or Windows the provider still reports CaseInsensitivePaths, so renaming a.cs onto an existing A.cs overwrites A.cs
+    // Broiler-Human:        PENDING
     public FileSystemWorkspaceStorage(string root)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(root);
@@ -43,6 +66,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
 
     public IReadOnlyList<string> GrantedRoots { get; }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=0D3BDD
+    // Broiler-Falsified-If: a relative path through a symbolic link inside the granted root returns the text of a file outside it
+    // Broiler-Human:        PENDING
     public ValueTask<StorageResult<StorageTextContent>> ReadTextAsync(
         string relativePath, CancellationToken cancellationToken = default)
     {
@@ -68,6 +94,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=0DA4C9
+    // Broiler-Falsified-If: a symbolic link already present at the file's .broiler-tmp sibling makes a save write the new text to the link's target outside the granted root
+    // Broiler-Human:        PENDING
     public ValueTask<StorageResult<string>> WriteTextAsync(
         string relativePath,
         string text,
@@ -119,6 +148,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=EC7076
+    // Broiler-Falsified-If: an entry that is a symbolic link or junction appears in the listing
+    // Broiler-Human:        PENDING
     public ValueTask<StorageResult<IReadOnlyList<StorageEntry>>> ListAsync(
         string relativeDirectory, CancellationToken cancellationToken = default)
     {
@@ -152,6 +184,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
             StorageResult<IReadOnlyList<StorageEntry>>.Ok(entries));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=5E493B
+    // Broiler-Falsified-If: a directory is reported with a non-zero size or a revision, or a missing path is reported as found
+    // Broiler-Human:        PENDING
     public ValueTask<StorageResult<StorageEntry>> StatAsync(
         string relativePath, CancellationToken cancellationToken = default)
     {
@@ -171,6 +206,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
             DurableId(full))));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=C04576
+    // Broiler-Falsified-If: deleting a directory that contains a symbolic link or junction removes files under the link's target outside the granted root
+    // Broiler-Human:        PENDING
     public ValueTask<StorageResult<bool>> DeleteAsync(
         string relativePath, CancellationToken cancellationToken = default)
     {
@@ -197,6 +235,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C594C6
+    // Broiler-Falsified-If: a rename onto an existing entry whose name differs by more than letter case replaces it instead of failing with Conflict
+    // Broiler-Human:        PENDING
     public ValueTask<StorageResult<StorageEntry>> RenameAsync(
         string fromRelativePath, string toRelativePath, CancellationToken cancellationToken = default)
     {
@@ -240,6 +281,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=D812AE
+    // Broiler-Falsified-If: a relative path that names or passes through a symbolic link or junction inside the granted root resolves to a location outside it and is not refused
+    // Broiler-Human:        PENDING
     private bool TryResolve(string relativePath, out string full, out StorageFailure? failure)
     {
         full = string.Empty;
@@ -269,6 +313,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=42A80D
+    // Broiler-Falsified-If: a path returned by ListAsync does not resolve back to the same entry when passed to ReadTextAsync
+    // Broiler-Human:        PENDING
     private string Relative(string full) =>
         Path.GetRelativePath(_root, full).Replace('\\', '/');
 
@@ -277,6 +324,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
     /// would make opening a large workspace slow enough to matter, and this is
     /// enough to notice that something changed.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=26CAA7
+    // Broiler-Falsified-If: a file rewritten after it was read, with a different length or a later last-write time, still reports the revision it was read at
+    // Broiler-Human:        PENDING
     private static string Revision(string full)
     {
         var info = new FileInfo(full);
@@ -285,6 +335,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
             $"{info.LastWriteTimeUtc.Ticks:x}-{info.Length:x}");
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=37BD5B
+    // Broiler-Falsified-If: a path is returned as a durable identity, so a rename outside the editor is mistaken for the same file
+    // Broiler-Human:        PENDING
     private static string? DurableId(string full)
     {
         // The local filesystem exposes no identity that survives a rename
@@ -294,6 +347,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         return null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=C81C03
+    // Broiler-Falsified-If: a file that is not valid UTF-8, such as Windows-1252 text, is returned with U+FFFD in place of its bytes and reported as utf-8, so the next save rewrites it
+    // Broiler-Human:        PENDING
     private static (string Text, TextEncodingInfo Encoding) Decode(byte[] bytes)
     {
         if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
@@ -301,6 +357,9 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         return (Encoding.UTF8.GetString(bytes), TextEncodingInfo.Utf8NoBom);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=35C06C
+    // Broiler-Falsified-If: text saved with HasByteOrderMark set is written without the EF BB BF prefix, or with it twice
+    // Broiler-Human:        PENDING
     private static byte[] Encode(string text, TextEncodingInfo encoding)
     {
         byte[] body = new UTF8Encoding(false).GetBytes(text);
@@ -315,9 +374,15 @@ public sealed class FileSystemWorkspaceStorage : IWorkspaceStorage
         return result;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=11A125
+    // Broiler-Falsified-If: the returned result reports success, or carries a kind other than the one given
+    // Broiler-Human:        PENDING
     private static ValueTask<StorageResult<T>> Fail<T>(StorageFailureKind kind, string message) =>
         ValueTask.FromResult(StorageResult<T>.Fail(kind, message));
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=B76052
+    // Broiler-Falsified-If: the returned result reports success, or carries a kind other than the failure's, so an OutsideGrant refusal reaches the caller as another kind
+    // Broiler-Human:        PENDING
     private static ValueTask<StorageResult<T>> Fail<T>(StorageFailure failure) =>
         ValueTask.FromResult(StorageResult<T>.Fail(failure.Kind, failure.Message));
 }

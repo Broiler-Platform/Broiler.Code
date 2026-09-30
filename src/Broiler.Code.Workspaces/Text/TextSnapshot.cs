@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   20
+// Annotated:        20/20
+// Exempt:           5
+// Human-reviewed:   0/20
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         16/0
+// Resource impact:  3/10 max
+// Unverified:       20
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,6 +31,9 @@ namespace Broiler.Code.Workspaces.Text;
 /// document unless the caller explicitly asks for it with
 /// <see cref="ToString"/> — which the editor never does.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=B8B01E
+// Broiler-Falsified-If: a snapshot produced by WithChange reads differently from the same replacement applied to its predecessor's string
+// Broiler-Human:        PENDING
 public sealed class TextSnapshot
 {
     private readonly RopeNode? _root;
@@ -33,6 +53,8 @@ public sealed class TextSnapshot
     /// </summary>
     public int Version { get; }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=D4B95F
+    // Broiler-Human:        PENDING
     public int Length => _root?.Length ?? 0;
 
     /// <summary>
@@ -40,14 +62,22 @@ public sealed class TextSnapshot
     /// terminator produces a final empty line — which is what an editor shows
     /// and what line arithmetic needs.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=A7FA62
+    // Broiler-Human:        PENDING
     public int LineCount => (_root?.LineBreaks ?? 0) + 1;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=14D7E4
+    // Broiler-Falsified-If: a text whose CRLF straddles an internal leaf boundary reports a LineCount one higher than its terminator count plus one
+    // Broiler-Human:        PENDING
     public static TextSnapshot Create(string text, int version = 0)
     {
         ArgumentNullException.ThrowIfNull(text);
         return new TextSnapshot(RopeNode.Create(text), version);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=8D9D6B
+    // Broiler-Falsified-If: an index equal to Length returns a character instead of throwing
+    // Broiler-Human:        PENDING
     public char this[int index]
     {
         get
@@ -59,6 +89,9 @@ public sealed class TextSnapshot
     }
 
     /// <summary>Zero-based line containing <paramref name="position"/>.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=D592A4
+    // Broiler-Falsified-If: a position between the CR and the LF of a CRLF is reported on the following line
+    // Broiler-Human:        PENDING
     public int GetLineFromPosition(int position)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(position);
@@ -66,6 +99,9 @@ public sealed class TextSnapshot
         return _root?.LineBreaksBefore(position) ?? 0;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=135D3C
+    // Broiler-Falsified-If: the start of the line after a CRLF points at the LF instead of the character after it
+    // Broiler-Human:        PENDING
     public int GetLineStart(int line)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(line);
@@ -74,6 +110,9 @@ public sealed class TextSnapshot
     }
 
     /// <summary>Length of the line excluding its terminator.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=9B4451
+    // Broiler-Falsified-If: a line ending in CRLF reports a length that includes its CR
+    // Broiler-Human:        PENDING
     public int GetLineLength(int line)
     {
         int start = GetLineStart(line);
@@ -93,12 +132,18 @@ public sealed class TextSnapshot
     }
 
     /// <summary>Zero-based line and column, for the normalized diagnostic model.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=A83D80
+    // Broiler-Falsified-If: a position at the first character of a line reports a non-zero column
+    // Broiler-Human:        PENDING
     public (int Line, int Column) GetLineAndColumn(int position)
     {
         int line = GetLineFromPosition(position);
         return (line, position - GetLineStart(line));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=3C11FD
+    // Broiler-Falsified-If: a column past the end of a line yields a position on the following line instead of the line's end
+    // Broiler-Human:        PENDING
     public int GetPosition(int line, int column)
     {
         int start = GetLineStart(line);
@@ -110,6 +155,9 @@ public sealed class TextSnapshot
     /// This is what the renderer and the classifier use; both work a visible
     /// range at a time and neither may pull the document into a string.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=BA3096
+    // Broiler-Falsified-If: characters of destination beyond the requested length are overwritten by the copy
+    // Broiler-Human:        PENDING
     public void CopyTo(int start, int length, Span<char> destination)
     {
         ValidateRange(start, length);
@@ -121,6 +169,9 @@ public sealed class TextSnapshot
     }
 
     /// <summary>Materializes one range. Bounded by the caller, never by the document.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=46A015
+    // Broiler-Falsified-If: a range with start 1 and length int.MaxValue passes validation and the call attempts to allocate a string of that length instead of throwing ArgumentOutOfRangeException
+    // Broiler-Human:        PENDING
     public string GetText(int start, int length)
     {
         ValidateRange(start, length);
@@ -130,6 +181,8 @@ public sealed class TextSnapshot
             state.Item1._root!.CopyTo(state.start, span));
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=075661
+    // Broiler-Human:        PENDING
     public string GetLineText(int line) => GetText(GetLineStart(line), GetLineLength(line));
 
     /// <summary>
@@ -139,6 +192,9 @@ public sealed class TextSnapshot
     /// </summary>
     public override string ToString() => GetText(0, Length);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=0FD387
+    // Broiler-Falsified-If: the successor's text differs from the predecessor's string with OldLength characters at Start replaced by NewText
+    // Broiler-Human:        PENDING
     internal TextSnapshot WithChange(TextChange change, int version)
     {
         (RopeNode? prefix, RopeNode? rest) = RopeNode.Split(_root, change.Start);
@@ -152,6 +208,9 @@ public sealed class TextSnapshot
     /// surrogate pairs and combining marks. A caret that moves by one char
     /// splits an emoji; a caret that moves by one text element does not.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=DF0185
+    // Broiler-Falsified-If: a caret before a surrogate pair moves to the position between its two halves
+    // Broiler-Human:        PENDING
     public int GetNextCaretPosition(int position)
     {
         if (position >= Length)
@@ -166,6 +225,9 @@ public sealed class TextSnapshot
         return enumerator.MoveNext() ? position + enumerator.GetTextElement().Length : position + 1;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=1739D6
+    // Broiler-Falsified-If: a caret after a surrogate pair moves to the position between its two halves
+    // Broiler-Human:        PENDING
     public int GetPreviousCaretPosition(int position)
     {
         if (position <= 0)
@@ -191,6 +253,9 @@ public sealed class TextSnapshot
     /// without copying it. Chunk boundaries are an artifact of the tree and
     /// carry no meaning; a consumer that cares about boundaries must buffer.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=18C8D2
+    // Broiler-Falsified-If: concatenating the chunks delivered for a range gives a different text than GetText returns for the same range
+    // Broiler-Human:        PENDING
     public void ForEachChunk(int start, int length, ChunkVisitor visitor)
     {
         ArgumentNullException.ThrowIfNull(visitor);
@@ -199,8 +264,13 @@ public sealed class TextSnapshot
             VisitChunks(_root!, start, length, visitor);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=D9AB37
+    // Broiler-Human:        PENDING
     public delegate void ChunkVisitor(ReadOnlySpan<char> chunk, int position);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=2B10EC
+    // Broiler-Falsified-If: a range starting inside a leaf delivers that leaf's chunk from the leaf's first character instead of from the range start
+    // Broiler-Human:        PENDING
     private static void VisitChunks(RopeNode node, int start, int length, ChunkVisitor visitor)
     {
         var pending = new Stack<(RopeNode Node, int Offset)>();
@@ -230,6 +300,9 @@ public sealed class TextSnapshot
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=41A366
+    // Broiler-Falsified-If: a start of 1 with a length of int.MaxValue passes the check because start plus length wraps negative
+    // Broiler-Human:        PENDING
     private void ValidateRange(int start, int length)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(start);

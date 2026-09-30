@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   16
+// Annotated:        16/16
+// Exempt:           8
+// Human-reviewed:   0/16
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         10/0
+// Resource impact:  5/10 max
+// Unverified:       16
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 
@@ -8,6 +25,9 @@ namespace Broiler.Code.Workspaces.Text;
 /// undo/redo. The editor control never mutates an independent copy — it submits
 /// versioned intents here and renders the accepted snapshot.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=38ED39
+// Broiler-Falsified-If: undoing every entry after a sequence of typing, deletions and replacements leaves text that differs from the text the buffer was constructed with
+// Broiler-Human:        PENDING
 public sealed class SourceBuffer
 {
     private readonly List<UndoEntry> _undo = [];
@@ -15,6 +35,9 @@ public sealed class SourceBuffer
     private int _version;
     private bool _groupOpen;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=0E9201
+    // Broiler-Falsified-If: a buffer built over a non-empty text reports IsDirty before any edit is applied
+    // Broiler-Human:        PENDING
     public SourceBuffer(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -24,6 +47,8 @@ public sealed class SourceBuffer
     }
 
     /// <summary>Raised after a transaction is accepted, with the change that produced it.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4E52F0
+    // Broiler-Human:        PENDING
     public event Action<TextSnapshot, TextChange>? Changed;
 
     public TextSnapshot Current { get; private set; }
@@ -31,6 +56,9 @@ public sealed class SourceBuffer
     /// <summary>Version last written to storage; drives the dirty overlay.</summary>
     public int SavedVersion { get; private set; }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0F712F
+    // Broiler-Falsified-If: an accepted edit after MarkSaved leaves IsDirty reading false
+    // Broiler-Human:        PENDING
     public bool IsDirty => Current.Version != SavedVersion;
 
     public bool IsReadOnly { get; set; }
@@ -42,10 +70,17 @@ public sealed class SourceBuffer
     /// </summary>
     public string LineEnding { get; set; }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=D82573
+    // Broiler-Human:        PENDING
     public bool CanUndo => _undo.Count > 0;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=87BA60
+    // Broiler-Human:        PENDING
     public bool CanRedo => _redo.Count > 0;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=11A34D
+    // Broiler-Falsified-If: a change with Start 1 and OldLength int.MaxValue passes the range check because the sum wraps negative, and Apply throws instead of returning an OutOfRange rejection
+    // Broiler-Human:        PENDING
     public EditResult Apply(EditTransaction transaction)
     {
         if (IsReadOnly)
@@ -71,8 +106,13 @@ public sealed class SourceBuffer
     /// those events, and without them a whole editing session collapses into
     /// one undo step.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7F7AA7
+    // Broiler-Human:        PENDING
     public void BreakUndoGroup() => _groupOpen = false;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=D1481B
+    // Broiler-Falsified-If: undoing a coalesced typing group leaves text that differs from the text before the group's first insertion
+    // Broiler-Human:        PENDING
     public bool Undo()
     {
         if (IsReadOnly || _undo.Count == 0)
@@ -94,6 +134,9 @@ public sealed class SourceBuffer
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=41BB4D
+    // Broiler-Falsified-If: redoing an undone group produces text that differs from the text the group originally produced
+    // Broiler-Human:        PENDING
     public bool Redo()
     {
         if (IsReadOnly || _redo.Count == 0)
@@ -110,12 +153,18 @@ public sealed class SourceBuffer
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=76CBA4
+    // Broiler-Falsified-If: typing immediately after MarkSaved is merged into the undo group that was open before the save
+    // Broiler-Human:        PENDING
     public void MarkSaved()
     {
         SavedVersion = Current.Version;
         BreakUndoGroup();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=346F3D
+    // Broiler-Falsified-If: an insertion that does not start where the previous insertion ended is merged into the open undo group
+    // Broiler-Human:        PENDING
     private void Push(string name, TextChange change, string replaced)
     {
         _redo.Clear();
@@ -138,6 +187,9 @@ public sealed class SourceBuffer
         _groupOpen = change.OldLength == 0 && change.NewLength > 0;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=D3EEFD
+    // Broiler-Falsified-If: Changed is raised while Current still holds the previous snapshot, so a handler reading Current sees the old version
+    // Broiler-Human:        PENDING
     private TextSnapshot Commit(TextChange change)
     {
         TextSnapshot next = Current.WithChange(change, ++_version);
@@ -146,6 +198,9 @@ public sealed class SourceBuffer
         return next;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=F33A30
+    // Broiler-Falsified-If: a document whose first line ends in CRLF is given a bare LF or CR as its LineEnding
+    // Broiler-Human:        PENDING
     private static string DetectLineEnding(TextSnapshot snapshot)
     {
         // The first terminator wins. Scanning the whole document to take a
@@ -164,7 +219,11 @@ public sealed class SourceBuffer
         return Environment.NewLine;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=53E0A7
+    // Broiler-Human:        PENDING
     private sealed record UndoEntry(string Name, List<UndoStep> Steps);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4B07D0
+    // Broiler-Human:        PENDING
     private readonly record struct UndoStep(TextChange Change, string ReplacedText);
 }

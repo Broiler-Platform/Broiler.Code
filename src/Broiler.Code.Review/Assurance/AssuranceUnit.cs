@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   7
+// Annotated:        7/7
+// Exempt:           12
+// Human-reviewed:   0/7
+// IP risk:          None
+// Security risk:    High
+// Criteria:         6/2
+// Resource impact:  6/10 max
+// Unverified:       7
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 
@@ -12,6 +29,9 @@ namespace Broiler.Code.Review.Assurance;
 /// counts from one because a person reads it. Converting once, here, is cheaper
 /// than being wrong about it in the three places that consume this.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=8BB887
+// Broiler-Falsified-If: an exempt unit that carries an annotation block reports IsWritable true, so the editor enables recording a decision on it
+// Broiler-Human:        PENDING
 public sealed record AssuranceUnit
 {
     /// <summary>
@@ -59,12 +79,21 @@ public sealed record AssuranceUnit
     public AssuranceUnitState State { get; init; } = AssuranceUnitState.New;
 
     /// <summary>True when the unit counts towards the file's relevant total.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=D4856F
+    // Broiler-Falsified-If: an exempt unit reports IsRelevant true and is counted in the file's relevant total
+    // Broiler-Human:        PENDING
     public bool IsRelevant => !IsExempt;
 
     /// <summary>True when a reviewer can record a decision on this unit here.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=C9E913
+    // Broiler-Falsified-If: a unit with no annotation block, or an exempt one, reports IsWritable true
+    // Broiler-Human:        PENDING
     public bool IsWritable => Annotation is not null && !IsExempt;
 
     /// <summary>Whether <paramref name="line"/> falls inside the unit's extent.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=BF2982
+    // Broiler-Falsified-If: the line after EndLine or the line before StartLine is reported inside the unit, so a caret there resolves to it
+    // Broiler-Human:        PENDING
     public bool Contains(int line) => line >= StartLine && line <= EndLine;
 }
 
@@ -79,6 +108,8 @@ public sealed record AssuranceUnit
 /// <param name="IsExempt">Whether the exemption predicate matched.</param>
 /// <param name="Exemption">Why, in the owning component's words.</param>
 /// <param name="Fingerprint">The unit's fingerprint now.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CF5156
+// Broiler-Human:        PENDING
 public readonly record struct AssuranceScannedUnit(
     string Name,
     string DisplayName,
@@ -117,6 +148,9 @@ public readonly record struct AssuranceScannedUnit(
 /// not get to be approximately right: a fingerprint that is nearly correct
 /// reports every reviewed unit in the repository as stale.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=A317C5
+// Broiler-Falsified-If: a change to a declaration's tokens leaves its reported fingerprint unchanged, so a human line recorded against the old code still matches
+// Broiler-Human:        PENDING
 public interface IAssuranceUnitScanner
 {
     /// <summary>
@@ -127,5 +161,8 @@ public interface IAssuranceUnitScanner
     /// declaration's tokens and nothing else — so a caller with no path may pass
     /// an empty string.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=0003C4
+    // Broiler-Falsified-If: a declaration the owning component does not exempt is reported with IsExempt true, so it drops out of the relevant total
+    // Broiler-Human:        PENDING
     IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path);
 }
