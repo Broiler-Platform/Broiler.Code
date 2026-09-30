@@ -96,6 +96,50 @@ what it directly drives. It is not a measure of how often the code is called.
 | 7–8 | Growth driven by untrusted length or count fields, backtracking, whole-document layout or paint, image, font or media decode, or anything that is bounded only by a budget kept elsewhere. |
 | 9–10 | The unit exhausts CPU or memory by design unless an external limit stops it. Examples are a script execution loop and decompression. |
 
+## Keeping values consistent across related units
+
+Most disagreements between two assessors come from relationships between
+units, not from the units themselves. The first pilot audits found every one of
+the following. These rules settle them.
+
+- **A type carries at least the worst of what it declares.** Its `Security`
+  is at least the highest `Security` of its members, and its `Resources` is at
+  least their highest `Resources`. Its criterion names the worst failure among
+  them. Broiler.VM already does this for most of its type units.
+- **Cost flows to callers.** `Resources` is what one call can cost, so a unit
+  scores at least what the units it calls can cost with inputs it passes
+  through. The exception is when that cost is bounded by a budget this unit
+  enforces. A one-line `GetSite(host)` over a quadratic suffix walk scores what
+  the walk scores.
+- **A forwarder takes the `Security` of what it forwards to.** A one-line
+  method that hands attacker-influenced data to a parser, or a boundary check to
+  another method, is exactly as risky as the call it makes.
+- **A constant or table takes the `Security` of the decision it configures.**
+  Examples are a size limit a parser enforces, a character set a validator
+  accepts, and the list of forbidden headers. Something that is only displayed
+  or logged is `None` or `Low`.
+- **An interface or abstract member is assessed by its contract.** Rate it by
+  what every implementation must get right. A transport interface that carries
+  untrusted responses is `High`, even though it has no body, and its criterion
+  is stated against the contract.
+- **Equality that is a boundary is a boundary.** A record or key type whose
+  equality or hash decides isolation is `High`, including compiler-generated
+  equality. Examples are a cookie partition key, a site key and a cache key per
+  origin.
+- **Siblings of the same shape get the same values.** Before writing a value
+  that differs from a same-shaped sibling in the same file, check that the code
+  really differs.
+
+## When the code already fails its criterion
+
+Writing a criterion means asking how the unit could be wrong, and sometimes the
+answer is that it already is. For example, a lazy cache mutated without a lock
+on a type documented as thread-safe, or a response body decompressed with no
+size cap. Keep the criterion as it is: it describes the defect precisely. Then
+report the unit, with the evidence, as a **suspected defect** to whoever runs
+the assessment, so that it reaches an issue tracker rather than living only in
+a comment. An assessment never fixes code.
+
 ## Spec: optional
 
 Cite a record only when the code plainly implements it. Put a component ADR as

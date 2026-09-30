@@ -243,7 +243,7 @@ internal static partial class AssuranceCommand
             if (!File.Exists(path))
                 throw new UsageException($"--config: '{path}' does not exist");
 
-            return AssuranceComponentConfig.Parse(File.ReadAllText(path));
+            return Named(AssuranceComponentConfig.Parse(File.ReadAllText(path)), root);
         }
 
         return LoadConfig(root)

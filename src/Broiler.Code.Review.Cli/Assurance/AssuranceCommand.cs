@@ -326,8 +326,16 @@ internal static partial class AssuranceCommand
     private static AssuranceComponentConfig? LoadConfig(string root)
     {
         string path = Path.Combine(root, AssuranceComponentConfig.FileName);
-        return File.Exists(path) ? AssuranceComponentConfig.Parse(File.ReadAllText(path)) : null;
+        return File.Exists(path) ? Named(AssuranceComponentConfig.Parse(File.ReadAllText(path)), root) : null;
     }
+
+    /// <summary>
+    /// The configuration with its documented default name: a configuration
+    /// that names no component is the component its root directory is, so the
+    /// generated titles never come out as "#  Code Assurance".
+    /// </summary>
+    private static AssuranceComponentConfig Named(AssuranceComponentConfig config, string root) =>
+        config.Component.Length > 0 ? config : config with { Component = ComponentName(root, null) };
 
     private static string ComponentName(string root, AssuranceComponentConfig? config) =>
         config is { Component.Length: > 0 }

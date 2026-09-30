@@ -138,6 +138,21 @@ public sealed class AssuranceGenerateCommandTests
     }
 
     [Fact(Timeout = 600000)]
+    public void A_Configuration_That_Names_No_Component_Is_Titled_After_Its_Root()
+    {
+        using TemporaryComponent component = Component(
+            """{ "projects": [ "src/Probe/Probe.csproj" ], "spdx": { "copyright": [ "2026 Broiler Platform contributors" ], "license": "Apache-2.0" } }""");
+        component.Write("src/Probe/Counter.cs", Counter);
+
+        (int exit, _, _) = component.Run("generate", "--root", component.Root);
+
+        string name = Path.GetFileName(Path.TrimEndingDirectorySeparator(Path.GetFullPath(component.Root)));
+        Assert.Equal(0, exit);
+        Assert.StartsWith($"# {name} Code Assurance\n", component.Read("CODE-ASSURANCE.md"), StringComparison.Ordinal);
+        Assert.StartsWith($"# Human Review: {name}\n", component.Read("HUMAN_REVIEW.md"), StringComparison.Ordinal);
+    }
+
+    [Fact(Timeout = 600000)]
     public void A_Dry_Run_Writes_Nothing()
     {
         using TemporaryComponent component = Component();
