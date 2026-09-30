@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   5
+// Annotated:        5/5
+// Exempt:           4
+// Human-reviewed:   0/5
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         4/4
+// Resource impact:  7/10 max
+// Unverified:       5
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,6 +33,9 @@ namespace Broiler.Code.Review.Assurance;
 /// is on the Linux runners where these configs are checked; a pattern that only
 /// matched on Windows would exclude nothing in CI.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=458A43
+// Broiler-Falsified-If: a name-only pattern of eight '*a' groups followed by '*b' takes seconds to reject a 40-character file name made of 'a', because the expression has no match timeout
+// Broiler-Human:        PENDING
 public sealed class AssuranceGlob
 {
     private readonly Regex _regex;
@@ -37,6 +57,9 @@ public sealed class AssuranceGlob
     /// pattern would never match a root-relative path, and a pattern that
     /// silently matches nothing is an exclusion nobody notices failing.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=94206A
+    // Broiler-Falsified-If: a pattern with a '..' segment, or a drive prefix such as 'C:/src', is accepted
+    // Broiler-Human:        PENDING
     public static bool TryParse(string? pattern, out AssuranceGlob? glob, out string? problem)
     {
         glob = null;
@@ -75,6 +98,9 @@ public sealed class AssuranceGlob
     }
 
     /// <summary>Whether <paramref name="relativePath"/> (forward slashes) matches.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=333AFA
+    // Broiler-Falsified-If: a name-only pattern of eight '*a' groups followed by '*b' takes seconds to reject a 40-character file name made of 'a', because the expression has no match timeout
+    // Broiler-Human:        PENDING
     public bool IsMatch(string relativePath)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
@@ -83,8 +109,13 @@ public sealed class AssuranceGlob
         return _regex.IsMatch(subject);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=312394
+    // Broiler-Human:        PENDING
     public override string ToString() => Pattern;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=86EA4E
+    // Broiler-Falsified-If: a '.' in the pattern, as in '*.g.cs', matches any character, so 'xAgBcs' matches
+    // Broiler-Human:        PENDING
     private static string ToRegex(string pattern)
     {
         var regex = new StringBuilder("^");

@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   31
+// Annotated:        31/31
+// Exempt:           0
+// Human-reviewed:   0/31
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         21/21
+// Resource impact:  8/10 max
+// Unverified:       31
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,18 +29,26 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// <param name="RelativePath">The .csproj, relative to the component root, forward slashes.</param>
 /// <param name="Directory">The project's directory, relative to the root; empty for the root itself.</param>
 /// <param name="AssemblyName">The assembly the project builds.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=A1D735
+// Broiler-Human:        PENDING
 internal sealed record ComponentProject(string RelativePath, string Directory, string AssemblyName);
 
 /// <summary>One covered source file.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=90C302
+// Broiler-Human:        PENDING
 internal sealed record ComponentSourceFile(string RelativePath, string FullPath, ComponentProject Project);
 
 /// <summary>
 /// A file under a covered project, or compiled into one, that is not covered,
 /// and why. A path ending in <c>/</c> is a directory the tool does not enter.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=94945A
+// Broiler-Human:        PENDING
 internal sealed record ComponentExcludedFile(string RelativePath, string Reason);
 
 /// <summary>A path a <c>--files</c> list or an insert names that is not a covered file, and why.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=E0644A
+// Broiler-Human:        PENDING
 internal sealed record ComponentUnknownPath(string Path, string Reason);
 
 /// <summary>What discovery found.</summary>
@@ -35,6 +60,8 @@ internal sealed record ComponentUnknownPath(string Path, string Reason);
 /// did not enter. Ordered by path.
 /// </param>
 /// <param name="Notes">Things a person running the tool should know, such as a heuristic project list.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=25DB23
+// Broiler-Human:        PENDING
 internal sealed record ComponentSourceSet(
     IReadOnlyList<ComponentProject> Projects,
     IReadOnlyList<ComponentSourceFile> Files,
@@ -42,8 +69,12 @@ internal sealed record ComponentSourceSet(
     IReadOnlyList<string> Notes);
 
 /// <summary>Why discovery could not produce a source set.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=70DEE0
+// Broiler-Human:        PENDING
 internal sealed class ComponentSourceException : Exception
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E52F4F
+    // Broiler-Human:        PENDING
     public ComponentSourceException(string message)
         : base(message)
     {
@@ -78,8 +109,14 @@ internal sealed class ComponentSourceException : Exception
 /// A directory that is itself another covered project's directory is walked
 /// once, for that project, so no file is covered twice.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=71E8E4
+// Broiler-Falsified-If: a .cs file reached through a junction, or inside a directory holding a .git entry, is returned among the covered files
+// Broiler-Human:        PENDING
 internal static class ComponentSources
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=1F5999
+    // Broiler-Falsified-If: a .cs file under an obj directory directly below a project root is returned as covered
+    // Broiler-Human:        PENDING
     private static readonly string[] BuildOutput = ["bin", "obj"];
 
     /// <summary>
@@ -87,6 +124,9 @@ internal static class ComponentSources
     /// configuration, its project list is used as it is. Without one, product
     /// projects are guessed, and <see cref="ComponentSourceSet.Notes"/> says so.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=1AB32E
+    // Broiler-Falsified-If: a configured project that lies inside a nested checkout is walked and its files covered instead of refused
+    // Broiler-Human:        PENDING
     public static ComponentSourceSet Discover(string root, AssuranceComponentConfig? config)
     {
         ArgumentNullException.ThrowIfNull(root);
@@ -228,6 +268,9 @@ internal static class ComponentSources
     /// the run, because a changed-files list from a pull request names tests
     /// and documents too; <c>list --strict</c> fails on one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=8689F7
+    // Broiler-Falsified-If: a --files list whose only line names an uncovered path returns a set that still holds covered files
+    // Broiler-Human:        PENDING
     public static ComponentSourceSet Restrict(
         ComponentSourceSet set, string root, IEnumerable<string> listed, out IReadOnlyList<ComponentUnknownPath> unknown)
     {
@@ -271,6 +314,9 @@ internal static class ComponentSources
     /// covered file only in case names that file; elsewhere it names nothing,
     /// and the reason suggests the file it would have named.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=8A8F8C
+    // Broiler-Falsified-If: on Linux a path that differs from a covered file only in letter case returns that file
+    // Broiler-Human:        PENDING
     public static ComponentSourceFile? Find(ComponentSourceSet set, string root, string path, out ComponentUnknownPath? problem)
     {
         ArgumentNullException.ThrowIfNull(set);
@@ -313,6 +359,9 @@ internal static class ComponentSources
     /// segments are dropped and <c>..</c> resolved. A path outside the root
     /// comes back starting with <c>../</c>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=AC07D0
+    // Broiler-Falsified-If: a path such as src/../../x.cs comes back without a leading ../, so it is taken for a file inside the root
+    // Broiler-Human:        PENDING
     public static string Normalize(string root, string path)
     {
         ArgumentNullException.ThrowIfNull(root);
@@ -348,6 +397,9 @@ internal static class ComponentSources
     /// The name decides which assemblies are closed to the escape hatch, and a
     /// silent fallback there closes nothing.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=B1A16D
+    // Broiler-Falsified-If: a project whose only AssemblyName sits in a PropertyGroup with a Condition returns that name instead of refusing
+    // Broiler-Human:        PENDING
     internal static string AssemblyNameOf(string root, string projectPath)
     {
         string fallback = Path.GetFileNameWithoutExtension(projectPath);
@@ -392,6 +444,9 @@ internal static class ComponentSources
     /// builds. A misspelt name would otherwise close nothing while the report
     /// said it was closed.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=9AE3E7
+    // Broiler-Falsified-If: a configuration whose closedToEscapeHatch names an assembly no configured project builds passes without an exception
+    // Broiler-Human:        PENDING
     private static void CheckClosedAssemblies(AssuranceComponentConfig config, IEnumerable<ComponentProject> projects)
     {
         var built = new SortedSet<string>(projects.Select(static project => project.AssemblyName), StringComparer.Ordinal);
@@ -407,8 +462,13 @@ internal static class ComponentSources
     }
 
     /// <summary>One file the walk found, or one path it did not enter, with why.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=2ECFF9
+    // Broiler-Human:        PENDING
     private readonly record struct WalkEntry(string RelativePath, string FullPath, string? Skipped);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=E07ED9
+    // Broiler-Falsified-If: a subdirectory that is a junction is descended into and its .cs files are yielded with no skip reason
+    // Broiler-Human:        PENDING
     private static IEnumerable<WalkEntry> Walk(string root, string start, HashSet<string> projectDirectories, bool anyDepth)
     {
         // Each directory with the build output directory it lies in, below the
@@ -469,6 +529,8 @@ internal static class ComponentSources
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=9469BB
+    // Broiler-Human:        PENDING
     private static string BuildOutputReason(string directory) =>
         $"inside the build output directory '{directory}/', which is left out at any depth " +
         "(\"excludeBuildOutputAtAnyDepth\": false covers it)";
@@ -479,6 +541,9 @@ internal static class ComponentSources
     /// holding a <c>.git</c> entry, or a link. Null when there is none. The
     /// root's own <c>.git</c> is the component's and does not count.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=1C607B
+    // Broiler-Falsified-If: on Windows a directory segment spelt .git. (which the file system opens as .git) returns null instead of a .git barrier
+    // Broiler-Human:        PENDING
     internal static (string Directory, string What, bool IsLink)? Unenterable(string root, string relativeDirectory)
     {
         if (relativeDirectory.Length == 0)
@@ -504,6 +569,9 @@ internal static class ComponentSources
         return null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=057A2F
+    // Broiler-Falsified-If: a directory whose .git entry is a file, as in a submodule checkout, is reported as not a nested checkout
+    // Broiler-Human:        PENDING
     private static bool IsNestedCheckout(string directory)
     {
         string git = Path.Combine(directory, ".git");
@@ -511,6 +579,9 @@ internal static class ComponentSources
     }
 
     /// <summary>True for a junction or symbolic link, file or directory, and for anything that cannot be asked.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=895528
+    // Broiler-Falsified-If: a directory junction, or a path whose attributes cannot be read, returns false
+    // Broiler-Human:        PENDING
     internal static bool IsLink(string path)
     {
         try
@@ -529,6 +600,8 @@ internal static class ComponentSources
     }
 
     /// <summary>One <c>&lt;Compile Include&gt;</c> value, resolved to a file or not resolvable.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=4B4CEA
+    // Broiler-Human:        PENDING
     private sealed record CompileItem(string Include, string DeclaredIn, string FullPath, bool Unresolved);
 
     /// <summary>
@@ -538,6 +611,9 @@ internal static class ComponentSources
     /// <c>Condition</c> is ignored and a <c>Remove</c> is not applied: the bias
     /// is to cover what may be compiled, not only what certainly is.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=C2DC5E
+    // Broiler-Falsified-If: an include using an MSBuild property other than the two it expands is resolved or dropped instead of yielded as unresolved
+    // Broiler-Human:        PENDING
     private static IEnumerable<CompileItem> CompileItems(string root, string projectFile, ComponentProject project)
     {
         string projectDirectory = Path.GetDirectoryName(projectFile)!;
@@ -585,6 +661,9 @@ internal static class ComponentSources
     /// files from its directory up to the root, and every file those import by
     /// a literal path inside the root, each once.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=1476CB
+    // Broiler-Falsified-If: an Import whose literal path leads outside the component root is loaded
+    // Broiler-Human:        PENDING
     private static IEnumerable<string> ProjectFiles(string root, string projectFile)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -617,6 +696,9 @@ internal static class ComponentSources
     }
 
     /// <summary>The <c>Directory.Build.props</c> and <c>.targets</c> files from <paramref name="directory"/> up to the root.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=F30897
+    // Broiler-Falsified-If: a Directory.Build.props in a directory above the component root is returned
+    // Broiler-Human:        PENDING
     private static IEnumerable<string> DirectoryBuildFiles(string root, string directory)
     {
         for (DirectoryInfo? current = new(directory); current is not null; current = current.Parent)
@@ -639,6 +721,9 @@ internal static class ComponentSources
     }
 
     /// <summary>The files one include names, relative to the project directory, with its wildcards expanded.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=0A7161
+    // Broiler-Falsified-If: an include such as ../../../../**/*.cs, whose wildcard base lies outside the component root, has that base directory enumerated
+    // Broiler-Human:        PENDING
     private static IEnumerable<string> Resolve(string projectDirectory, string include)
     {
         string[] segments = include.Replace('\\', '/').Split('/');
@@ -685,6 +770,9 @@ internal static class ComponentSources
         return found;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=49023D
+    // Broiler-Falsified-If: a path in a sibling directory whose name begins with the directory name, such as root2/x.cs against root, counts as under it
+    // Broiler-Human:        PENDING
     private static bool IsUnder(string path, string directory)
     {
         string relative = Path.GetRelativePath(directory, path);
@@ -692,6 +780,9 @@ internal static class ComponentSources
             (!relative.StartsWith("..", StringComparison.Ordinal) && !Path.IsPathRooted(relative));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=177EB9
+    // Broiler-Falsified-If: a project file declaring an external entity has it resolved, so text from a file outside the component appears in an element value
+    // Broiler-Human:        PENDING
     private static XDocument? Load(string path)
     {
         try
@@ -713,6 +804,9 @@ internal static class ComponentSources
     /// configuration: every project that is not a test, a benchmark, a sample or
     /// a diagnostic, outside nested checkouts and build output.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=EDE036
+    // Broiler-Falsified-If: a .csproj inside a directory holding a .git entry is returned as a product project
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<string> GuessProjects(string root)
     {
         var found = new List<string>();
@@ -748,6 +842,9 @@ internal static class ComponentSources
         return found;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=DDA2BD
+    // Broiler-Falsified-If: a project that declares IsTestProject true is reported as a product
+    // Broiler-Human:        PENDING
     private static bool LooksLikeProduct(string relative, string fullPath)
     {
         string[] notProduct = ["tests", "test", "samples", "sample", "benchmarks", "benchmark", "diagnostics", "tools"];
@@ -772,6 +869,9 @@ internal static class ComponentSources
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=75666A
+    // Broiler-Falsified-If: a path outside the root comes back neither rooted nor starting with ../, so Discover takes it for a file inside the root
+    // Broiler-Human:        PENDING
     private static string Relative(string root, string path)
     {
         string relative = Path.GetRelativePath(root, path).Replace('\\', '/');

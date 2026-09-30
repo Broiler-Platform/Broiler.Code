@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   6
+// Annotated:        6/6
+// Exempt:           0
+// Human-reviewed:   0/6
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         6/4
+// Resource impact:  7/10 max
+// Unverified:       6
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 
@@ -25,12 +42,18 @@ namespace Broiler.Code.Review;
 /// and picking the closest of four identical blocks would answer a question
 /// about one of them with a note about another.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=1BE3D5
+// Broiler-Falsified-If: a note whose anchor text occurs at two or more places in the file, none of them its recorded line, is placed on one of them as Moved instead of reported as Ambiguous
+// Broiler-Human:        PENDING
 public static class NoteAnchoring
 {
     /// <summary>
     /// Places every note in <paramref name="review"/> onto
     /// <paramref name="content"/>, in the record's order.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=403C96
+    // Broiler-Falsified-If: notes anchored on the LF text of a file come back Orphaned when the same file is passed with CRLF line endings or a leading byte-order mark
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<AnchoredNote> Place(FileReview review, string content)
     {
         ArgumentNullException.ThrowIfNull(review);
@@ -55,6 +78,9 @@ public static class NoteAnchoring
     /// normalized when it was recorded, and every note would silently come back
     /// orphaned. Splitting a raw CRLF file here is the one way to misuse this.
     /// </param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=8033AA
+    // Broiler-Falsified-If: a note whose anchor text is still at its recorded line is reported as Moved or Ambiguous because the same text also occurs elsewhere in the file
+    // Broiler-Human:        PENDING
     public static AnchoredNote Place(ReviewNote note, string[] lines)
     {
         ArgumentNullException.ThrowIfNull(note);
@@ -107,6 +133,9 @@ public static class NoteAnchoring
     /// clamped rather than rejected: a caret at the end of a document is a
     /// legitimate place to ask a question from.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=8F2B6C
+    // Broiler-Falsified-If: a start line past the last line of the content throws instead of anchoring the note on the last line
+    // Broiler-Human:        PENDING
     public static ReviewAnchor CreateAnchor(string content, int startLine, int endLine, string? symbol = null)
     {
         ArgumentNullException.ThrowIfNull(content);
@@ -121,6 +150,9 @@ public static class NoteAnchoring
         return new ReviewAnchor(start, end, string.Join('\n', lines[start..(end + 1)]), symbol);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=958350
+    // Broiler-Falsified-If: a start index near int.MaxValue passes the bounds test through integer overflow and lines is indexed past its end
+    // Broiler-Human:        PENDING
     private static bool MatchesAt(string[] lines, string[] wanted, int start)
     {
         if (start < 0 || start + wanted.Length > lines.Length)
@@ -140,6 +172,9 @@ public static class NoteAnchoring
     /// final empty line, so a file that gains or loses one does not shift every
     /// note's match by an index.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=F85117
+    // Broiler-Falsified-If: a text ending in a newline yields a trailing empty line, so the same file with and without a final newline places a note differently
+    // Broiler-Human:        PENDING
     private static string[] SplitLines(string normalized)
     {
         if (normalized.Length == 0)

@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   15
+// Annotated:        15/15
+// Exempt:           0
+// Human-reviewed:   0/15
+// IP risk:          Low
+// Security risk:    Critical
+// Criteria:         15/15
+// Resource impact:  7/10 max
+// Unverified:       15
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -21,12 +38,24 @@ namespace Broiler.App;
 /// <c>AllowUnsafeBlocks</c> in every one of them. The two application heads use
 /// <c>DllImport</c> for their own interop for the same reason.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Critical; Resources=7; Fingerprint=F39BF4
+// Broiler-Falsified-If: a CF_UNICODETEXT block with no terminating NUL inside its allocation is read past the end of the block
+// Broiler-Human:        PENDING
 [SupportedOSPlatform("windows5.0")]
 internal sealed class WindowsClipboard(IntPtr ownerWindow) : IUiClipboardHost
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Critical; Resources=0; Fingerprint=82BB56
+    // Broiler-Falsified-If: the value differs from 13, CF_UNICODETEXT, so a block in another clipboard format is read as NUL-terminated UTF-16
+    // Broiler-Human:        PENDING
     private const uint CfUnicodeText = 13;
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=6C1EE9
+    // Broiler-Falsified-If: the value differs from 0x0002, GMEM_MOVEABLE, so the block handed to SetClipboardData is fixed memory the clipboard does not accept
+    // Broiler-Human:        PENDING
     private const uint GmemMoveable = 0x0002;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Critical; Resources=7; Fingerprint=23A8D0
+    // Broiler-Falsified-If: a CF_UNICODETEXT block with no terminating NUL inside its GlobalSize is read past the end of the block
+    // Broiler-Human:        PENDING
     public bool TryGetText(out string text)
     {
         text = string.Empty;
@@ -65,6 +94,9 @@ internal sealed class WindowsClipboard(IntPtr ownerWindow) : IUiClipboardHost
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Critical; Resources=4; Fingerprint=33578F
+    // Broiler-Falsified-If: the terminating NUL is written outside the (text.Length + 1) * 2 bytes allocated for the block
+    // Broiler-Human:        PENDING
     public void SetText(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -109,37 +141,67 @@ internal sealed class WindowsClipboard(IntPtr ownerWindow) : IUiClipboardHost
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=0B1567
+    // Broiler-Falsified-If: the BOOL result is marshalled as a one-byte bool, so a failed open reads as success and the clipboard is used without being held
+    // Broiler-Human:        PENDING
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool OpenClipboard(IntPtr owner);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=819D6E
+    // Broiler-Falsified-If: the import binds to an entry other than CloseClipboard in user32, so the clipboard stays open and blocks every other application's copy
+    // Broiler-Human:        PENDING
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseClipboard();
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=82E0CE
+    // Broiler-Falsified-If: the import binds to an entry other than EmptyClipboard in user32, so SetClipboardData runs without this window having taken clipboard ownership
+    // Broiler-Human:        PENDING
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool EmptyClipboard();
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=AAAC79
+    // Broiler-Falsified-If: the format parameter is declared as a type other than the 32-bit UINT the function takes, so availability is asked for a different format
+    // Broiler-Human:        PENDING
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsClipboardFormatAvailable(uint format);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=317039
+    // Broiler-Falsified-If: the HANDLE result is declared narrower than IntPtr, so a 64-bit handle is truncated before GlobalLock
+    // Broiler-Human:        PENDING
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr GetClipboardData(uint format);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Critical; Resources=1; Fingerprint=BDB3DF
+    // Broiler-Falsified-If: the HANDLE result is declared narrower than IntPtr, so a successful call can read as zero and the caller frees a block the clipboard now owns
+    // Broiler-Human:        PENDING
     [DllImport("user32.dll", SetLastError = true)]
     private static extern IntPtr SetClipboardData(uint format, IntPtr data);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Critical; Resources=4; Fingerprint=B864A6
+    // Broiler-Falsified-If: the byte count is declared narrower than SIZE_T, so a large request allocates a smaller block than the caller then writes
+    // Broiler-Human:        PENDING
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr GlobalAlloc(uint flags, UIntPtr bytes);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Critical; Resources=1; Fingerprint=80E1CC
+    // Broiler-Falsified-If: the HGLOBAL parameter is declared narrower than IntPtr, so a different block is released
+    // Broiler-Human:        PENDING
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr GlobalFree(IntPtr handle);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Critical; Resources=1; Fingerprint=D52183
+    // Broiler-Falsified-If: the returned pointer is declared narrower than IntPtr, so a 64-bit block address is truncated before text is read or written through it
+    // Broiler-Human:        PENDING
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr GlobalLock(IntPtr handle);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=BDEB39
+    // Broiler-Falsified-If: the import binds to an entry other than GlobalUnlock in kernel32, so every paste and copy leaves the block's lock count raised
+    // Broiler-Human:        PENDING
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GlobalUnlock(IntPtr handle);

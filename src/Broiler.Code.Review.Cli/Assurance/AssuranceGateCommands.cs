@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   15
+// Annotated:        15/15
+// Exempt:           0
+// Human-reviewed:   0/15
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         13/9
+// Resource impact:  8/10 max
+// Unverified:       15
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,8 +34,14 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// what the check accepts is what the generator writes, and there is no second
 /// implementation of either to drift.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=CCE5C4
+// Broiler-Falsified-If: generate writes a source file or artefact in a run that also reported a refusal
+// Broiler-Human:        PENDING
 internal static partial class AssuranceCommand
 {
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=929E74
+    // Broiler-Falsified-If: a run with a refusal, or with an existing report the generator did not write and no --adopt, still writes a file
+    // Broiler-Human:        PENDING
     private static int Generate(Options options, TextWriter output, TextWriter error)
     {
         string root = RootOf(options);
@@ -106,6 +129,9 @@ internal static partial class AssuranceCommand
         return failed.Count == 0 ? Done : Refused;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=39CE19
+    // Broiler-Falsified-If: a run whose only problem is a covered file that could not be read as UTF-8 exits 0
+    // Broiler-Human:        PENDING
     private static int Check(Options options, TextWriter output, TextWriter error)
     {
         string root = RootOf(options);
@@ -168,6 +194,9 @@ internal static partial class AssuranceCommand
         return violations.Count == 0 ? Done : Refused;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=87451D
+    // Broiler-Falsified-If: a unit whose human line still reads PENDING is included in the count printed for units a person has decided
+    // Broiler-Human:        PENDING
     private static int Status(Options options, TextWriter output, TextWriter error)
     {
         string root = RootOf(options);
@@ -210,6 +239,9 @@ internal static partial class AssuranceCommand
     }
 
     /// <summary>The configuration at the root, which a write command requires, in owned mode.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=444F24
+    // Broiler-Falsified-If: a component with no assurance.config.json at its root, or one whose mode is external, gets a configuration back and a write command proceeds
+    // Broiler-Human:        PENDING
     private static AssuranceComponentConfig OwnedConfig(string root, string command)
     {
         // The configuration's presence at the component root is the opt-in to
@@ -236,6 +268,9 @@ internal static partial class AssuranceCommand
     /// outside a component that has not opted in, such as one whose own tests
     /// generate its record.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=9F9308
+    // Broiler-Falsified-If: a --config path that does not exist falls back to the configuration at the root instead of raising a usage error
+    // Broiler-Human:        PENDING
     private static AssuranceComponentConfig ReadableConfig(string root, Options options, string command)
     {
         if (options.Value("--config") is { } path)
@@ -252,6 +287,9 @@ internal static partial class AssuranceCommand
                 "or --config naming one.");
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=77AB52
+    // Broiler-Falsified-If: a configuration without an spdx object reaches generate or check without an AssuranceConfigException
+    // Broiler-Human:        PENDING
     private static void RequireSpdx(AssuranceComponentConfig config)
     {
         if (config.Spdx is null)
@@ -269,6 +307,9 @@ internal static partial class AssuranceCommand
     /// line. <paramref name="prefix"/> goes before the file's root-relative
     /// path, for a workflow that runs from a directory above the component.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=0CF246
+    // Broiler-Falsified-If: a violation whose message spans two lines is emitted as two output lines, so the second one can start a workflow command of its own
+    // Broiler-Human:        PENDING
     internal static string WorkflowCommand(AssuranceViolation violation, string? prefix = null)
     {
         var properties = new List<string>();
@@ -286,15 +327,24 @@ internal static partial class AssuranceCommand
         return $"{head}::{EscapeData(violation.Rule + " " + violation.Message + remedy)}";
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C0E98F
+    // Broiler-Falsified-If: a message holding a carriage return or line feed is emitted with the raw character instead of %0D or %0A
+    // Broiler-Human:        PENDING
     private static string EscapeData(string value) => value
         .Replace("%", "%25", StringComparison.Ordinal)
         .Replace("\r", "%0D", StringComparison.Ordinal)
         .Replace("\n", "%0A", StringComparison.Ordinal);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=DC0025
+    // Broiler-Falsified-If: a file path containing a comma or a colon is emitted unescaped, so it ends the file property and starts another
+    // Broiler-Human:        PENDING
     private static string EscapeProperty(string value) => EscapeData(value)
         .Replace(":", "%3A", StringComparison.Ordinal)
         .Replace(",", "%2C", StringComparison.Ordinal);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=00E3A4
+    // Broiler-Falsified-If: a run with at least one violation prints a summary line saying no violations
+    // Broiler-Human:        PENDING
     private static string Summary(
         string component, IReadOnlyList<AssuranceViolation> violations, bool release, bool sourcesOnly)
     {
@@ -324,18 +374,28 @@ internal static partial class AssuranceCommand
     }
 
     /// <summary>J1 before J10, and anything that is not a J rule first.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=DCC118
+    // Broiler-Falsified-If: J10 sorts before J2 in the per-rule counts
+    // Broiler-Human:        PENDING
     private static int RuleOrder(string rule) =>
         rule.Length > 1 && rule[0] == 'J' &&
         int.TryParse(rule.AsSpan(1), NumberStyles.None, CultureInfo.InvariantCulture, out int number)
             ? number
             : 0;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=34CBEC
+    // Broiler-Falsified-If: Portion(1999, 2000) prints 100% for a share that falls short of the whole
+    // Broiler-Human:        PENDING
     private static string Portion(int part, int whole) => whole == 0
         ? part.ToString(CultureInfo.InvariantCulture)
         : Invariant($"{part} of {whole} ({(int)Math.Round(100.0 * part / whole)}%)");
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=49799F
+    // Broiler-Human:        PENDING
     private static string Plural(int count, string noun) =>
         Invariant($"{count} {noun}{(count == 1 ? string.Empty : "s")}");
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=EDD234
+    // Broiler-Human:        PENDING
     private static string Indent(string message) => message.Replace("\n", "\n    ", StringComparison.Ordinal);
 }

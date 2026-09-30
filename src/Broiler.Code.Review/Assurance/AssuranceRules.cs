@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   13
+// Annotated:        13/13
+// Exempt:           0
+// Human-reviewed:   0/13
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         13/11
+// Resource impact:  5/10 max
+// Unverified:       13
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,6 +32,9 @@ namespace Broiler.Code.Review.Assurance;
 /// component reports, so a tool that writes a block must run them over what it
 /// is about to write.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=BBF1D1
+// Broiler-Falsified-If: a criterion, exemption reason or Spec value containing a claim phrase passes VocabularyProblems with no problem
+// Broiler-Human:        PENDING
 public static partial class AssuranceRules
 {
     /// <summary>
@@ -22,6 +42,9 @@ public static partial class AssuranceRules
     /// <c>reviewed</c> is deliberately absent: "since it was reviewed" describes
     /// what a fingerprint is for and is not a claim that anything was.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=C1DD35
+    // Broiler-Falsified-If: a term of the owning component's J9 list is missing here, so a generated line using it passes this tool's check
+    // Broiler-Human:        PENDING
     public static readonly IReadOnlyList<string> ReviewClaimTerms =
     [
         "verified",
@@ -41,6 +64,9 @@ public static partial class AssuranceRules
     ];
 
     /// <summary>The security values that oblige a unit to carry a falsification criterion.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=DE9342
+    // Broiler-Falsified-If: the list lacks High or Critical, so a block at that level passes without a criterion line
+    // Broiler-Human:        PENDING
     public static readonly IReadOnlyList<string> SecurityRequiringACriterion = ["High", "Critical"];
 
     /// <summary>
@@ -58,6 +84,9 @@ public static partial class AssuranceRules
     /// or <c>&gt;=</c> are prose. A criterion also never says that somebody
     /// looked (<see cref="ReviewClaimsIn"/>).
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=1B72D8
+    // Broiler-Falsified-If: a criterion stating one of the format's field names followed by an equals sign and a value yields no problem
+    // Broiler-Human:        PENDING
     public static IEnumerable<string> CriterionProblems(string? criterion)
     {
         if (criterion is null)
@@ -89,6 +118,9 @@ public static partial class AssuranceRules
     /// one. The report prints every reason, so a claim here would be printed
     /// there as though the record held it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=320DC4
+    // Broiler-Falsified-If: an exemption reason containing a claim phrase yields no problem
+    // Broiler-Human:        PENDING
     public static IEnumerable<string> ExemptionReasonProblems(string? reason)
     {
         if (reason is null)
@@ -105,6 +137,9 @@ public static partial class AssuranceRules
     /// Every problem with a <c>Spec=</c> value beyond its shape: it cites what
     /// the unit implements, and never who read it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=19E322
+    // Broiler-Falsified-If: a Spec value containing a claim phrase yields no problem
+    // Broiler-Human:        PENDING
     public static IEnumerable<string> SpecProblems(string? spec)
     {
         if (spec is null)
@@ -131,6 +166,9 @@ public static partial class AssuranceRules
     /// substrings, which refuses those too. Every term of its list is one of
     /// these, so a claim it finds standing as a word is found here as well.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=0C28B4
+    // Broiler-Falsified-If: a claim phrase the expression matches is left out of the returned list, so the text carrying it is accepted
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> ReviewClaimsIn(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -152,6 +190,9 @@ public static partial class AssuranceRules
     /// <see cref="AssuranceAnnotation.TryParseStrict"/>; the lenient parse keeps
     /// shapes this would misreport.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=703D05
+    // Broiler-Falsified-If: a non-exempt block missing one of the five required fields yields no problem
+    // Broiler-Human:        PENDING
     public static IEnumerable<string> VocabularyProblems(AssuranceAnnotation annotation)
     {
         ArgumentNullException.ThrowIfNull(annotation);
@@ -212,6 +253,9 @@ public static partial class AssuranceRules
     /// True when a block that is not an exemption states a security risk that
     /// obliges it to carry a criterion.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=1B1FA3
+    // Broiler-Falsified-If: a non-exempt block whose security value is High or Critical returns false
+    // Broiler-Human:        PENDING
     public static bool RequiresFalsificationCriterion(AssuranceAnnotation annotation)
     {
         ArgumentNullException.ThrowIfNull(annotation);
@@ -229,6 +273,9 @@ public static partial class AssuranceRules
     /// surrounding whitespace is accepted as it is there, and the answer does not
     /// depend on the machine's locale.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=2E1379
+    // Broiler-Falsified-If: a value of 11 or -1 is accepted, or the answer for 7 changes with the machine's current culture
+    // Broiler-Human:        PENDING
     public static bool TryParseResources(string? value, out int resources)
     {
         if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out resources) &&
@@ -247,17 +294,26 @@ public static partial class AssuranceRules
     /// of a comparison operator, and a value. The owning component's
     /// expression with its identifier narrowed to those names.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=D5C99A
+    // Broiler-Falsified-If: a format field name followed by an equals sign and a value, written in lower case or with spaces around the sign, is not matched
+    // Broiler-Human:        PENDING
     [GeneratedRegex(
         @"(?<![=!<>\w.-])\b(?:Origin|Spec|IP|Security|Resources|Fingerprint|EXEMPT|Previous)\s*=\s*(?![=])\S+",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex FieldOnACriterion();
 
     /// <summary>A review claim as a whole word or phrase. See <see cref="ReviewClaimsIn"/>.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=897B3A
+    // Broiler-Falsified-If: a claim phrase written in mixed case, or with a tab between its two words, is not matched
+    // Broiler-Human:        PENDING
     [GeneratedRegex(
         @"\b(?:verified|approv(?:e|es|ed|al|als|ing)|reviewers?|reviewed[\s-]+by|human[\s-]*review(?:ed|s)?|eligible\s+for\s+release|sign(?:ed)?[\s-]*off|certified|attested|lgtm|looks\s+good\s+to\s+me|checked[\s-]+by)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ReviewClaim();
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=3; Fingerprint=799B4C
+    // Broiler-Falsified-If: a tab or line break inside a matched claim phrase survives normalisation, so one claim is listed under two spellings
+    // Broiler-Human:        PENDING
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespaceRun();
 }

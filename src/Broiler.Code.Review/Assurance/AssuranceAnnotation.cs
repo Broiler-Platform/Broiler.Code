@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   26
+// Annotated:        26/26
+// Exempt:           8
+// Human-reviewed:   0/26
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         23/14
+// Resource impact:  3/10 max
+// Unverified:       26
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -5,6 +22,8 @@ using System.Text;
 namespace Broiler.Code.Review.Assurance;
 
 /// <summary>One <c>Key=Value</c> pair on the machine's assessment line.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=741120
+// Broiler-Human:        PENDING
 public readonly record struct AssuranceField(string Key, string Value);
 
 /// <summary>
@@ -24,6 +43,9 @@ public readonly record struct AssuranceField(string Key, string Value);
 /// against the unit's value now is the entire definition of a stale review. They
 /// are exposed separately and never folded together.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=48FCDA
+// Broiler-Falsified-If: a human line whose head is a placeholder such as TODO, followed by the unit's current fingerprint, yields a non-null name and stops blocking release
+// Broiler-Human:        PENDING
 public sealed class AssuranceAnnotation
 {
     private AssuranceAnnotation(
@@ -66,12 +88,19 @@ public sealed class AssuranceAnnotation
     public string HumanBody { get; }
 
     /// <summary>The first line of the block, for a caller measuring its extent.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=93F23A
+    // Broiler-Human:        PENDING
     public int FirstLine => AiLine;
 
     /// <summary>The last line of the block.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3DC783
+    // Broiler-Human:        PENDING
     public int LastLine => HumanLine;
 
     /// <summary>True when the block carries a falsification criterion.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=43065F
+    // Broiler-Falsified-If: a block whose criterion line is present but empty reports a criterion
+    // Broiler-Human:        PENDING
     public bool HasCriterion => Criterion.Length > 0;
 
     /// <summary>
@@ -80,18 +109,27 @@ public sealed class AssuranceAnnotation
     /// <c>Criteria:</c> row; an empty criterion is reported as a problem there
     /// rather than left uncounted.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=FCA3E3
+    // Broiler-Falsified-If: a block with no criterion line reports one, so a High unit without a criterion passes the missing-criterion rule
+    // Broiler-Human:        PENDING
     public bool HasCriterionLine => FalsifiedIfLine is not null;
 
     /// <summary>
     /// The criterion as the owning component exposes it: null when the block has
     /// no criterion line, empty when it has one that says nothing.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=713B36
+    // Broiler-Falsified-If: a block with no criterion line returns an empty string rather than null
+    // Broiler-Human:        PENDING
     public string? FalsifiedIf => FalsifiedIfLine is null ? null : Criterion;
 
     /// <summary>
     /// The <c>Previous=reviewer@fingerprint</c> a stale human line preserves, or
     /// null. Split at the last <c>@</c>; with none, the fingerprint is empty.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=5DCCC5
+    // Broiler-Falsified-If: a stale line whose preserved entry reads A@B@0A1B2C is split at its first '@', yielding the fingerprint B@0A1B2C
+    // Broiler-Human:        PENDING
     public (string Reviewer, string Fingerprint)? Previous
     {
         get
@@ -112,12 +150,21 @@ public sealed class AssuranceAnnotation
     }
 
     /// <summary>The fingerprint the generator last stamped onto the machine's line.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=9DFC74
+    // Broiler-Falsified-If: a machine line whose only Fingerprint key sits inside the value of another field reports that value's hex as the recorded fingerprint
+    // Broiler-Human:        PENDING
     public string? RecordedFingerprint => Field(AssuranceVocabulary.FingerprintField);
 
     /// <summary>The reason this unit is exempt in the source, when it says so outright.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=E8E581
+    // Broiler-Falsified-If: a machine line whose only EXEMPT key sits inside the value of another field makes the unit exempt
+    // Broiler-Human:        PENDING
     public string? ExemptReason => Field(AssuranceVocabulary.ExemptField);
 
     /// <summary>True when nobody has recorded anything.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=913ECB
+    // Broiler-Falsified-If: a body of exactly PENDING is read as not pending
+    // Broiler-Human:        PENDING
     public bool HumanIsPending =>
         string.Equals(HumanBody, AssuranceVocabulary.Pending, StringComparison.Ordinal);
 
@@ -126,6 +173,9 @@ public sealed class AssuranceAnnotation
     /// review. Matched by prefix, because the written form carries who approved
     /// what: <c>STALE; Previous=EB@06FA02</c>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=24F979
+    // Broiler-Falsified-If: a body opening with STALE and a preserved entry is read as not stale, so the earlier name is returned as the current decider
+    // Broiler-Human:        PENDING
     public bool HumanIsStale =>
         HumanBody.StartsWith(AssuranceVocabulary.Stale, StringComparison.Ordinal);
 
@@ -142,6 +192,9 @@ public sealed class AssuranceAnnotation
     /// <c>TODO</c> names nobody, and a line that names nobody is no approval,
     /// whatever fingerprint stands beside it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=A5E68A
+    // Broiler-Falsified-If: a head that is a placeholder such as TODO or NONE is returned as the name of the person who decided
+    // Broiler-Human:        PENDING
     public string? Reviewer
     {
         get
@@ -156,6 +209,9 @@ public sealed class AssuranceAnnotation
     }
 
     /// <summary>The version the reviewer approved, or null when they left it to the generator.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=CD1BE3
+    // Broiler-Falsified-If: a body whose only fingerprint sits inside another part's value, after that part's own key, is returned as the version decided on
+    // Broiler-Human:        PENDING
     public string? HumanFingerprint
     {
         get
@@ -179,6 +235,9 @@ public sealed class AssuranceAnnotation
     /// has made a statement about the code; dropping it while writing their name
     /// back would erase it silently.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=331AD2
+    // Broiler-Falsified-If: the fingerprint part of the old line is returned among the assessment parts, so the rewritten line carries two fingerprints
+    // Broiler-Human:        PENDING
     public IReadOnlyList<string> HumanAssessment
     {
         get
@@ -214,6 +273,9 @@ public sealed class AssuranceAnnotation
     /// nobody can answer, and treating it as an annotation would let the pane
     /// offer a reviewer somewhere to write that this file has no room for.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=EA7190
+    // Broiler-Falsified-If: a machine line followed by a line that is neither a criterion nor a human line is returned as a parsed block
+    // Broiler-Human:        PENDING
     public static bool TryParse(AssuranceLines lines, int aiLine, out AssuranceAnnotation? annotation)
     {
         ArgumentNullException.ThrowIfNull(lines);
@@ -268,6 +330,9 @@ public sealed class AssuranceAnnotation
     /// not directly underneath. Keys and values are trimmed around <c>=</c>, as
     /// there. The problem strings are that component's, word for word.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=FAFD32
+    // Broiler-Falsified-If: a machine line holding a part with no '=' sign is accepted as a parsed block
+    // Broiler-Human:        PENDING
     public static bool TryParseStrict(
         AssuranceLines lines, int aiLine, out AssuranceAnnotation? annotation, out string? problem)
     {
@@ -365,6 +430,9 @@ public sealed class AssuranceAnnotation
     /// trailing space, because a trailing space is whitespace nobody can see and
     /// every diff can.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=4A9412
+    // Broiler-Falsified-If: a non-empty value starts at a column other than the one Broiler.VM writes for the same marker
+    // Broiler-Human:        PENDING
     public static string RenderLine(string indent, string marker, string value)
     {
         ArgumentNullException.ThrowIfNull(indent);
@@ -377,6 +445,9 @@ public sealed class AssuranceAnnotation
     }
 
     /// <summary>A machine field by key, or null.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=6F1036
+    // Broiler-Falsified-If: a lookup for EXEMPT returns the value of a field keyed exempt or Exempt
+    // Broiler-Human:        PENDING
     public string? Field(string key)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -391,6 +462,9 @@ public sealed class AssuranceAnnotation
     }
 
     /// <summary>The machine's line as it would be written now.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=000778
+    // Broiler-Falsified-If: a field read with an '=' and an empty value is written back as a bare key, which the strict parse then refuses
+    // Broiler-Human:        PENDING
     public string RenderAiLine()
     {
         var builder = new StringBuilder();
@@ -408,6 +482,9 @@ public sealed class AssuranceAnnotation
     }
 
     /// <summary>The human's line carrying <paramref name="body"/>.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=7B8700
+    // Broiler-Falsified-If: the human line is written at an indent other than the one the block's machine line carries
+    // Broiler-Human:        PENDING
     public string RenderHumanLine(string body) =>
         RenderLine(Indent, AssuranceVocabulary.HumanMarker, body);
 
@@ -420,6 +497,9 @@ public sealed class AssuranceAnnotation
     /// generator only rewrites blocks the strict parse accepted, and every
     /// field of one of those had an <c>=</c>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=54FB7B
+    // Broiler-Falsified-If: the generator writes back a machine line whose fields differ in number or order from those it read
+    // Broiler-Human:        PENDING
     public static string RenderAiLine(string indent, IEnumerable<AssuranceField> fields)
     {
         ArgumentNullException.ThrowIfNull(fields);
@@ -437,19 +517,31 @@ public sealed class AssuranceAnnotation
     }
 
     /// <summary>The criterion line. The prose is carried through; the generator never authors one.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=63C954
+    // Broiler-Falsified-If: the criterion prose is altered when the generator writes the line back
+    // Broiler-Human:        PENDING
     public static string RenderFalsifiedIfLine(string indent, string criterion) =>
         RenderLine(indent, AssuranceVocabulary.FalsifiedIfMarker, criterion);
 
     /// <summary>The human line at <paramref name="indent"/>.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=84BEA7
+    // Broiler-Falsified-If: the body handed in is altered when the generator writes the human line back
+    // Broiler-Human:        PENDING
     public static string RenderHumanLine(string indent, string body) =>
         RenderLine(indent, AssuranceVocabulary.HumanMarker, body);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=DAFA8E
+    // Broiler-Falsified-If: a line indented with tabs yields a body missing its first characters or still holding part of the marker
+    // Broiler-Human:        PENDING
     private static string Body(string line, string marker)
     {
         string trimmed = line.TrimStart();
         return trimmed[marker.Length..].Trim();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=E601E6
+    // Broiler-Falsified-If: a field whose value itself contains '=' is split at the last '=', so its key absorbs part of the value
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<AssuranceField> ParseFields(string body)
     {
         if (body.Length == 0)

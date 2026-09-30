@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   12
+// Annotated:        12/12
+// Exempt:           2
+// Human-reviewed:   0/12
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         12/9
+// Resource impact:  7/10 max
+// Unverified:       12
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,8 +40,14 @@ namespace Broiler.Code.Language.CSharp.Assurance;
 /// attaches one; a scan of the lines above the declaration would also find
 /// markers inside raw strings and disabled code.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=FCB453
+// Broiler-Falsified-If: an AI marker line in one declaration's leading trivia is reported as the AnnotationLine of a different declaration
+// Broiler-Human:        PENDING
 public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=D17683
+    // Broiler-Falsified-If: a stray criterion-marker or human-line-marker comment that opens its own line is missing from AssuranceCommentLines, so the orphan rule never reports it
+    // Broiler-Human:        PENDING
     private static readonly string[] Markers =
     [
         AssuranceVocabulary.AiMarker,
@@ -40,6 +63,9 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
     /// under <see cref="CSharpAssuranceScanner.DefaultPreprocessorSymbols"/> when
     /// that is null, applying <paramref name="predicate"/>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=52D929
+    // Broiler-Falsified-If: a scanner built with its own preprocessor symbols or the strict predicate scans under the default symbols or the owning-component predicate instead
+    // Broiler-Human:        PENDING
     public CSharpAssuranceFileScanner(
         IEnumerable<string>? preprocessorSymbols = null,
         AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent)
@@ -50,6 +76,9 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
     }
 
     /// <inheritdoc/>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=714735
+    // Broiler-Falsified-If: an AI marker written inside a raw string literal or #if-disabled code is reported as a unit's AnnotationLine or among AssuranceCommentLines
+    // Broiler-Human:        PENDING
     public AssuranceScannedFile ScanFile(string text, string path)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -140,6 +169,9 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
     /// comments included, and disabled text, which reads like code but is
     /// shown to nobody as code. A forged summary can be written in any of them.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=0; Fingerprint=C9EB4E
+    // Broiler-Falsified-If: a forged summary line written in a block comment, a documentation comment or #if-disabled text is absent from CommentLines and so escapes the forged-summary rule
+    // Broiler-Human:        PENDING
     private static bool IsCommentLike(SyntaxTrivia trivia) =>
         trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
         trivia.IsKind(SyntaxKind.MultiLineCommentTrivia) ||
@@ -148,6 +180,9 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
         trivia.IsKind(SyntaxKind.DisabledTextTrivia);
 
     /// <summary>One entry per physical line the trivia spans, with that line's part of it.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=941D43
+    // Broiler-Falsified-If: a block comment spanning three physical lines yields other than three entries, or an entry numbered with a line its text is not on
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceCommentLine> LinesOf(SourceText source, SyntaxTrivia trivia)
     {
         TextSpan span = trivia.FullSpan;
@@ -170,6 +205,9 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
     /// token is inside the header, where no declaration picks it up. The
     /// top-level unit has no header: its block goes above its first statement.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=F9AE18
+    // Broiler-Falsified-If: an assurance comment between a constructor's parameter list and its base initializer lies outside the lines from DeclarationLine to HeaderEndLine
+    // Broiler-Human:        PENDING
     private static SyntaxToken HeaderEnd(MemberDeclarationSyntax declaration)
     {
         SyntaxToken end = declaration switch
@@ -194,9 +232,15 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
         return end.IsKind(SyntaxKind.None) || end.IsMissing ? declaration.GetLastToken() : end;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=5D0427
+    // Broiler-Falsified-If: the missing open brace of a type declaration broken by a syntax error is returned as present
+    // Broiler-Human:        PENDING
     private static SyntaxToken? Present(SyntaxToken token) =>
         token.IsKind(SyntaxKind.None) || token.IsMissing ? null : token;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=B604BB
+    // Broiler-Falsified-If: a comment that carries a marker later in its text rather than at its start is taken for an assurance line, or one opening with the human-line marker is not
+    // Broiler-Human:        PENDING
     private static bool OpensWithMarker(string comment)
     {
         foreach (string marker in Markers)
@@ -208,9 +252,15 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
         return false;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=B90CE4
+    // Broiler-Falsified-If: a #line directive above a declaration moves the line reported for its block or for a directive away from the physical line
+    // Broiler-Human:        PENDING
     private static int LineOf(SyntaxTree tree, TextSpan span) =>
         tree.GetLineSpan(span).StartLinePosition.Line;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=A65D8A
+    // Broiler-Falsified-If: a marker comment preceded on its line only by U+FEFF or U+001A, which the C# parser skips as whitespace, is left out of AssuranceCommentLines and escapes the orphan and below-declaration rules
+    // Broiler-Human:        PENDING
     private static bool IsBlank(string text)
     {
         foreach (char character in text)
@@ -222,5 +272,8 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=3088E2
+    // Broiler-Falsified-If: the indent returned for a declaration that shares its line with other code includes characters other than the line's leading whitespace
+    // Broiler-Human:        PENDING
     private static string IndentOf(string line) => AssuranceLines.IndentOf(line);
 }

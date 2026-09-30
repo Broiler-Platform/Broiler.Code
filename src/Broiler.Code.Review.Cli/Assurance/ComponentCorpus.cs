@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   8
+// Annotated:        8/8
+// Exempt:           6
+// Human-reviewed:   0/8
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         8/6
+// Resource impact:  8/10 max
+// Unverified:       8
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -20,9 +37,15 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// the comparison is made in LF, so neither kind of checkout reports every line
 /// of a current file as different.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=FFA75F
+// Broiler-Falsified-If: a text the generator rendered in LF is written with LF lines to a file whose lines end in CRLF
+// Broiler-Human:        PENDING
 internal sealed record ComponentArtefact(string RelativePath, string FullPath, AssuranceSourceText? Source, string NewLine)
 {
     /// <summary><paramref name="desired"/>, which the generator rendered in LF, in this file's line endings.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=20C81C
+    // Broiler-Falsified-If: a text the generator rendered in LF is written with LF lines to a file whose lines end in CRLF
+    // Broiler-Human:        PENDING
     public string Restyle(string desired) =>
         NewLine == "\r\n" ? desired.Replace("\n", "\r\n", StringComparison.Ordinal) : desired;
 }
@@ -32,6 +55,9 @@ internal sealed record ComponentArtefact(string RelativePath, string FullPath, A
 /// <see cref="AssuranceSource"/>, the component-level artefacts, and every
 /// file that could not be read, which the generator refuses over.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=ABFA27
+// Broiler-Falsified-If: an artefact path whose directory is a junction leading outside the component root is written through it
+// Broiler-Human:        PENDING
 internal sealed class ComponentCorpus
 {
     private ComponentCorpus(
@@ -61,6 +87,9 @@ internal sealed class ComponentCorpus
     /// <summary>Files that could not be read as UTF-8. They are missing from <see cref="Corpus"/>.</summary>
     public IReadOnlyList<AssuranceViolation> Problems { get; }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=265A60
+    // Broiler-Falsified-If: a covered file that is not valid UTF-8 is left out of the corpus with no IO entry in Problems, so generate writes the rest and check reports nothing about it
+    // Broiler-Human:        PENDING
     public static ComponentCorpus Load(string root, AssuranceComponentConfig config)
     {
         ArgumentNullException.ThrowIfNull(root);
@@ -132,6 +161,9 @@ internal sealed class ComponentCorpus
     /// already refused a rooted path and a <c>..</c> segment; these are the
     /// questions only the disk can answer.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=E072E0
+    // Broiler-Falsified-If: an artefact path that is itself a symbolic link passes without a ComponentSourceException
+    // Broiler-Human:        PENDING
     private static void CheckWritable(string root, string relative, string full)
     {
         string? directory = Path.GetDirectoryName(relative.Replace('/', Path.DirectorySeparatorChar))?.Replace('\\', '/');
@@ -156,6 +188,9 @@ internal sealed class ComponentCorpus
     /// signed <c>HUMAN_REVIEW.md</c> and points the per-unit record at another
     /// file. A file there the generator wrote is not one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=410865
+    // Broiler-Falsified-If: a hand-written HUMAN_REVIEW.md at the default path is left out of the result while the configuration points the per-unit record at another file
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<string> SeparateRecords(string root, AssuranceArtefactPaths paths)
     {
         var configured = new[] { paths.Report, paths.HumanReview, paths.Manifest };
@@ -182,6 +217,9 @@ internal sealed class ComponentCorpus
     /// the part of each <c>*.md</c> file name before its first <c>-</c>. Empty
     /// when the directory does not exist, so that every citation is reported.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=036BD4
+    // Broiler-Falsified-If: an ADR number resolves when the ADR directory holds no *.md file whose name begins with that number followed by a hyphen
+    // Broiler-Human:        PENDING
     public static IReadOnlySet<string> AdrRecords(string root, string directory)
     {
         string full = Path.Combine(Path.GetFullPath(root), directory.Replace('/', Path.DirectorySeparatorChar));
@@ -198,6 +236,9 @@ internal sealed class ComponentCorpus
     /// endings, and refusing when it changed on disk since it was read (or,
     /// for a new one, appeared).
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=3D2205
+    // Broiler-Falsified-If: a new artefact file that appeared on disk after Load is overwritten instead of refused
+    // Broiler-Human:        PENDING
     public bool TryWrite(AssuranceArtefact artefact, out string? problem)
     {
         ArgumentNullException.ThrowIfNull(artefact);

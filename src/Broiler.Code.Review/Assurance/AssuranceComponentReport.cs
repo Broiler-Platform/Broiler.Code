@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   5
+// Annotated:        5/5
+// Exempt:           0
+// Human-reviewed:   0/5
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         3/0
+// Resource impact:  4/10 max
+// Unverified:       5
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,9 +38,15 @@ namespace Broiler.Code.Review.Assurance;
 /// appears only beside the count the annotations give for it, or after a
 /// negation in the same clause, and the check reads this text for exactly that.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=18C351
+// Broiler-Falsified-If: the report's count of decided units exceeds the number of relevant units whose human line binds a decision to their current fingerprint
+// Broiler-Human:        PENDING
 public static class AssuranceComponentReport
 {
     /// <summary>The report for <paramref name="units"/>, the post-generation units of every covered file.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=7E4C31
+    // Broiler-Falsified-If: the report's count of decided units exceeds the number of relevant units whose human line binds a decision to their current fingerprint
+    // Broiler-Human:        PENDING
     public static string Render(AssuranceReportContext context, IReadOnlyList<AssuranceCorpusUnit> units)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -205,6 +228,8 @@ public static class AssuranceComponentReport
         return report.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=EAE22A
+    // Broiler-Human:        PENDING
     private static int AnnotatedFiles(IEnumerable<AssuranceCorpusUnit> units) => units
         .Where(static unit => unit.Annotation is not null)
         .Select(static unit => unit.File)
@@ -216,6 +241,9 @@ public static class AssuranceComponentReport
     /// exempt ones included, and a last row for the relevant units no block
     /// assesses. The rows therefore need not sum to the relevant count.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=EF5D73
+    // Broiler-Falsified-If: the not-annotated row differs from the relevant units minus the annotated ones
+    // Broiler-Human:        PENDING
     private static string Distribution(
         string heading,
         IReadOnlyList<string> vocabulary,
@@ -234,6 +262,8 @@ public static class AssuranceComponentReport
         return section.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=1; Fingerprint=43DBD5
+    // Broiler-Human:        PENDING
     private static string AssembliesPhrase(int count) =>
         count == 1 ? "the covered assembly" : $"the {AssuranceFormat.Count(count)} covered assemblies";
 }

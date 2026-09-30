@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   15
+// Annotated:        15/15
+// Exempt:           0
+// Human-reviewed:   0/15
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         15/9
+// Resource impact:  3/10 max
+// Unverified:       15
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using Broiler.UI.CodeEditor;
@@ -24,8 +41,14 @@ namespace Broiler.Code.Language.CSharp.Syntax;
 /// evaluated graph's defines, which this classifier deliberately cannot see.</item>
 /// </list>
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=361447
+// Broiler-Falsified-If: a span is emitted whose start plus length exceeds the length of the line it was lexed from
+// Broiler-Human:        PENDING
 internal static class CSharpLineLexer
 {
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=B85F2E
+    // Broiler-Falsified-If: some input line makes the main loop revisit an index without advancing, so Lex never returns
+    // Broiler-Human:        PENDING
     internal static LineState Lex(
         ReadOnlySpan<char> line,
         LineState state,
@@ -199,6 +222,9 @@ internal static class CSharpLineLexer
         return LineState.Default;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=ECF1CC
+    // Broiler-Falsified-If: a directive whose name runs to the end of the line produces a PreprocessorText span of zero length or one starting past the line end
+    // Broiler-Human:        PENDING
     private static void LexDirective(ReadOnlySpan<char> line, int hash, List<CodeClassificationSpan> output)
     {
         int i = hash + 1;
@@ -220,6 +246,9 @@ internal static class CSharpLineLexer
     /// <paramref name="i"/>. Sets <paramref name="isLiteral"/> to false when the
     /// character turned out to be an ordinary <c>@</c> or <c>$</c>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C19B2E
+    // Broiler-Falsified-If: a raw string opened with 256 or more quotes is carried as a wrapped quote count, so a shorter run of quotes closes it
+    // Broiler-Human:        PENDING
     private static int LexLiteral(
         ReadOnlySpan<char> line,
         int i,
@@ -330,6 +359,9 @@ internal static class CSharpLineLexer
         return i;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=281435
+    // Broiler-Falsified-If: a character literal that ends the line with a backslash produces a span that extends past the line end
+    // Broiler-Human:        PENDING
     private static int LexCharacter(ReadOnlySpan<char> line, int i, List<CodeClassificationSpan> output)
     {
         int start = i;
@@ -355,6 +387,9 @@ internal static class CSharpLineLexer
         return i;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=0C3C1F
+    // Broiler-Falsified-If: a doubled quote inside a verbatim string is taken as the closing quote, so the rest of the string is lexed as code
+    // Broiler-Human:        PENDING
     private static int ContinueVerbatimString(
         ReadOnlySpan<char> line,
         int i,
@@ -400,6 +435,9 @@ internal static class CSharpLineLexer
         return i;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C0A2DC
+    // Broiler-Falsified-If: a run of fewer quotes than the opening delimiter closes the raw string
+    // Broiler-Human:        PENDING
     private static int ContinueRawString(
         ReadOnlySpan<char> line,
         int i,
@@ -446,6 +484,9 @@ internal static class CSharpLineLexer
         return i;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=F3224D
+    // Broiler-Falsified-If: a number whose last character on the line is an exponent marker returns an index past the line end
+    // Broiler-Human:        PENDING
     private static int ScanNumber(ReadOnlySpan<char> line, int i)
     {
         if (line[i] == '0' && i + 1 < line.Length && (line[i + 1] is 'x' or 'X' or 'b' or 'B'))
@@ -492,18 +533,27 @@ internal static class CSharpLineLexer
         return i;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=762A41
+    // Broiler-Falsified-If: for a span containing the comment terminator it returns an offset other than the index just past its slash
+    // Broiler-Human:        PENDING
     private static int IndexOfBlockCommentEnd(ReadOnlySpan<char> span)
     {
         int index = span.IndexOf("*/", StringComparison.Ordinal);
         return index < 0 ? -1 : index + 2;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=05BA23
+    // Broiler-Falsified-If: a span of zero or negative length reaches the output list
+    // Broiler-Human:        PENDING
     private static void Emit(List<CodeClassificationSpan> output, int start, int length, CodeClassificationKind kind)
     {
         if (length > 0)
             output.Add(new CodeClassificationSpan(start, length, kind));
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=A8A0FD
+    // Broiler-Falsified-If: a run that ends where it started adds a zero-length span, or the run start is left behind the end it flushed to
+    // Broiler-Human:        PENDING
     private static void Flush(
         List<CodeClassificationSpan> output,
         ref int runStart,
@@ -515,15 +565,27 @@ internal static class CSharpLineLexer
         runStart = end;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=B1EF86
+    // Broiler-Falsified-If: a character other than an underscore, a letter or the verbatim prefix starts an identifier
+    // Broiler-Human:        PENDING
     private static bool IsIdentifierStart(char c) =>
         c == '_' || c == '@' || char.IsLetter(c);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=33E72B
+    // Broiler-Falsified-If: a digit is rejected, so an identifier such as x1 is split and its tail lexed as a number
+    // Broiler-Human:        PENDING
     private static bool IsIdentifierPart(char c) =>
         c == '_' || char.IsLetterOrDigit(c);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=8DB670
+    // Broiler-Falsified-If: one of the ten punctuation characters, such as the dot or the semicolon, returns false
+    // Broiler-Human:        PENDING
     private static bool IsPunctuation(char c) =>
         c is '(' or ')' or '[' or ']' or '{' or '}' or ';' or ',' or '.' or ':';
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=B577B1
+    // Broiler-Falsified-If: one of the fourteen operator characters, such as the question mark or the tilde, returns false
+    // Broiler-Human:        PENDING
     private static bool IsOperator(char c) =>
         c is '+' or '-' or '*' or '/' or '%' or '=' or '<' or '>' or '!' or
             '&' or '|' or '^' or '~' or '?';

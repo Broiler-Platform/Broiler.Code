@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   10
+// Annotated:        10/10
+// Exempt:           8
+// Human-reviewed:   0/10
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         10/2
+// Resource impact:  4/10 max
+// Unverified:       10
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,6 +36,9 @@ namespace Broiler.Code.Review;
 /// report computed over a set of records can never be changed underneath by an
 /// edit happening in the editor at the same time.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=0CBA60
+// Broiler-Falsified-If: code outside this assembly sets ReviewedContentHash on a record, so it can claim a hash for content nothing hashed
+// Broiler-Human:        PENDING
 public sealed record FileReview
 {
     /// <summary>
@@ -36,6 +56,9 @@ public sealed record FileReview
     /// that the downgrade is visible in the file afterwards instead of
     /// invisible.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3A7DC4
+    // Broiler-Falsified-If: a record read at a higher version is written back with this build's lower number
+    // Broiler-Human:        PENDING
     public const int CurrentVersion = 1;
 
     /// <summary>The reviewed file, relative to the workspace root, forward slashes.</summary>
@@ -91,9 +114,15 @@ public sealed record FileReview
     public int Version { get; init; } = CurrentVersion;
 
     /// <summary>Notes still waiting on a human.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=0F5919
+    // Broiler-Falsified-If: a resolved note is counted as open, or an open note is left out of the count
+    // Broiler-Human:        PENDING
     public int OpenNoteCount => Notes.Count(note => note.IsOpen);
 
     /// <summary>An empty record for a file nobody has touched.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=6ECC79
+    // Broiler-Falsified-If: an empty record reports a status other than Unreviewed or carries a content hash
+    // Broiler-Human:        PENDING
     public static FileReview Empty(string path) => new() { Path = path };
 
     /// <summary>
@@ -105,6 +134,9 @@ public sealed record FileReview
     /// human-review claim, and the one way to make it worthless is to let
     /// something mark a file reviewed without reading it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=53984F
+    // Broiler-Falsified-If: a decision other than Unreviewed recorded with a name made only of whitespace is stored instead of throwing
+    // Broiler-Human:        PENDING
     public FileReview WithDecision(
         ReviewStatus status,
         string reviewer,
@@ -145,6 +177,9 @@ public sealed record FileReview
     /// notes rather than from a clock or a random source, so writing the same
     /// review twice produces the same file rather than a spurious diff.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=B75F88
+    // Broiler-Falsified-If: the returned record lacks the note, or the original record's note list is changed
+    // Broiler-Human:        PENDING
     public FileReview AddNote(ReviewNote note)
     {
         ArgumentNullException.ThrowIfNull(note);
@@ -159,6 +194,9 @@ public sealed record FileReview
     /// highest-numbered note frees its id again — see <see cref="ReviewNote.Id"/>
     /// for why that is accepted.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=9D2726
+    // Broiler-Falsified-If: a record holding a note with id n2147483647 yields a next id that is negative or already in use
+    // Broiler-Human:        PENDING
     public string NextNoteId()
     {
         int highest = 0;
@@ -175,6 +213,9 @@ public sealed record FileReview
     }
 
     /// <summary>Replaces a note by ID, or returns the record unchanged when there is no such note.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=0439F3
+    // Broiler-Falsified-If: a note whose id does not match is passed to the update function or changed in the result
+    // Broiler-Human:        PENDING
     public FileReview ReplaceNote(string id, Func<ReviewNote, ReviewNote> update)
     {
         ArgumentNullException.ThrowIfNull(update);
@@ -205,6 +246,9 @@ public sealed record FileReview
     /// one of a colliding pair behind would leave an addressable note the
     /// reviewer cannot remove.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=7A45E1
+    // Broiler-Falsified-If: a record holding two notes with the same id keeps one of them after that id is removed
+    // Broiler-Human:        PENDING
     public FileReview RemoveNote(string id) =>
         this with { Notes = [.. Notes.Where(note => !string.Equals(note.Id, id, StringComparison.Ordinal))] };
 
@@ -214,5 +258,8 @@ public sealed record FileReview
     /// an empty file, so the review directory mirrors what has actually been
     /// looked at instead of accumulating placeholders for every file ever opened.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=A161C6
+    // Broiler-Falsified-If: a record with a status other than Unreviewed, or with any note, reports IsEmpty true and is deleted rather than written
+    // Broiler-Human:        PENDING
     public bool IsEmpty => Status == ReviewStatus.Unreviewed && Notes.Count == 0;
 }

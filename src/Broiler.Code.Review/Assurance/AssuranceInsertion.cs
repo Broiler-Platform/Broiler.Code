@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   17
+// Annotated:        17/17
+// Exempt:           11
+// Human-reviewed:   0/17
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         15/8
+// Resource impact:  6/10 max
+// Unverified:       17
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,6 +32,9 @@ namespace Broiler.Code.Review.Assurance;
 /// whoever produced it, and it is recorded as such, with <c>Fingerprint=TBF</c>
 /// for the owning component's generator to fill in.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=83C9B1
+// Broiler-Falsified-If: a value carried by an input entry reaches the human line of the block Render writes, so that line reads other than PENDING
+// Broiler-Human:        PENDING
 public sealed record AssuranceAssessment
 {
     /// <summary>Position in the input, for reporting.</summary>
@@ -44,6 +64,9 @@ public sealed record AssuranceAssessment
     /// <summary>The reason, for the <c>EXEMPT=</c> form. Null for an assessment.</summary>
     public string? Exempt { get; init; }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=D9004F
+    // Broiler-Falsified-If: an entry whose Exempt is the empty string is validated as an assessment instead of being refused for carrying no reason
+    // Broiler-Human:        PENDING
     public bool IsExemption => Exempt is not null;
 }
 
@@ -52,6 +75,8 @@ public sealed record AssuranceAssessment
 /// <param name="Applied">True when the block was (or, in a dry run, would be) written.</param>
 /// <param name="Message">What was done, or why not.</param>
 /// <param name="Line">The 1-based line the block's first line has in the new text, when applied.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=4B0151
+// Broiler-Human:        PENDING
 public sealed record AssuranceInsertEntryResult(
     AssuranceAssessment Entry,
     bool Applied,
@@ -61,8 +86,14 @@ public sealed record AssuranceInsertEntryResult(
 /// <summary>The outcome for one file.</summary>
 /// <param name="Text">The new text, or the original when nothing was applied.</param>
 /// <param name="Entries">One result per entry, in input order.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=3BF13A
+// Broiler-Falsified-If: a result with at least one applied entry reports Changed false, so the inserted text is never written
+// Broiler-Human:        PENDING
 public sealed record AssuranceInsertFileResult(string Text, IReadOnlyList<AssuranceInsertEntryResult> Entries)
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=D70263
+    // Broiler-Falsified-If: a result whose entries were all refused reports Changed true
+    // Broiler-Human:        PENDING
     public bool Changed => Entries.Any(static entry => entry.Applied);
 }
 
@@ -85,12 +116,18 @@ public sealed record AssuranceInsertFileResult(string Text, IReadOnlyList<Assura
 /// the file fingerprint are unchanged, every new block is attached to its unit,
 /// and deleting the new lines gives back the original text exactly.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=160B8B
+// Broiler-Falsified-If: text returned by Apply holds a newly inserted human line that reads anything other than PENDING
+// Broiler-Human:        PENDING
 public static class AssuranceInsertion
 {
     /// <summary>
     /// Every problem with an entry that can be found without the file. Empty
     /// means the entry is well formed.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=59D454
+    // Broiler-Falsified-If: an entry assessed High or Critical whose falsification criterion is only whitespace is returned with no problem
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Validate(AssuranceAssessment entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -176,6 +213,9 @@ public static class AssuranceInsertion
     /// The field order is the owning component's: Origin, Spec, IP, Security,
     /// Resources, Fingerprint.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=B9DC7B
+    // Broiler-Falsified-If: a rendered block's last line is anything other than the human marker followed by PENDING, whatever the entry holds
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Render(AssuranceAssessment entry, string indent)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -224,6 +264,9 @@ public static class AssuranceInsertion
     /// <param name="entries">The entries naming this file.</param>
     /// <param name="closedToEscapeHatch">True when <c>EXEMPT=</c> may not be written in this file's assembly.</param>
     /// <param name="assembly">The file's assembly, for messages.</param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=E5D891
+    // Broiler-Falsified-If: two entries naming the same unit of one file are applied, or one of them is, instead of both being refused
+    // Broiler-Human:        PENDING
     public static AssuranceInsertFileResult Apply(
         string text,
         string path,
@@ -354,6 +397,9 @@ public static class AssuranceInsertion
         return new AssuranceInsertFileResult(inserted, Complete(results, entries));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=34BB23
+    // Broiler-Falsified-If: an entry whose fingerprint matches none of the units of that name is resolved to one of them instead of being refused as stale
+    // Broiler-Human:        PENDING
     private static (int? Index, string? Why) Resolve(IReadOnlyList<AssuranceCandidate> candidates, AssuranceAssessment entry)
     {
         var named = new List<int>();
@@ -398,6 +444,9 @@ public static class AssuranceInsertion
     /// the line above it, which is the one the neighbourhood uses. The first line
     /// of a file has none above it and takes its own.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=FC2669
+    // Broiler-Falsified-If: a block inserted above a declaration inside a CRLF region of a file whose endings are mixed is given LF endings
+    // Broiler-Human:        PENDING
     private static string SeparatorAt(AssuranceLines lines, int line)
     {
         if (line > 0 && lines.SeparatorOf(line - 1) is { Length: > 0 } above)
@@ -410,6 +459,9 @@ public static class AssuranceInsertion
     }
 
     /// <summary>Where a declaration line lands once the blocks above it are inserted.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=DBF600
+    // Broiler-Falsified-If: a declaration with two three-line blocks inserted above it is placed at its old line plus anything other than six
+    // Broiler-Human:        PENDING
     private static int NewLineOf(
         int declarationLine, IReadOnlyList<AssuranceCandidate> candidates, Dictionary<int, IReadOnlyList<string>> blocks)
     {
@@ -427,6 +479,9 @@ public static class AssuranceInsertion
     /// Rescans the new text and checks that inserting changed nothing but the
     /// comments it was meant to add. Returns what went wrong, or null.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=BA8C95
+    // Broiler-Falsified-If: an inserted text that differs from the original in a character outside the inserted lines is answered with null
+    // Broiler-Human:        PENDING
     private static string? Verify(
         string original,
         string inserted,
@@ -513,6 +568,9 @@ public static class AssuranceInsertion
             : "removing the inserted lines does not give back the original text";
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=008F44
+    // Broiler-Falsified-If: an entry left without a result is reported as applied
+    // Broiler-Human:        PENDING
     private static IReadOnlyList<AssuranceInsertEntryResult> Complete(
         AssuranceInsertEntryResult?[] results, IReadOnlyList<AssuranceAssessment> entries)
     {
@@ -523,9 +581,14 @@ public static class AssuranceInsertion
         return complete;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=F03306
+    // Broiler-Human:        PENDING
     private static AssuranceInsertEntryResult Refused(AssuranceAssessment entry, string message) =>
         new(entry, false, message);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=84F930
+    // Broiler-Falsified-If: a vocabulary value that differs from an allowed one only in letter case, such as 'high', adds no problem
+    // Broiler-Human:        PENDING
     private static void Closed(string name, string? value, string[] allowed, List<string> problems)
     {
         if (value is null)
@@ -538,6 +601,9 @@ public static class AssuranceInsertion
             problems.Add($"{name} '{value}' is outside its vocabulary ({string.Join(", ", allowed)})");
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=79917E
+    // Broiler-Falsified-If: a value holding a U+2028 line separator or a lone carriage return is reported as one line
+    // Broiler-Human:        PENDING
     private static bool IsOneLine(string value)
     {
         foreach (char character in value)

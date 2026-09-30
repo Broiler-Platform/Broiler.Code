@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   9
+// Annotated:        9/9
+// Exempt:           8
+// Human-reviewed:   0/9
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         8/0
+// Resource impact:  3/10 max
+// Unverified:       9
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +23,8 @@ using Broiler.UI.CodeEditor;
 namespace Broiler.Code.Core.Diagnostics;
 
 /// <summary>Where a diagnostic came from. Merging depends on it.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=F3F31E
+// Broiler-Human:        PENDING
 public enum DiagnosticOrigin
 {
     /// <summary>The live language service, for the snapshot being edited.</summary>
@@ -21,6 +40,9 @@ public enum DiagnosticOrigin
 /// <summary>
 /// One diagnostic with everything the merge needs to decide precedence.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=CD170A
+// Broiler-Falsified-If: a live and a build diagnostic with the same code, document and span but different message text are both kept by the merge
+// Broiler-Human:        PENDING
 public sealed record MergedDiagnostic(
     DiagnosticOrigin Origin,
     string DocumentPath,
@@ -34,6 +56,9 @@ public sealed record MergedDiagnostic(
     /// it is localized, and the live service and the build worker may be
     /// running different compiler builds that word it differently.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=8DBAFC
+    // Broiler-Falsified-If: two diagnostics with the same code, document, start and length but different message text produce different keys
+    // Broiler-Human:        PENDING
     public (string?, string, int, int) Key =>
         (Adornment.Code, DocumentPath, Adornment.Start, Adornment.Length);
 }
@@ -51,6 +76,9 @@ public sealed record MergedDiagnostic(
 /// describe text that may have moved. They are kept only while their snapshot
 /// is still current, and otherwise shown as belonging to an earlier build.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=9D1A6B
+// Broiler-Falsified-If: a build diagnostic is shown in place of the live diagnostic with the same code, document and span
+// Broiler-Human:        PENDING
 public sealed class DocumentDiagnosticMerge
 {
     private readonly List<MergedDiagnostic> _live = [];
@@ -69,6 +97,9 @@ public sealed class DocumentDiagnosticMerge
     /// live ones. The UI says so, because otherwise a user sees build errors
     /// for code they have changed and cannot tell why.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=4CD7F2
+    // Broiler-Falsified-If: a build whose snapshot version equals the live snapshot version is reported stale
+    // Broiler-Human:        PENDING
     public bool BuildIsStale => BuildSnapshotVersion >= 0 && BuildSnapshotVersion < LiveSnapshotVersion;
 
     /// <summary>
@@ -76,6 +107,9 @@ public sealed class DocumentDiagnosticMerge
     /// what is already held — analysis runs concurrently and completes out of
     /// order.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=388580
+    // Broiler-Falsified-If: live results for an older snapshot version replace the results already accepted for a newer one
+    // Broiler-Human:        PENDING
     public bool TryApplyLive(int snapshotVersion, IEnumerable<MergedDiagnostic> diagnostics)
     {
         ArgumentNullException.ThrowIfNull(diagnostics);
@@ -93,6 +127,9 @@ public sealed class DocumentDiagnosticMerge
     /// applied — two builds can be in flight, and the older one finishing last
     /// must not win.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=4BBAA1
+    // Broiler-Falsified-If: a build for an older snapshot applied after a newer build replaces the newer build's diagnostics
+    // Broiler-Human:        PENDING
     public bool TryApplyBuild(
         string buildId, int snapshotVersion, IEnumerable<MergedDiagnostic> diagnostics)
     {
@@ -113,6 +150,9 @@ public sealed class DocumentDiagnosticMerge
     /// The diagnostics to show. Live wins on identity; a build diagnostic
     /// survives only when live has not covered it and the build is not stale.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=12D26E
+    // Broiler-Falsified-If: a zero-width build diagnostic at a non-zero offset is still returned after live results have moved past the build's snapshot
+    // Broiler-Human:        PENDING
     public IReadOnlyList<MergedDiagnostic> GetMerged()
     {
         var merged = new List<MergedDiagnostic>(_live);
@@ -138,6 +178,9 @@ public sealed class DocumentDiagnosticMerge
         return merged;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=11AF64
+    // Broiler-Falsified-If: after ClearBuild, GetMerged still returns a diagnostic from the cleared build or BuildIsStale is true
+    // Broiler-Human:        PENDING
     public void ClearBuild()
     {
         _build.Clear();

@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   7
+// Annotated:        7/7
+// Exempt:           4
+// Human-reviewed:   0/7
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         7/7
+// Resource impact:  5/10 max
+// Unverified:       7
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +29,9 @@ namespace Broiler.Code.Review.Cli;
 /// means nothing until it says which files, so the rules are here, in one place,
 /// stated rather than scattered through a walk.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=D8619C
+// Broiler-Falsified-If: a source file under a directory whose name only contains an excluded name, such as src/Broiler.Svg/ or src/binaries/, is left out of the inventory
+// Broiler-Human:        PENDING
 public sealed record InventoryOptions
 {
     /// <summary>
@@ -76,9 +96,15 @@ public sealed record InventoryOptions
 /// The shallowest path wins, which for every component in this repository is its
 /// own top-level checkout rather than somebody else's copy of it.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=443E0E
+// Broiler-Falsified-If: a file added at a shallower path with the same identity, such as docs/Broiler.CSS/Parsing/Tokenizer.cs, displaces Broiler.CSS/src/Broiler.CSS/Parsing/Tokenizer.cs from the inventory
+// Broiler-Human:        PENDING
 public static class SourceInventory
 {
     /// <summary>Lists reviewable files under <paramref name="root"/>, as forward-slash relative paths.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=95817F
+    // Broiler-Falsified-If: a file added at a shallower path with the same identity, such as docs/Broiler.CSS/Parsing/Tokenizer.cs, displaces Broiler.CSS/src/Broiler.CSS/Parsing/Tokenizer.cs from the inventory
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Enumerate(string root, InventoryOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(root);
@@ -129,6 +155,9 @@ public static class SourceInventory
     /// in one component, checked out twice. A path with no such segment is its
     /// own identity, so nothing outside a component is ever folded away.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=CE03B4
+    // Broiler-Falsified-If: Broiler.HTML/Broiler.CSS/src/Broiler.CSS/Parsing/Tokenizer.cs and Broiler.CSS/src/Broiler.CSS/Parsing/Tokenizer.cs reduce to different identities
+    // Broiler-Human:        PENDING
     public static string IdentityOf(string relativePath)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
@@ -149,6 +178,9 @@ public static class SourceInventory
     /// How many <c>Broiler.</c>-named segments a path passes through — its
     /// nesting depth in checkout terms rather than in directory terms.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=E0F13A
+    // Broiler-Falsified-If: Broiler.Browser/Broiler.DOM/src/Broiler.DOM/Node.cs reports a depth no greater than Broiler.DOM/src/Broiler.DOM/Node.cs, so the copy wins the fold
+    // Broiler-Human:        PENDING
     public static int ComponentDepth(string relativePath)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
@@ -163,6 +195,9 @@ public static class SourceInventory
         return depth;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=0ACF3C
+    // Broiler-Falsified-If: a symbolic link or junction to a directory outside the root is descended and the files under it are listed
+    // Broiler-Human:        PENDING
     private static void Walk(string root, string directory, InventoryOptions options, List<string> into)
     {
         foreach (string child in Directory.EnumerateDirectories(directory))
@@ -207,6 +242,9 @@ public static class SourceInventory
     /// more accurate and would cost a full read of every file in the tree to
     /// change an answer that these names already get right.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=F35499
+    // Broiler-Falsified-If: a hand-written file no tool writes, such as Broiler.Input/src/Broiler.Input.Linux/AssemblyInfo.cs, is classed as generated and left out of the inventory
+    // Broiler-Human:        PENDING
     public static bool IsGenerated(string relativePath) =>
         relativePath.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase) ||
         relativePath.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase) ||

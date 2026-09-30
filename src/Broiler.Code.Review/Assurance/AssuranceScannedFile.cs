@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   6
+// Annotated:        6/6
+// Exempt:           1
+// Human-reviewed:   0/6
+// IP risk:          None
+// Security risk:    High
+// Criteria:         2/2
+// Resource impact:  6/10 max
+// Unverified:       6
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System.Collections.Generic;
 
 namespace Broiler.Code.Review.Assurance;
@@ -7,6 +24,8 @@ namespace Broiler.Code.Review.Assurance;
 /// </summary>
 /// <param name="Line">Zero-based line the directive starts on.</param>
 /// <param name="Text">The directive, trimmed: <c>#if DEBUG</c>, <c>#nullable enable</c>.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=548686
+// Broiler-Human:        PENDING
 public readonly record struct AssuranceDirective(int Line, string Text);
 
 /// <summary>
@@ -46,6 +65,8 @@ public readonly record struct AssuranceDirective(int Line, string Text);
 /// and this line sits inside the declaration, below its first token, where
 /// nothing attaches it.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=9F6CF9
+// Broiler-Human:        PENDING
 public sealed record AssuranceFileUnit(
     AssuranceScannedUnit Unit,
     string Indent,
@@ -71,6 +92,8 @@ public sealed record AssuranceFileUnit(
 /// counts differ, the parser's line numbers do not index <see cref="AssuranceLines"/>,
 /// and nothing may be written into the file by line number.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=69787B
+// Broiler-Human:        PENDING
 public sealed record AssuranceScannedFile(
     IReadOnlyList<AssuranceFileUnit> Units,
     string FileFingerprint,
@@ -90,6 +113,8 @@ public sealed record AssuranceScannedFile(
 /// <summary>One physical line of one comment.</summary>
 /// <param name="Line">Zero-based line.</param>
 /// <param name="Text">The comment's text on that line, delimiters included: <c>// x</c>, <c>/* x</c>, <c> * x */</c>.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=41350D
+// Broiler-Human:        PENDING
 public readonly record struct AssuranceCommentLine(int Line, string Text);
 
 /// <summary>
@@ -100,11 +125,17 @@ public readonly record struct AssuranceCommentLine(int Line, string Text);
 /// are. Implementations must agree with the owning component token for token,
 /// exactly as that interface's must.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=DFA515
+// Broiler-Falsified-If: a marker text standing inside a string literal or disabled code is reported among the assurance comment lines
+// Broiler-Human:        PENDING
 public interface IAssuranceFileScanner
 {
     /// <summary>
     /// Parses <paramref name="text"/> (already decoded, with no byte-order mark)
     /// and reports its units, fingerprint, directives and assurance comments.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=CAA86D
+    // Broiler-Falsified-If: a change to a declaration's tokens leaves the fingerprint ScanFile reports for it unchanged
+    // Broiler-Human:        PENDING
     AssuranceScannedFile ScanFile(string text, string path);
 }

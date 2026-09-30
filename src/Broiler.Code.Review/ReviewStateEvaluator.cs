@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   3
+// Annotated:        3/3
+// Exempt:           0
+// Human-reviewed:   0/3
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         3/3
+// Resource impact:  4/10 max
+// Unverified:       3
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 
 namespace Broiler.Code.Review;
@@ -12,6 +29,9 @@ namespace Broiler.Code.Review;
 /// that survives contact with development. Everything else in this assembly
 /// exists to make this function answerable.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=96A140
+// Broiler-Falsified-If: a record with status Reviewed reports Current freshness for text whose normalized form differs from the text it was hashed from
+// Broiler-Human:        PENDING
 public static class ReviewStateEvaluator
 {
     /// <summary>
@@ -23,6 +43,9 @@ public static class ReviewStateEvaluator
     /// treated as unchanged, because a deleted-and-restored file must not keep
     /// an approval it never earned.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=9D7EDE
+    // Broiler-Falsified-If: a record with status Reviewed evaluated with null content reports IsVerified as true
+    // Broiler-Human:        PENDING
     public static ReviewState Evaluate(FileReview? review, string? content)
     {
         if (review is null || review.Status == ReviewStatus.Unreviewed)
@@ -38,6 +61,9 @@ public static class ReviewStateEvaluator
         return new ReviewState(review.Status, FreshnessOf(review, content), review.OpenNoteCount);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=9ED4E9
+    // Broiler-Falsified-If: a record whose reviewedContentHash is absent or carries an unknown algorithm prefix evaluates as Current or Stale instead of Unknown
+    // Broiler-Human:        PENDING
     private static ReviewFreshness FreshnessOf(FileReview review, string? content)
     {
         if (content is null)

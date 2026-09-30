@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   11
+// Annotated:        11/11
+// Exempt:           5
+// Human-reviewed:   0/11
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         7/0
+// Resource impact:  4/10 max
+// Unverified:       11
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,6 +33,9 @@ namespace Broiler.Code.Core.Shell;
 /// that announce a row's level and position — none of which would exist in a
 /// bespoke list.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=6788B5
+// Broiler-Falsified-If: activating a diagnostic row resolves through EntryFor to another row's entry, so it navigates to a different diagnostic's location
+// Broiler-Human:        PENDING
 public sealed class ProblemsTreeSource(ProblemsModel model) : IObservableTreeDataSource
 {
     private readonly ProblemsModel _model = model ?? throw new ArgumentNullException(nameof(model));
@@ -24,23 +44,35 @@ public sealed class ProblemsTreeSource(ProblemsModel model) : IObservableTreeDat
     private readonly Dictionary<string, List<string>> _children = [];
     private bool _valid;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CFCEED
+    // Broiler-Human:        PENDING
     public event EventHandler<TreeDataChangedEventArgs>? DataChanged;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DCF68B
+    // Broiler-Human:        PENDING
     public TreeNodeId Root => new("problems");
 
     /// <summary>The entry a node stands for, or null for a document group.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=13AFAB
+    // Broiler-Falsified-If: a document group node yields a diagnostic entry instead of null
+    // Broiler-Human:        PENDING
     public ProblemEntry? EntryFor(TreeNodeId node)
     {
         EnsureBuilt();
         return _entriesByNode.GetValueOrDefault(node.Value);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=1C7BFE
+    // Broiler-Human:        PENDING
     public void Refresh()
     {
         _valid = false;
         DataChanged?.Invoke(this, new TreeDataChangedEventArgs(TreeNodeId.None));
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=678B09
+    // Broiler-Falsified-If: a document group's child count differs from the number of diagnostics grouped under that document
+    // Broiler-Human:        PENDING
     public int GetChildCount(TreeNodeId node)
     {
         EnsureBuilt();
@@ -49,6 +81,9 @@ public sealed class ProblemsTreeSource(ProblemsModel model) : IObservableTreeDat
         return _children.TryGetValue(node.Value, out List<string>? children) ? children.Count : 0;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=317DE1
+    // Broiler-Falsified-If: the child at an index of a document group is an entry grouped under a different document
+    // Broiler-Human:        PENDING
     public TreeNodeId GetChild(TreeNodeId node, int index)
     {
         EnsureBuilt();
@@ -57,8 +92,14 @@ public sealed class ProblemsTreeSource(ProblemsModel model) : IObservableTreeDat
             : _children[node.Value][index]);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=C07485
+    // Broiler-Falsified-If: a diagnostic row reports itself expandable
+    // Broiler-Human:        PENDING
     public bool CanExpand(TreeNodeId node) => GetChildCount(node) > 0;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=F93F8F
+    // Broiler-Falsified-If: a document-scoped diagnostic on the first line of its file is shown as line 0
+    // Broiler-Human:        PENDING
     public TreeNodePresentation GetPresentation(TreeNodeId node)
     {
         EnsureBuilt();
@@ -90,6 +131,9 @@ public sealed class ProblemsTreeSource(ProblemsModel model) : IObservableTreeDat
         return new TreeNodePresentation(node, ShortName(document), $"{count}", "file");
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=5E45A0
+    // Broiler-Falsified-If: two identical diagnostics on the same line produce one row instead of two
+    // Broiler-Human:        PENDING
     private void EnsureBuilt()
     {
         if (_valid)
@@ -122,6 +166,8 @@ public sealed class ProblemsTreeSource(ProblemsModel model) : IObservableTreeDat
         _valid = true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=D20199
+    // Broiler-Human:        PENDING
     private static string ShortName(string path)
     {
         int slash = path.LastIndexOfAny(['/', '\\']);

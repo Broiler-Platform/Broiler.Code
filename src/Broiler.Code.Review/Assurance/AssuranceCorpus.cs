@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   8
+// Annotated:        8/8
+// Exempt:           8
+// Human-reviewed:   0/8
+// IP risk:          None
+// Security risk:    High
+// Criteria:         2/2
+// Resource impact:  1/10 max
+// Unverified:       8
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,9 +25,13 @@ namespace Broiler.Code.Review.Assurance;
 /// <param name="RelativePath">Root-relative, forward slashes.</param>
 /// <param name="Assembly">The assembly the file's project builds.</param>
 /// <param name="Text">The decoded text, without a byte-order mark.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=0CB756
+// Broiler-Human:        PENDING
 public sealed record AssuranceSource(string RelativePath, string Assembly, string Text);
 
 /// <summary>A file under a covered project that the configuration leaves out, and why.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E52E05
+// Broiler-Human:        PENDING
 public sealed record AssuranceExcludedSource(string RelativePath, string Reason);
 
 /// <summary>
@@ -29,6 +50,8 @@ public sealed record AssuranceExcludedSource(string RelativePath, string Reason)
 /// The current text of each component-level artefact, by root-relative path.
 /// A path that is absent here does not exist on disk.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=2C83F4
+// Broiler-Human:        PENDING
 public sealed record AssuranceCorpus(
     IReadOnlyList<AssuranceSource> Files,
     IReadOnlyList<AssuranceExcludedSource> Excluded,
@@ -52,6 +75,9 @@ public sealed record AssuranceCorpus(
 /// <param name="File">The file's root-relative path.</param>
 /// <param name="Assembly">The file's assembly.</param>
 /// <param name="Candidate">The unit, classified from the file's text.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=492720
+// Broiler-Falsified-If: a candidate the exemption predicate does not exempt reads as not relevant, so the J1 and J11 rules skip it
+// Broiler-Human:        PENDING
 public sealed record AssuranceCorpusUnit(string File, string Assembly, AssuranceCandidate Candidate)
 {
     public string Name => Candidate.Unit.Name;
@@ -59,12 +85,17 @@ public sealed record AssuranceCorpusUnit(string File, string Assembly, Assurance
     public string Fingerprint => Candidate.Unit.Fingerprint;
 
     /// <summary>The 1-based line of the declaration's first token, attributes included.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0DB13E
+    // Broiler-Human:        PENDING
     public int Line => Candidate.Unit.DeclarationLine + 1;
 
     public AssuranceAnnotation? Annotation => Candidate.Annotation;
 
     public bool IsExempt => Candidate.IsExempt;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=DC666B
+    // Broiler-Falsified-If: a candidate the exemption predicate does not exempt reads as not relevant, so the J1 and J11 rules skip it
+    // Broiler-Human:        PENDING
     public bool IsRelevant => !Candidate.IsExempt;
 
     /// <summary>The exemption case, <c>DeclaredInSource</c> for <c>EXEMPT=</c>, or <c>None</c>.</summary>
@@ -76,6 +107,8 @@ public sealed record AssuranceCorpusUnit(string File, string Assembly, Assurance
     /// The unit as every message names it: <c>path(line): name</c>. The same
     /// shape the owning component's messages use.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=2D3788
+    // Broiler-Human:        PENDING
     public string Where => string.Create(CultureInfo.InvariantCulture, $"{File}({Line}): {Name}");
 }
 
@@ -89,6 +122,8 @@ public sealed record AssuranceCorpusUnit(string File, string Assembly, Assurance
 /// <param name="File">The root-relative file it is about, or null for the component.</param>
 /// <param name="Line">The 1-based line, when there is one.</param>
 /// <param name="Message">The message, in the owning component's words where it has them.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=2BAEB4
+// Broiler-Human:        PENDING
 public sealed record AssuranceViolation(string Rule, string? File, int? Line, string Message)
 {
     /// <summary>

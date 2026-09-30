@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   11
+// Annotated:        11/11
+// Exempt:           0
+// Human-reviewed:   0/11
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         9/8
+// Resource impact:  3/10 max
+// Unverified:       11
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +29,12 @@ namespace Broiler.Code.Review.Assurance;
 /// file anyway. The plan catches it per file and reports it; nothing is written
 /// while any refusal stands.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=21FCF6
+// Broiler-Human:        PENDING
 public sealed class AssuranceRefusalException : Exception
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=5CA58C
+    // Broiler-Human:        PENDING
     public AssuranceRefusalException(string message)
         : base(message)
     {
@@ -40,10 +61,19 @@ public sealed class AssuranceRefusalException : Exception
 /// reviewer can have been reading; if the code has moved since, the decision
 /// is recorded as outrun rather than moved onto code nobody saw.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=6C9EE3
+// Broiler-Falsified-If: Refreshed writes a body naming an alias that the line as written did not carry
+// Broiler-Human:        PENDING
 public static class AssuranceHumanLine
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=FC3986
+    // Broiler-Falsified-If: the marker is spelled differently from the one Broiler.VM writes in a stale line, so a stale line that component wrote fails IsDefined and its file is refused
+    // Broiler-Human:        PENDING
     private const string PreviousMarker = "Previous=";
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=D3DF95
+    // Broiler-Falsified-If: the marker lacks its trailing equals sign, so ReviewerNames drops any name that begins with the letters of the field name
+    // Broiler-Human:        PENDING
     private static readonly string FingerprintMarker = AssuranceVocabulary.FingerprintField + "=";
 
     /// <summary>
@@ -57,6 +87,9 @@ public static class AssuranceHumanLine
     /// A bare alias on a unit whose machine line records no fingerprint yet, so
     /// nothing says which version was approved.
     /// </exception>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=B9FC2E
+    // Broiler-Falsified-If: a bare alias whose machine line records a fingerprint other than the current one comes back bound to the current fingerprint
+    // Broiler-Human:        PENDING
     public static string Refreshed(AssuranceAnnotation annotation, string currentFingerprint, string where)
     {
         ArgumentNullException.ThrowIfNull(annotation);
@@ -127,6 +160,9 @@ public static class AssuranceHumanLine
     /// alias (<see cref="AssuranceVocabulary.IsAlias"/>), where the owning
     /// component takes anything without an <c>=</c>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=71E984
+    // Broiler-Falsified-If: a body whose head is a placeholder such as TODO, followed by a fingerprint part, is reported as a defined shape
+    // Broiler-Human:        PENDING
     public static bool IsDefined(string body)
     {
         ArgumentNullException.ThrowIfNull(body);
@@ -164,6 +200,9 @@ public static class AssuranceHumanLine
     /// reviewer's own assessment parts. Only the exact body <c>PENDING</c>
     /// carries none.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=B7EFD7
+    // Broiler-Falsified-If: the name inside a stale line's previous-decision part is missing from the returned set
+    // Broiler-Human:        PENDING
     public static IReadOnlySet<string> ReviewerNames(string body)
     {
         ArgumentNullException.ThrowIfNull(body);
@@ -201,6 +240,9 @@ public static class AssuranceHumanLine
     /// <param name="where">The unit, as <c>path(line): name</c>.</param>
     /// <param name="before">The human body as the source states it.</param>
     /// <param name="after">The body the generator is about to write.</param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=6C4972
+    // Broiler-Falsified-If: an after body naming an alias absent from the before body returns without throwing
+    // Broiler-Human:        PENDING
     public static void RefuseInventedApproval(string where, string before, string after)
     {
         ArgumentNullException.ThrowIfNull(where);
@@ -237,6 +279,9 @@ public static class AssuranceHumanLine
     /// saying there is none. Never the state machine's name for it, which would
     /// put a bare review word into generated prose with no count beside it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=B55E30
+    // Broiler-Falsified-If: an annotation with an empty human body is shown as an empty string
+    // Broiler-Human:        PENDING
     public static string Display(AssuranceAnnotation? annotation) => annotation switch
     {
         null => "no annotation",
@@ -248,6 +293,9 @@ public static class AssuranceHumanLine
     /// Every human body in a text, at any indentation: the lines whose trimmed
     /// text opens with the human marker.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=3AD2CA
+    // Broiler-Falsified-If: a human line indented with tabs is not returned
+    // Broiler-Human:        PENDING
     public static IEnumerable<string> BodiesIn(string text)
     {
         ArgumentNullException.ThrowIfNull(text);

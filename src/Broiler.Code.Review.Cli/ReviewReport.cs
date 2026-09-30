@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   8
+// Annotated:        8/8
+// Exempt:           0
+// Human-reviewed:   0/8
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         5/3
+// Resource impact:  5/10 max
+// Unverified:       8
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,9 +35,15 @@ namespace Broiler.Code.Review.Cli;
 /// review still current?" would eventually disagree, and the first anyone would
 /// hear of it is a CI run contradicting the badge in the editor.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=B86628
+// Broiler-Falsified-If: a recorded file whose text the storage refuses to read, such as a symbolic link, is reported as reviewed and unchanged
+// Broiler-Human:        PENDING
 public static class ReviewReport
 {
     /// <summary>Evaluates <paramref name="files"/> against the records under <paramref name="root"/>.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=2DB7D3
+    // Broiler-Falsified-If: a recorded file whose text the storage refuses to read, such as a symbolic link, is reported as reviewed and unchanged
+    // Broiler-Human:        PENDING
     public static async ValueTask<IReadOnlyList<ReviewedFile>> EvaluateAsync(
         string root,
         IReadOnlyList<string> files,
@@ -89,6 +112,9 @@ public static class ReviewReport
     /// The overall row comes first and the component table is worst-first, which
     /// is the order somebody deciding what to review next reads it in.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=11E880
+    // Broiler-Falsified-If: the four rows of the overall table do not add up to the file total its opening sentence states
+    // Broiler-Human:        PENDING
     public static string ToMarkdown(IReadOnlyList<ReviewedFile> files)
     {
         ArgumentNullException.ThrowIfNull(files);
@@ -137,6 +163,9 @@ public static class ReviewReport
     /// Renders the report as JSON, for anything that wants to track the number
     /// over time rather than read it once.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=40B3FF
+    // Broiler-Falsified-If: a component listed in the Markdown table is missing from the JSON components array
+    // Broiler-Human:        PENDING
     public static string ToJson(IReadOnlyList<ReviewedFile> files)
     {
         ArgumentNullException.ThrowIfNull(files);
@@ -174,6 +203,9 @@ public static class ReviewReport
     /// back on. The coverage number is how those are reported; this is for
     /// things that changed under a human's earlier answer.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=ED3B11
+    // Broiler-Falsified-If: a file whose record says reviewed but whose content hash no longer matches is missing from the returned list
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<ReviewedFile> Regressions(IReadOnlyList<ReviewedFile> files)
     {
         ArgumentNullException.ThrowIfNull(files);
@@ -188,6 +220,8 @@ public static class ReviewReport
         return found;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=747CD1
+    // Broiler-Human:        PENDING
     private static void WriteTotals(
         System.Text.Json.Utf8JsonWriter writer, string name, ReviewCoverageTotals totals)
     {
@@ -196,6 +230,8 @@ public static class ReviewReport
         writer.WriteEndObject();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=51A2C4
+    // Broiler-Human:        PENDING
     private static void WriteTotalsBody(
         System.Text.Json.Utf8JsonWriter writer, ReviewCoverageTotals totals)
     {
@@ -209,6 +245,8 @@ public static class ReviewReport
         writer.WriteNumber("verifiedPercent", Math.Round(totals.VerifiedPercent, 2));
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=434BE1
+    // Broiler-Human:        PENDING
     private static string Invariant(FormattableString text) =>
         text.ToString(CultureInfo.InvariantCulture);
 }

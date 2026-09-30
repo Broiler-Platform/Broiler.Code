@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   14
+// Annotated:        14/14
+// Exempt:           0
+// Human-reviewed:   0/14
+// IP risk:          Low
+// Security risk:    Medium
+// Criteria:         11/0
+// Resource impact:  4/10 max
+// Unverified:       14
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +28,8 @@ namespace Broiler.Code.Review.Assurance;
 /// <param name="Files">Distinct files those units are in.</param>
 /// <param name="Current">Of those, the units whose decision is bound to the version here now.</param>
 /// <param name="Outrun">Of those, the units whose code moved after the decision.</param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=E64272
+// Broiler-Human:        PENDING
 public sealed record AssuranceReviewerRow(string Alias, int Units, int Files, int Current, int Outrun);
 
 /// <summary>
@@ -28,6 +47,9 @@ public sealed record AssuranceReviewerRow(string Alias, int Units, int Files, in
 /// writes this file only where the configuration points it, and refuses to
 /// replace a file it did not write unless told to adopt it.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=478EA2
+// Broiler-Falsified-If: the record reports Status COMPLETE, or a first status count equal to the relevant count, while a relevant unit's human line does not name the fingerprint that unit computes now
+// Broiler-Human:        PENDING
 public static class AssuranceHumanReviewRecord
 {
     /// <summary>
@@ -35,6 +57,9 @@ public static class AssuranceHumanReviewRecord
     /// some are, <c>COMPLETE</c> when all are. A component with no relevant
     /// unit is <c>PENDING</c>, not complete.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=632B32
+    // Broiler-Falsified-If: a list whose relevant units all name their current fingerprint except one unit in the Stale state returns COMPLETE
+    // Broiler-Human:        PENDING
     public static string Status(IReadOnlyList<AssuranceCorpusUnit> units)
     {
         ArgumentNullException.ThrowIfNull(units);
@@ -49,6 +74,9 @@ public static class AssuranceHumanReviewRecord
     /// <c>Previous=</c>, in ordinal order. Nothing registers an alias; it is
     /// here because a line carries it.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=3CEE52
+    // Broiler-Falsified-If: a unit in the Stale state is counted in its alias's Current column instead of its Outrun column
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<AssuranceReviewerRow> Reviewers(IReadOnlyList<AssuranceCorpusUnit> units)
     {
         ArgumentNullException.ThrowIfNull(units);
@@ -68,6 +96,9 @@ public static class AssuranceHumanReviewRecord
     }
 
     /// <summary>The alias a unit's human line names: the live one, or the one a STALE line preserves.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=A15C4F
+    // Broiler-Falsified-If: a unit whose human line reads exactly PENDING yields an alias instead of null
+    // Broiler-Human:        PENDING
     public static string? AliasOn(AssuranceCorpusUnit unit)
     {
         ArgumentNullException.ThrowIfNull(unit);
@@ -75,6 +106,9 @@ public static class AssuranceHumanReviewRecord
     }
 
     /// <summary>The record for the post-generation units of every covered file.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=3E3905
+    // Broiler-Falsified-If: the first count on the status line differs from the number of relevant units whose human line names the fingerprint the unit computes now
+    // Broiler-Human:        PENDING
     public static string Render(AssuranceReportContext context, IReadOnlyList<AssuranceCorpusUnit> units)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -127,6 +161,8 @@ public static class AssuranceHumanReviewRecord
         return record.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=CA068A
+    // Broiler-Human:        PENDING
     private static string HowToUseThisFile() =>
         "## 1. How To Use This File\n" +
         "\n" +
@@ -135,6 +171,8 @@ public static class AssuranceHumanReviewRecord
         "to fill in and nothing here to leave blank.\n" +
         "\n";
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=25B077
+    // Broiler-Human:        PENDING
     private static string HowAReviewIsRecorded() =>
         "## 2. How A Review Is Recorded\n" +
         "\n" +
@@ -168,6 +206,9 @@ public static class AssuranceHumanReviewRecord
         "did, which is the narrower and the more useful of the two.\n" +
         "\n";
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=5ADC21
+    // Broiler-Falsified-If: a unit whose annotation states an EXEMPT reason is counted among the assessed units in the closing sentence
+    // Broiler-Human:        PENDING
     private static string WhatThisRecordDoesNotSay(IReadOnlyList<AssuranceCorpusUnit> units)
     {
         AssuranceAnnotation[] assessed = [.. units
@@ -197,6 +238,9 @@ public static class AssuranceHumanReviewRecord
             "that makes it read.\n";
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=984E85
+    // Broiler-Falsified-If: the section says no alias appears in the tree while at least one unit's human line names an alias
+    // Broiler-Human:        PENDING
     private static string ReviewerSection(IReadOnlyList<AssuranceCorpusUnit> units)
     {
         IReadOnlyList<AssuranceReviewerRow> rows = Reviewers(units);
@@ -224,6 +268,9 @@ public static class AssuranceHumanReviewRecord
         return section.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=8B51B9
+    // Broiler-Falsified-If: a covered file whose path contains a '|' character produces a table row whose counts fall under the wrong column headers
+    // Broiler-Human:        PENDING
     private static string CoverageSection(AssuranceReportContext context, IReadOnlyList<AssuranceCorpusUnit> units)
     {
         var section = new StringBuilder("## 6. Coverage By File\n\n");
@@ -252,6 +299,9 @@ public static class AssuranceHumanReviewRecord
         return section.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=78B89F
+    // Broiler-Falsified-If: a unit in the Stale or HumanPending state is listed under Decisions Recorded
+    // Broiler-Human:        PENDING
     private static string DecisionSection(IReadOnlyList<AssuranceCorpusUnit> units)
     {
         AssuranceCorpusUnit[] decided = [.. units.Where(static unit =>
@@ -274,6 +324,9 @@ public static class AssuranceHumanReviewRecord
         return section.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=65467B
+    // Broiler-Falsified-If: a unit in the Stale state is left out of the list of decisions the code has outrun
+    // Broiler-Human:        PENDING
     private static string OutrunSection(IReadOnlyList<AssuranceCorpusUnit> units)
     {
         AssuranceCorpusUnit[] outrun = [.. units.Where(static unit => unit.State == AssuranceUnitState.Stale)];
@@ -295,6 +348,9 @@ public static class AssuranceHumanReviewRecord
         return section.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=4D894E
+    // Broiler-Falsified-If: a unit whose machine line assesses it Critical is left out of the list of units where a decision is required first
+    // Broiler-Human:        PENDING
     private static string RequiredFirstSection(IReadOnlyList<AssuranceCorpusUnit> units)
     {
         AssuranceCorpusUnit[] required = [.. units.Where(static unit => unit.Annotation?.Field("Security") is "High" or "Critical")];

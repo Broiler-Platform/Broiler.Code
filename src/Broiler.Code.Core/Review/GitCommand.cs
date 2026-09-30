@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   5
+// Annotated:        5/5
+// Exempt:           0
+// Human-reviewed:   0/5
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         5/5
+// Resource impact:  3/10 max
+// Unverified:       5
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -19,6 +36,9 @@ namespace Broiler.Code.Core.Review;
 /// is not a repository, a host with no git, a scratch directory. Nothing about
 /// the review record depends on git being present.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=2D0DFB
+// Broiler-Falsified-If: a file named git in the editor process's current directory is started in place of the git found on PATH
+// Broiler-Human:        PENDING
 internal static class GitCommand
 {
     /// <summary>
@@ -26,8 +46,14 @@ internal static class GitCommand
     /// to answer, and a review pane that stalls while somebody marks a file
     /// reviewed is worse than one that records no revision.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=3B2C97
+    // Broiler-Falsified-If: a git child that never exits keeps a lookup waiting for more than two seconds
+    // Broiler-Human:        PENDING
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(2);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=3ED69D
+    // Broiler-Falsified-If: a file named git in the editor process's current directory is started in place of the git found on PATH
+    // Broiler-Human:        PENDING
     public static async ValueTask<string?> RunAsync(
         string workingDirectory, string arguments, CancellationToken cancellationToken)
     {
@@ -114,8 +140,14 @@ internal static class GitCommand
 /// account name is the fallback, and it is a fallback rather than the default
 /// because two people on one machine share it.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=83CBB4
+// Broiler-Falsified-If: a git lookup that fails, times out or prints an empty user.name yields an empty name instead of the account name
+// Broiler-Human:        PENDING
 public static class GitIdentity
 {
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=7D5BB6
+    // Broiler-Falsified-If: a git lookup that fails, times out or prints an empty user.name yields an empty name instead of the account name
+    // Broiler-Human:        PENDING
     public static async ValueTask<string> ResolveReviewerAsync(
         string workingDirectory, CancellationToken cancellationToken = default)
     {

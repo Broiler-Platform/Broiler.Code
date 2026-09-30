@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   16
+// Annotated:        16/16
+// Exempt:           15
+// Human-reviewed:   0/16
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         13/7
+// Resource impact:  4/10 max
+// Unverified:       16
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -27,6 +44,9 @@ namespace Broiler.Code.Linux;
 /// dispatched, because a control touched from a device thread is a race. The
 /// window's loop drains the queue on the UI thread.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=52B01F
+// Broiler-Falsified-If: a key typed while another application has focus is dispatched to the editor although the window never reported focus to SetActiveAsync
+// Broiler-Human:        PENDING
 internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log) : IAsyncDisposable
 {
     private readonly EvdevInputRouter _router = router ?? throw new ArgumentNullException(nameof(router));
@@ -50,8 +70,14 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
     public string MouseDevice { get; private set; } = "none";
 
     /// <summary>True once at least one device is open and readable.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=380C67
+    // Broiler-Falsified-If: IsAvailable reads false while a keyboard or mouse device is open, so SetActiveAsync(false) returns without stopping it
+    // Broiler-Human:        PENDING
     public bool IsAvailable => _keyboard is not null || _mouse is not null;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=5A21D5
+    // Broiler-Falsified-If: an opened keyboard delivers key events to the pending queue before SetActiveAsync(true) has started it
+    // Broiler-Human:        PENDING
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
     {
         if (_started)
@@ -97,6 +123,9 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
     /// of a window, so this is the only thing stopping keystrokes meant for
     /// another application from being typed into the editor.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=14B20F
+    // Broiler-Falsified-If: SetActiveAsync(false) returns normally while the keyboard device is still started, so keys typed into another application are queued for the editor
+    // Broiler-Human:        PENDING
     public async ValueTask SetActiveAsync(bool active, CancellationToken cancellationToken = default)
     {
         if (!IsAvailable || _active == active)
@@ -120,6 +149,9 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
         _active = active;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=6EBB00
+    // Broiler-Falsified-If: two pointer updates are given the same pointer sequence number
+    // Broiler-Human:        PENDING
     public void SetAbsolutePointer(double x, double y)
     {
         if (_router.SetAbsolutePointer(x, y, _pointerId, Interlocked.Increment(ref _pointerSequence))
@@ -129,6 +161,9 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=0B12C6
+    // Broiler-Falsified-If: an event enqueued by a device thread while a drain runs is lost rather than dispatched in this drain or the next
+    // Broiler-Human:        PENDING
     public int Drain(Action<UiInputEvent> dispatch)
     {
         ArgumentNullException.ThrowIfNull(dispatch);
@@ -143,6 +178,9 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
         return count;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=724DAA
+    // Broiler-Falsified-If: after DisposeAsync completes, the keyboard or mouse device is still open or its events still reach the pending queue
+    // Broiler-Human:        PENDING
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -167,6 +205,9 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=602E8F
+    // Broiler-Falsified-If: a key event whose router result carries text queues the text before the key, so the editor sees the character before its key-down
+    // Broiler-Human:        PENDING
     private void OnKeyChanged(KeyboardKeyEvent inputEvent)
     {
         (UiInputEvent key, UiInputEvent? text) = _router.FromKey(inputEvent);
@@ -175,15 +216,27 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
             _pending.Enqueue(text);
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=2A1D43
+    // Broiler-Falsified-If: a mouse move is dispatched on the device thread instead of being queued for the UI thread
+    // Broiler-Human:        PENDING
     private void OnMouseMoved(MouseMoveEvent inputEvent) =>
         _pending.Enqueue(_router.FromMouseMove(inputEvent));
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=ED9D85
+    // Broiler-Falsified-If: a mouse button change is dispatched on the device thread instead of being queued for the UI thread
+    // Broiler-Human:        PENDING
     private void OnMouseButtonChanged(MouseButtonEvent inputEvent) =>
         _pending.Enqueue(_router.FromMouseButton(inputEvent));
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=1E543E
+    // Broiler-Falsified-If: a wheel change is dispatched on the device thread instead of being queued for the UI thread
+    // Broiler-Human:        PENDING
     private void OnMouseWheelChanged(MouseWheelEvent inputEvent) =>
         _pending.Enqueue(_router.FromWheel(inputEvent));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=5E3814
+    // Broiler-Falsified-If: when opening the first available keyboard throws, the next available keyboard is not tried and keyboard input stays disabled
+    // Broiler-Human:        PENDING
     private async ValueTask<KeyboardInputDevice?> OpenKeyboardAsync(CancellationToken cancellationToken)
     {
         if (_keyboardProvider is null)
@@ -218,6 +271,9 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
         return null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=D690DE
+    // Broiler-Falsified-If: when opening the first available mouse throws, the next available mouse is not tried and mouse input stays disabled
+    // Broiler-Human:        PENDING
     private async ValueTask<MouseInputDevice?> OpenMouseAsync(CancellationToken cancellationToken)
     {
         if (_mouseProvider is null)
@@ -249,6 +305,8 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
         return null;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=D5E0BA
+    // Broiler-Human:        PENDING
     private void Explain(LinuxEventDeviceAccessStatus access)
     {
         if (!access.DirectoryExists || access.EventDeviceCount == 0)
@@ -266,10 +324,14 @@ internal sealed class LinuxCodeInput(EvdevInputRouter router, Action<string> log
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=1589B8
+    // Broiler-Human:        PENDING
     private static IEnumerable<InputDeviceDescriptor> Available(
         IReadOnlyList<InputDeviceDescriptor> devices) =>
         devices.Where(static device => device.Availability == InputDeviceAvailability.Available);
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=DEA113
+    // Broiler-Human:        PENDING
     private static string Describe(InputDeviceDescriptor descriptor)
     {
         string? node = descriptor.Capabilities

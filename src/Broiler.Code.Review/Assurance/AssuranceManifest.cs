@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   21
+// Annotated:        21/21
+// Exempt:           0
+// Human-reviewed:   0/21
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         15/10
+// Resource impact:  5/10 max
+// Unverified:       21
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,9 +25,13 @@ using System.Text.Json;
 namespace Broiler.Code.Review.Assurance;
 
 /// <summary>One unit entry of the manifest.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=B25853
+// Broiler-Human:        PENDING
 public sealed record AssuranceManifestEntry(string Name, string File, bool Exempt, string Exemption, string Fingerprint);
 
 /// <summary>One file entry of the manifest: the fingerprint over the file's whole token stream.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=0CA434
+// Broiler-Human:        PENDING
 public sealed record AssuranceManifestFile(string File, string Fingerprint);
 
 /// <summary>
@@ -27,18 +48,31 @@ public sealed record AssuranceManifestFile(string File, string Fingerprint);
 /// <c>$comment</c> text differs between components, because it names each
 /// one's commands.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=2C1E3B
+// Broiler-Falsified-If: a manifest whose recorded unit or file fingerprint differs from the value the tree computes now produces no J7 violation
+// Broiler-Human:        PENDING
 public static class AssuranceManifest
 {
     /// <summary>The sentence every description of the manifest carries, so no reader takes an entry for a review.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=C40271
+    // Broiler-Human:        PENDING
     public const string ChangeDetectionStatement = "This manifest is a change-detection record, not a review.";
 
     /// <summary>The sentence that states what the file entries add.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=C9C2C5
+    // Broiler-Human:        PENDING
     public const string CompletenessStatement =
         "Nothing in a covered file can change without something moving here, whatever kind of declaration it is.";
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=1EED07
+    // Broiler-Falsified-If: the opening text matches a generated manifest at a position other than the start of its files array
+    // Broiler-Human:        PENDING
     private const string FilesArrayOpening = "\n  \"files\": [";
 
     /// <summary>The <c>$comment</c> lines, naming this component's commands.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=628000
+    // Broiler-Falsified-If: the comment for a single covered assembly speaks of '1 covered assemblies'
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Comment(string generateCommand, string checkCommand, int assemblies)
     {
         ArgumentNullException.ThrowIfNull(generateCommand);
@@ -74,6 +108,9 @@ public static class AssuranceManifest
     }
 
     /// <summary>The unit entries <paramref name="units"/> imply, in the order they are written.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=7434AC
+    // Broiler-Falsified-If: an exempt unit of the tree has no entry, or two units are ordered by line rather than by file, name and fingerprint
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<AssuranceManifestEntry> Entries(IEnumerable<AssuranceCorpusUnit> units)
     {
         ArgumentNullException.ThrowIfNull(units);
@@ -87,6 +124,9 @@ public static class AssuranceManifest
     }
 
     /// <summary>The manifest as it is written to disk. Deterministic, LF, no trailing whitespace.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=07AA9A
+    // Broiler-Falsified-If: a manifest rendered from files and units does not read back through the unit and file readers to the same names, files and fingerprints
+    // Broiler-Human:        PENDING
     public static string Render(
         IReadOnlyList<string> comment,
         IEnumerable<AssuranceManifestFile> files,
@@ -140,6 +180,9 @@ public static class AssuranceManifest
     /// array where this layout puts it. For comparing two manifests whose
     /// prose differs by owner.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=D5575B
+    // Broiler-Falsified-If: two manifests whose files or units arrays differ return equal strings
+    // Broiler-Human:        PENDING
     public static string? ArraysOf(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -167,6 +210,9 @@ public static class AssuranceManifest
     /// <param name="units">Every unit of the tree.</param>
     /// <param name="manifestText">The manifest as it is on disk; empty when it does not exist.</param>
     /// <param name="remedy">The command that rewrites the manifest, for every violation it resolves.</param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=4AFDF1
+    // Broiler-Falsified-If: a manifest entry whose fingerprint differs from the one its unit computes now produces no J7 violation
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<AssuranceViolation> Violations(
         string manifestPath,
         IEnumerable<AssuranceManifestFile> files,
@@ -266,6 +312,9 @@ public static class AssuranceManifest
         return violations;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=CD42F7
+    // Broiler-Falsified-If: the expected entry for a unit carries a fingerprint, exempt flag or exemption other than the unit's own, so a changed unit matches its old manifest entry
+    // Broiler-Human:        PENDING
     private static AssuranceManifestEntry Entry(AssuranceCorpusUnit unit) =>
         new(unit.Name, unit.File, unit.IsExempt, unit.Exemption, unit.Fingerprint);
 
@@ -275,6 +324,9 @@ public static class AssuranceManifest
     /// that compares only the arrays reads nothing else, so anything else there
     /// is unread text in a generated record.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=0489BC
+    // Broiler-Falsified-If: a manifest with a fourth top-level property, or with its three properties in another order, yields no shape message
+    // Broiler-Human:        PENDING
     private static IEnumerable<string> ShapeViolations(string manifestPath, string text)
     {
         JsonDocument document;
@@ -314,6 +366,9 @@ public static class AssuranceManifest
     /// common controls by name, every other control as <c>\uXXXX</c>, and
     /// everything else verbatim.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=A27206
+    // Broiler-Falsified-If: a name or path containing a quote, a backslash or a control character is written so that parsing the manifest back yields a different string
+    // Broiler-Human:        PENDING
     public static string Escape(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -345,6 +400,9 @@ public static class AssuranceManifest
     /// The file-entry disagreements, each with the covered file it is about,
     /// or null when it is about the manifest itself.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=FAEA34
+    // Broiler-Falsified-If: a covered file whose recorded file fingerprint differs from the one it computes now produces no message
+    // Broiler-Human:        PENDING
     private static List<(string? File, string Message)> FileViolations(
         string manifestPath, IEnumerable<AssuranceManifestFile> files, string manifestText)
     {
@@ -394,6 +452,9 @@ public static class AssuranceManifest
     }
 
     /// <summary>The unit entries, or null (with the reason added) when there are none to read.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=4C8862
+    // Broiler-Falsified-If: a manifest whose units member is missing or is not an array is read as an empty list of entries instead of being reported
+    // Broiler-Human:        PENDING
     private static List<AssuranceManifestEntry>? ReadUnits(string manifestPath, string text, List<string> messages)
     {
         var entries = new List<AssuranceManifestEntry>();
@@ -440,6 +501,9 @@ public static class AssuranceManifest
     }
 
     /// <summary>The file entries, or null (with the reason added) when there are none to read.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=EC7686
+    // Broiler-Falsified-If: a manifest whose files member is missing or is not an array is read as an empty list of file entries instead of being reported
+    // Broiler-Human:        PENDING
     private static List<AssuranceManifestFile>? ReadFiles(string manifestPath, string text, List<string> messages)
     {
         var entries = new List<AssuranceManifestFile>();
@@ -472,6 +536,9 @@ public static class AssuranceManifest
         return entries;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C812A6
+    // Broiler-Falsified-If: a property holding a JSON number, null, array or object is read as anything other than the empty string
+    // Broiler-Human:        PENDING
     private static string Text(JsonElement element, string property) =>
         element.ValueKind == JsonValueKind.Object &&
         element.TryGetProperty(property, out JsonElement value) &&
@@ -485,10 +552,17 @@ public static class AssuranceManifest
     /// the order of its messages, and a message order should not depend on the
     /// machine's locale.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=EEF520
+    // Broiler-Human:        PENDING
     private sealed class KeyOrder : IComparer<(string File, string Name)>
     {
+        // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=BC6032
+        // Broiler-Human:        PENDING
         public static readonly KeyOrder Instance = new();
 
+        // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=2C32B2
+        // Broiler-Falsified-If: two keys with the same file are ordered by something other than the ordinal order of their names
+        // Broiler-Human:        PENDING
         public int Compare((string File, string Name) x, (string File, string Name) y)
         {
             int file = string.CompareOrdinal(x.File, y.File);

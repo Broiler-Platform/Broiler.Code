@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   14
+// Annotated:        14/14
+// Exempt:           0
+// Human-reviewed:   0/14
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         13/11
+// Resource impact:  6/10 max
+// Unverified:       14
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,6 +36,9 @@ namespace Broiler.Code.Review.Assurance;
 /// The four-digit numbers of the decision records a <c>Spec=ADR-nnnn</c>
 /// citation may name, or null to leave citations unchecked.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=9B41C7
+// Broiler-Falsified-If: a default-constructed options value has sources-only on, so a check built without arguments skips comparing the report and the manifest prose
+// Broiler-Human:        PENDING
 public sealed record AssuranceCheckOptions(bool Release = false, bool SourcesOnly = false, IReadOnlySet<string>? AdrRecords = null);
 
 /// <summary>
@@ -44,9 +64,15 @@ public sealed record AssuranceCheckOptions(bool Release = false, bool SourcesOnl
 /// read the plan. J8 and the owning component's register and document rules
 /// (J12, H1 to H5) are about that repository and are not here.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=896DF1
+// Broiler-Falsified-If: a covered file whose annotation blocks or generated header differ from what generate would write passes Run with no violation
+// Broiler-Human:        PENDING
 public static class AssuranceChecks
 {
     /// <summary>Every violation in <paramref name="plan"/>, rule by rule.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=0F2232
+    // Broiler-Falsified-If: a relevant unit that carries no block in an indexable covered file produces no J1 violation
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<AssuranceViolation> Run(
         AssurancePlan plan, AssuranceComponentConfig config, AssuranceCheckOptions options)
     {
@@ -152,9 +178,15 @@ public static class AssuranceChecks
     /// Every unit assessed High or Critical that carries no criterion line, in
     /// the owning component's words.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=293283
+    // Broiler-Falsified-If: a unit assessed Critical with no criterion line is absent from the returned messages
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> MissingCriteria(IEnumerable<AssuranceCorpusUnit> units) =>
         [.. MissingCriteriaOf(units).Select(static missing => missing.Message)];
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=24C868
+    // Broiler-Falsified-If: a block that is not an exemption and assesses security as High with no criterion line is not yielded
+    // Broiler-Human:        PENDING
     private static IEnumerable<(AssuranceCorpusUnit Unit, string Message)> MissingCriteriaOf(IEnumerable<AssuranceCorpusUnit> units)
     {
         ArgumentNullException.ThrowIfNull(units);
@@ -179,6 +211,9 @@ public static class AssuranceChecks
     /// stranded criterion, or a line with the reason its block does not parse.
     /// Found as comment trivia, so a marker inside a string is not one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=306FF8
+    // Broiler-Falsified-If: a criterion comment that stands under no attached AI line produces no J2 violation
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceViolation> Orphans(AssurancePlannedFile file)
     {
         string path = file.Source.RelativePath;
@@ -223,6 +258,9 @@ public static class AssuranceChecks
     /// resolved; the section, and whether the record says what the citation
     /// implies, are not checked.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=4AAEE2
+    // Broiler-Falsified-If: a Spec citation of ADR-0042 when the records hold no 0042 produces no J2 violation
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceViolation> SpecViolations(
         IEnumerable<AssuranceCorpusUnit> units, IReadOnlySet<string> records, string directory)
     {
@@ -245,6 +283,9 @@ public static class AssuranceChecks
     /// Every recorded fingerprint that binds nothing or binds another version,
     /// read from the files as they are, before any generation refreshes them.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=ABAE2C
+    // Broiler-Falsified-If: a block whose recorded fingerprint differs from the one the unit's current tokens compute produces no J3 violation
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceViolation> FingerprintViolations(IEnumerable<AssuranceCorpusUnit> units)
     {
         foreach (AssuranceCorpusUnit unit in units)
@@ -290,6 +331,9 @@ public static class AssuranceChecks
     /// is the files as read: a name may travel from them into an artefact and
     /// never the other way.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=AB77B2
+    // Broiler-Falsified-If: an alias that a generated artefact prints on a human line, and no human line in the source files carries, produces no J4 violation
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceViolation> InventedApprovals(AssurancePlan plan)
     {
         var carried = new HashSet<string>(StringComparer.Ordinal);
@@ -331,6 +375,9 @@ public static class AssuranceChecks
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=329817
+    // Broiler-Falsified-If: with sources-only off, a report or manifest whose text differs from what the generator would write produces no J5 violation
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceViolation> StaleArtefacts(AssurancePlan plan, bool sourcesOnly)
     {
         string generate = plan.Context.GenerateCommand;
@@ -404,6 +451,9 @@ public static class AssuranceChecks
     /// prose is not compared there, so its <c>$comment</c> is text nothing
     /// else holds to anything, and it is exactly where a claim would be put.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=DAAAF2
+    // Broiler-Falsified-If: with sources-only on, a review claim written into the manifest comment on disk produces no J9 violation
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceViolation> ReviewClaims(AssurancePlan plan, bool sourcesOnly)
     {
         ILookup<string, AssuranceCorpusUnit> byFile = plan.UnitsAfter.ToLookup(static unit => unit.File, StringComparer.Ordinal);
@@ -431,6 +481,9 @@ public static class AssuranceChecks
     /// Every relevant unit the plan leaves in a state that blocks a release,
     /// named with the state and the human line, at its line as it is on disk.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=74A884
+    // Broiler-Falsified-If: with the release option on, a relevant unit left in a state that blocks a release produces no J11 violation
+    // Broiler-Human:        PENDING
     private static IEnumerable<AssuranceViolation> Unresolved(AssurancePlan plan)
     {
         foreach (AssurancePlannedFile file in plan.Files)
@@ -449,6 +502,9 @@ public static class AssuranceChecks
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=9368F2
+    // Broiler-Falsified-If: a line of the artefact text is dropped or merged with its neighbour, so a claim on it is never judged
+    // Broiler-Human:        PENDING
     private static List<string> Lines(string text)
     {
         var lines = new AssuranceLines(text);
@@ -459,6 +515,8 @@ public static class AssuranceChecks
         return list;
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=EAFAF7
+    // Broiler-Human:        PENDING
     private static AssuranceViolation At(string rule, AssuranceCorpusUnit unit, string message) =>
         new(rule, unit.File, unit.Line, message);
 }

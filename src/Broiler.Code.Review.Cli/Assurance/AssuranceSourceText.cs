@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   8
+// Annotated:        8/8
+// Exempt:           4
+// Human-reviewed:   0/8
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         8/7
+// Resource impact:  4/10 max
+// Unverified:       8
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.IO;
 using System.Text;
@@ -16,14 +33,29 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// listing but never rewritten, because decoding it and encoding it again would
 /// not give back the same bytes.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=CA4609
+// Broiler-Falsified-If: a file whose bytes are not valid UTF-8 is accepted, so a later write replaces those bytes with U+FFFD
+// Broiler-Human:        PENDING
 internal sealed class AssuranceSourceText
 {
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=FFCB5B
+    // Broiler-Falsified-If: a file that opens with EF BB BF is written back without those three bytes
+    // Broiler-Human:        PENDING
     private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=AD46DD
+    // Broiler-Falsified-If: a file that opens with FF FE is not refused as UTF-16 or UTF-32 before decoding
+    // Broiler-Human:        PENDING
     private static readonly byte[] Utf16LittleEndianBom = [0xFF, 0xFE];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=844152
+    // Broiler-Falsified-If: a file that opens with FE FF is not refused as UTF-16 before decoding
+    // Broiler-Human:        PENDING
     private static readonly byte[] Utf16BigEndianBom = [0xFE, 0xFF];
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=3E00C8
+    // Broiler-Falsified-If: decoding a byte sequence that is not valid UTF-8, such as a lone 0x80, yields U+FFFD instead of throwing
+    // Broiler-Human:        PENDING
     private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
     private AssuranceSourceText(string text, bool hasByteOrderMark, byte[] original)
@@ -46,6 +78,9 @@ internal sealed class AssuranceSourceText
     /// Reads <paramref name="path"/> as UTF-8, or explains why it cannot be
     /// rewritten safely.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=BEA0D1
+    // Broiler-Falsified-If: a file containing a byte such as 0xFF in its body is returned as source text instead of with a problem
+    // Broiler-Human:        PENDING
     public static bool TryRead(string path, out AssuranceSourceText? source, out string? problem)
     {
         source = null;
@@ -99,6 +134,9 @@ internal sealed class AssuranceSourceText
     }
 
     /// <summary>The bytes for <paramref name="text"/>, with the mark if the file had one.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=4C6711
+    // Broiler-Falsified-If: Encode with the mark requested returns bytes that do not open with EF BB BF, or without it returns bytes that do
+    // Broiler-Human:        PENDING
     public static byte[] Encode(string text, bool hasByteOrderMark)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -118,6 +156,9 @@ internal sealed class AssuranceSourceText
     /// byte-order mark. Refuses when the file changed on disk since it was read,
     /// so an edit made meanwhile is not overwritten.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=5A02F9
+    // Broiler-Falsified-If: a file whose bytes changed on disk after TryRead is overwritten instead of refused
+    // Broiler-Human:        PENDING
     public bool TryWrite(string path, string text, out string? problem)
     {
         problem = null;

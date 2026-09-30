@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   7
+// Annotated:        7/7
+// Exempt:           7
+// Human-reviewed:   0/7
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         4/4
+// Resource impact:  2/10 max
+// Unverified:       7
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -10,6 +27,8 @@ namespace Broiler.Code.Core.Shell;
 /// One entry in a dialog's type list. Extensions are bare, without a dot or a
 /// wildcard, so a host can render them in whatever form its platform wants.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=C1B768
+// Broiler-Human:        PENDING
 public sealed record FileDialogFilter(string Label, IReadOnlyList<string> Extensions)
 {
     public static FileDialogFilter Sources { get; } = new("C# source", ["cs"]);
@@ -19,6 +38,8 @@ public sealed record FileDialogFilter(string Label, IReadOnlyList<string> Extens
     public static FileDialogFilter All { get; } = new("All files", ["*"]);
 }
 
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4FB4F7
+// Broiler-Human:        PENDING
 public sealed record FileDialogRequest
 {
     public string Title { get; init; } = string.Empty;
@@ -43,6 +64,8 @@ public sealed record FileDialogRequest
 /// choice — which is what <see cref="IFileDialogService.RequestFolderAsync"/>
 /// returns.
 /// </param>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=D8055C
+// Broiler-Human:        PENDING
 public sealed record FileGrant(IWorkspaceStorage Storage, string RelativePath, string DisplayPath);
 
 /// <summary>
@@ -50,6 +73,9 @@ public sealed record FileGrant(IWorkspaceStorage Storage, string RelativePath, s
 /// the affected commands report themselves unavailable, rather than appearing
 /// to work and doing nothing.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=BE9D67
+// Broiler-Falsified-If: an implementation returns a grant whose Storage reaches above the chosen file's directory or above the folder the user picked
+// Broiler-Human:        PENDING
 public interface IFileDialogService
 {
     /// <summary>
@@ -63,9 +89,15 @@ public interface IFileDialogService
     /// </summary>
     bool CanRequestFolder => false;
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=944E8F
+    // Broiler-Falsified-If: an implementation returns a grant whose Storage reaches above the directory holding the file the user picked
+    // Broiler-Human:        PENDING
     ValueTask<FileGrant?> RequestOpenAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default);
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=DCA869
+    // Broiler-Falsified-If: an implementation returns a grant whose Storage reaches above the directory of the name the user chose
+    // Broiler-Human:        PENDING
     ValueTask<FileGrant?> RequestSaveAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default);
 
@@ -77,6 +109,9 @@ public interface IFileDialogService
     /// itself rather than something inside it, and the storage handed back
     /// reaches that directory and nothing wider.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=EF6151
+    // Broiler-Falsified-If: an implementation returns a grant whose Storage reaches above the directory the user picked
+    // Broiler-Human:        PENDING
     ValueTask<FileGrant?> RequestFolderAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default) =>
         ValueTask.FromResult<FileGrant?>(null);

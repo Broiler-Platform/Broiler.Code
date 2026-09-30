@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   18
+// Annotated:        18/18
+// Exempt:           13
+// Human-reviewed:   0/18
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         11/7
+// Resource impact:  5/10 max
+// Unverified:       18
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +29,8 @@ using Broiler.UI.TabView;
 namespace Broiler.Code.Core.Shell;
 
 /// <summary>What a host decided when asked about a dirty document.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0F3991
+// Broiler-Human:        PENDING
 public enum DirtyCloseChoice
 {
     Save,
@@ -23,6 +42,9 @@ public enum DirtyCloseChoice
 /// Asks the user what to do about unsaved changes. The coordinator never
 /// decides this: losing someone's work is not a default.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=A2BD04
+// Broiler-Falsified-If: an implementation answers Save or Discard for a dialog the user dismissed without choosing either
+// Broiler-Human:        PENDING
 public delegate ValueTask<DirtyCloseChoice> DirtyClosePrompt(
     IReadOnlyList<SourceDocument> dirtyDocuments, CancellationToken cancellationToken);
 
@@ -35,6 +57,9 @@ public delegate ValueTask<DirtyCloseChoice> DirtyClosePrompt(
 /// every switch, so the coordinator saves and restores caret, selection, and
 /// scroll per document. A user who returns to a tab expects the line they left.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=E40A07
+// Broiler-Falsified-If: a dirty document is closed and its unsaved text dropped although the prompt did not answer Discard
+// Broiler-Human:        PENDING
 public sealed class DocumentCoordinator : IDisposable
 {
     private readonly CodeWorkspace _workspace;
@@ -46,6 +71,8 @@ public sealed class DocumentCoordinator : IDisposable
     private WorkspaceItemId _active = WorkspaceItemId.None;
     private bool _disposed;
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=ED65BE
+    // Broiler-Human:        PENDING
     public DocumentCoordinator(
         CodeWorkspace workspace,
         UiCodeEditor editor,
@@ -64,12 +91,17 @@ public sealed class DocumentCoordinator : IDisposable
     /// <summary>Asked before a dirty document is closed. Cancels if unset.</summary>
     public DirtyClosePrompt? DirtyClosePrompt { get; set; }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=324218
+    // Broiler-Human:        PENDING
     public WorkspaceItemId ActiveDocument => _active;
 
     /// <summary>
     /// Opens a document and activates its tab. A document that is already open
     /// activates its existing tab and buffer rather than opening a second one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=9F57C0
+    // Broiler-Falsified-If: opening an item that already has a tab creates a second tab or a second buffer adapter for the same document
+    // Broiler-Human:        PENDING
     public async ValueTask<bool> OpenAsync(WorkspaceItemId id, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -111,6 +143,9 @@ public sealed class DocumentCoordinator : IDisposable
     /// way, because closing it would discard the very text they declined to
     /// lose.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=0BED20
+    // Broiler-Falsified-If: a dirty document is closed and its unsaved text dropped when the prompt answered anything other than Discard, including an unset prompt or a Save that failed
+    // Broiler-Human:        PENDING
     public async ValueTask<bool> CloseAsync(WorkspaceItemId id, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -158,6 +193,9 @@ public sealed class DocumentCoordinator : IDisposable
     /// leaves everything still open still open — a half-closed workspace is a
     /// state the user did not ask for.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=B97F3F
+    // Broiler-Falsified-If: documents after one whose close was cancelled or whose save failed are still closed
+    // Broiler-Human:        PENDING
     public async ValueTask<bool> CloseAllAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -175,6 +213,9 @@ public sealed class DocumentCoordinator : IDisposable
     /// item ID, not the path, so a rename or a Save As moves the label without
     /// disturbing the tab, its buffer, or its undo history.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=9C22B1
+    // Broiler-Falsified-If: after a Save As into another directory the tab header shows a directory segment or the old name instead of the new file name
+    // Broiler-Human:        PENDING
     public bool RenameTab(WorkspaceItemId id, string newRelativePath)
     {
         ThrowIfDisposed();
@@ -187,6 +228,9 @@ public sealed class DocumentCoordinator : IDisposable
         return true;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=15A4AD
+    // Broiler-Falsified-If: a document whose save failed has its recovery journal entry deleted or its tab shown as clean
+    // Broiler-Human:        PENDING
     public async ValueTask<SaveAllReport> SaveAllAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -201,6 +245,8 @@ public sealed class DocumentCoordinator : IDisposable
         return report;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=096E33
+    // Broiler-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -216,6 +262,9 @@ public sealed class DocumentCoordinator : IDisposable
     private void OnTabSelectionChanged(object? sender, UiTabSelectionChangedEventArgs e) =>
         ActivateSelectedTab();
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=DC7F01
+    // Broiler-Falsified-If: a close requested from the tab strip on a dirty document removes the tab without going through the dirty-close prompt
+    // Broiler-Human:        PENDING
     private void OnCloseRequested(object? sender, UiTabCloseRequestedEventArgs e)
     {
         if (_tabToItem.TryGetValue(e.Id, out WorkspaceItemId id))
@@ -227,6 +276,9 @@ public sealed class DocumentCoordinator : IDisposable
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=7EDCB4
+    // Broiler-Falsified-If: after a tab switch the editor is bound to a document other than the selected tab's, so keystrokes edit a file the user is not looking at
+    // Broiler-Human:        PENDING
     private void ActivateSelectedTab()
     {
         if (_disposed)
@@ -249,6 +301,9 @@ public sealed class DocumentCoordinator : IDisposable
         RestoreViewState(id);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=537B64
+    // Broiler-Falsified-If: the outgoing document's caret and scroll position are recorded on the incoming document
+    // Broiler-Human:        PENDING
     private void CaptureViewState()
     {
         if (_active.IsNone || _workspace.FindOpenDocument(_active) is not { } document)
@@ -261,6 +316,8 @@ public sealed class DocumentCoordinator : IDisposable
             _editor.Viewport.HorizontalOffset);
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=F339C1
+    // Broiler-Human:        PENDING
     private void RestoreViewState(WorkspaceItemId id)
     {
         if (_workspace.FindOpenDocument(id) is not { } document)
@@ -275,6 +332,9 @@ public sealed class DocumentCoordinator : IDisposable
         };
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=6EDB4E
+    // Broiler-Falsified-If: an edit made while the previous journal write for the same document is still in flight leaves the journal without that edit's text
+    // Broiler-Human:        PENDING
     private void OnBufferChanged(WorkspaceItemId id)
     {
         if (_disposed)
@@ -297,7 +357,11 @@ public sealed class DocumentCoordinator : IDisposable
         }
     }
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=239B87
+    // Broiler-Human:        PENDING
     private static string TabIdFor(WorkspaceItemId id) => $"doc:{id.Value}";
 
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0A45A6
+    // Broiler-Human:        PENDING
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
 }

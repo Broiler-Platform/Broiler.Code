@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   4
+// Annotated:        4/4
+// Exempt:           0
+// Human-reviewed:   0/4
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         4/2
+// Resource impact:  8/10 max
+// Unverified:       4
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -31,6 +48,9 @@ namespace Broiler.Code.Linux;
 /// composition, and the product says so instead of silently dropping their
 /// candidates.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=6DB86A
+// Broiler-Falsified-If: the window's loop drains a dispatcher other than the one the session and the shell post to, so worker results are applied on the thread that produced them
+// Broiler-Human:        PENDING
 internal static class CodeHost
 {
     /// <summary>
@@ -38,6 +58,9 @@ internal static class CodeHost
     /// <paramref name="fileDialogHelper"/> are passed in rather than probed
     /// here, so the report describes the services this run actually opened.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=69F076
+    // Broiler-Falsified-If: a run with no file-dialog helper reports FileDialogs as Native instead of Unavailable
+    // Broiler-Human:        PENDING
     public static HostServiceReport DescribeServices(string? fileDialogHelper = null, bool hasClipboard = false) =>
         new("Broiler Code (Linux)",
     [
@@ -90,6 +113,9 @@ internal static class CodeHost
     /// Deriving it means a service that later becomes native enables its
     /// commands automatically, and one that regresses disables them.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=0E53EB
+    // Broiler-Falsified-If: a report whose clipboard is Substitute or Unavailable yields a list without Cut, Copy and Paste
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> UnavailableCommands(HostServiceReport report)
     {
         ArgumentNullException.ThrowIfNull(report);
@@ -119,6 +145,9 @@ internal static class CodeHost
     /// editor, the workspace, the shell — is built elsewhere; this decides which
     /// platform services back them, and which of them are honestly missing.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=3AC252
+    // Broiler-Falsified-If: window.RunAsync is entered on a thread other than the one that constructed the window, so the dispatcher's Drain throws on the first frame
+    // Broiler-Human:        PENDING
     public static async Task<int> RunAsync(
         string? workspacePath, bool ignoreFocus, CancellationToken cancellationToken)
     {

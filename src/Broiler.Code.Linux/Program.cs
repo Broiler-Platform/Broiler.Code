@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   2
+// Annotated:        2/2
+// Exempt:           0
+// Human-reviewed:   0/2
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         2/2
+// Resource impact:  7/10 max
+// Unverified:       2
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,8 +24,14 @@ using Broiler.Code.Core.Hosting;
 
 namespace Broiler.Code.Linux;
 
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=D26BF0
+// Broiler-Falsified-If: input is read while another window has focus although --ignore-focus was not among the arguments
+// Broiler-Human:        PENDING
 internal static class Program
 {
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=C7D1FB
+    // Broiler-Falsified-If: input is read while another window has focus although --ignore-focus was not among the arguments
+    // Broiler-Human:        PENDING
     private static async Task<int> Main(string[] args)
     {
         // --services prints what the head provides and exits. It is how the

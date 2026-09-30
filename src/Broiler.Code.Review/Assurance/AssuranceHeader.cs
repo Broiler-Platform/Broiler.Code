@@ -1,3 +1,20 @@
+// SPDX-FileCopyrightText: 2026 Broiler Platform contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Broiler Code Assurance
+// ----------------------
+// Relevant units:   20
+// Annotated:        20/20
+// Exempt:           0
+// Human-reviewed:   0/20
+// IP risk:          Low
+// Security risk:    High
+// Criteria:         20/15
+// Resource impact:  5/10 max
+// Unverified:       20
+//
+// GENERATED - DO NOT EDIT MANUALLY
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -37,12 +54,18 @@ namespace Broiler.Code.Review.Assurance;
 ///
 /// A refusal is a message for a human, and the file is left as it was.
 /// </summary>
+// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=6ED41D
+// Broiler-Falsified-If: Strip deletes a copyright line that the configuration does not state for the file without returning a refusal
+// Broiler-Human:        PENDING
 public static class AssuranceHeader
 {
     /// <summary>
     /// The nine row labels in the narrow vocabulary's form: lower case, a hyphen
     /// read as a space, without the colon.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=4415CB
+    // Broiler-Falsified-If: a normalized label keeps its trailing colon or its upper case, so a comment opening 'relevant units : 3' below the header is not reported
+    // Broiler-Human:        PENDING
     private static readonly string[] NormalizedRowLabels =
         [.. AssuranceBanner.RowLabels.Select(static label => label.TrimEnd(':').Replace('-', ' ').ToLowerInvariant())];
     /// <summary>
@@ -51,6 +74,9 @@ public static class AssuranceHeader
     /// what makes it strict: in code that talks about reviews they match
     /// ordinary comments.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=DAF119
+    // Broiler-Falsified-If: a term holds an upper-case letter, so IsSummaryComment, which compares terms ordinally against lower-cased text, never matches it
+    // Broiler-Human:        PENDING
     public static readonly IReadOnlyList<string> StrictVocabulary =
     [
         "broiler code assurance",
@@ -66,6 +92,9 @@ public static class AssuranceHeader
     /// summary line under the narrow vocabulary: the banner, the marker, or one
     /// of the header's row labels.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=AA4C2E
+    // Broiler-Falsified-If: an opening keeps the leading slashes and space of the banner or the marker, so a line whose comment body opens with the banner text is not accepted by IsSummaryLine
+    // Broiler-Human:        PENDING
     private static readonly string[] NarrowOpenings =
     [
         AssuranceBanner.Banner[3..],
@@ -79,6 +108,9 @@ public static class AssuranceHeader
     /// comment never is: a summary is written in comments, and a string that
     /// happens to contain a row label is not one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=35AD38
+    // Broiler-Falsified-If: under the narrow vocabulary a '//' line whose body opens with 'unverified:' in lower case is not accepted as a summary line
+    // Broiler-Human:        PENDING
     public static bool IsSummaryLine(string line, AssuranceForgeryVocabulary vocabulary)
     {
         ArgumentNullException.ThrowIfNull(line);
@@ -98,6 +130,9 @@ public static class AssuranceHeader
     /// How many assurance banners a text carries, at any indentation and in any
     /// case. A generated file carries exactly one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=AF95F5
+    // Broiler-Falsified-If: an indented or lower-case copy of the banner line is not counted
+    // Broiler-Human:        PENDING
     public static int BannerCount(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -117,6 +152,9 @@ public static class AssuranceHeader
     /// A violation when <paramref name="text"/> carries more than one banner,
     /// in the owning component's words; otherwise null.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=9E099B
+    // Broiler-Falsified-If: a text carrying two banner lines returns null
+    // Broiler-Human:        PENDING
     public static AssuranceViolation? DuplicateBanners(string path, string text)
     {
         ArgumentNullException.ThrowIfNull(path);
@@ -147,6 +185,9 @@ public static class AssuranceHeader
     /// before the colon). The strict vocabulary adds the owning component's
     /// words anywhere in the line.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=E77B11
+    // Broiler-Falsified-If: a comment 'Relevant-Units : 3', with a hyphen and a space before the colon, is not reported under the narrow vocabulary
+    // Broiler-Human:        PENDING
     public static bool IsSummaryComment(string comment, AssuranceForgeryVocabulary vocabulary)
     {
         ArgumentNullException.ThrowIfNull(comment);
@@ -198,6 +239,9 @@ public static class AssuranceHeader
     /// <param name="text">The file's text, to find its header.</param>
     /// <param name="comments">Every comment line of the file, as the scanner reports them.</param>
     /// <param name="vocabulary">What marks a line as a summary line.</param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=F41069
+    // Broiler-Falsified-If: a row-label comment inside a documentation comment below the generated marker returns null
+    // Broiler-Human:        PENDING
     public static AssuranceViolation? ForgedSummary(
         string path, string text, IReadOnlyList<AssuranceCommentLine> comments, AssuranceForgeryVocabulary vocabulary)
     {
@@ -243,6 +287,9 @@ public static class AssuranceHeader
     /// spaces, in lower case: <c>"  //\tHuman-reviewed : 3/3"</c> is
     /// <c>"human-reviewed : 3/3"</c>.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=54B271
+    // Broiler-Falsified-If: a block-comment line ' * Exempt: 3 */' comes back still holding its asterisks or closing delimiter, so the label check misses it
+    // Broiler-Human:        PENDING
     private static string CommentContent(string comment)
     {
         string text = comment.Trim();
@@ -271,6 +318,9 @@ public static class AssuranceHeader
         return content.ToString();
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=9B9031
+    // Broiler-Falsified-If: a run of two or more characters that are neither letters nor digits between two words comes back as more than one space
+    // Broiler-Human:        PENDING
     private static string WordsOf(string content)
     {
         var words = new StringBuilder(content.Length);
@@ -299,6 +349,9 @@ public static class AssuranceHeader
     /// or nothing when it has none. This is the generated part of a source
     /// file, and all of it the review-claim rule reads there.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=A8E833
+    // Broiler-Falsified-If: a text that opens with a complete generated header is returned without its marker line
+    // Broiler-Human:        PENDING
     public static IReadOnlyList<string> GeneratedHeaderLines(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -328,6 +381,9 @@ public static class AssuranceHeader
     /// The line endings of the header lines removed, in order, so that the new
     /// header can end each of its lines the way the old one did.
     /// </param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=64DCF0
+    // Broiler-Falsified-If: a second header under the first, whose copyright line names a holder the configuration does not state, is removed without a refusal
+    // Broiler-Human:        PENDING
     public static string? Strip(
         AssuranceLines lines,
         IReadOnlyList<string> spdxLines,
@@ -426,6 +482,9 @@ public static class AssuranceHeader
     /// was one, and otherwise the ending of the line it lands above, so a file
     /// keeps its own line endings and a regeneration moves none of them.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=74ACD7
+    // Broiler-Falsified-If: a CRLF file whose old header was stripped gets LF endings on the new header's lines
+    // Broiler-Human:        PENDING
     public static void Insert(AssuranceLines lines, IReadOnlyList<string> header, IReadOnlyList<string> separators)
     {
         ArgumentNullException.ThrowIfNull(lines);
@@ -445,12 +504,18 @@ public static class AssuranceHeader
     /// <c>//</c>, the banner, its rule, the marker, or a row with one of the
     /// nine labels (whatever value it states).
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=FBBD80
+    // Broiler-Falsified-If: a documentation line, or the machine line of an assurance block, counts as header-shaped
+    // Broiler-Human:        PENDING
     private static bool IsHeaderShaped(string line) =>
         line.StartsWith(AssuranceBanner.SpdxCopyrightPrefix, StringComparison.Ordinal) ||
         line.StartsWith(AssuranceBanner.SpdxLicensePrefix, StringComparison.Ordinal) ||
         line is "//" or AssuranceBanner.Banner or AssuranceBanner.BannerRule or AssuranceBanner.GeneratedMarker ||
         AssuranceBanner.RowLabels.Any(label => line.StartsWith("// " + label, StringComparison.Ordinal));
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=A3504D
+    // Broiler-Falsified-If: a leading run broken by a blank line is counted past that blank line
+    // Broiler-Human:        PENDING
     private static int LeadingCommentRun(AssuranceLines lines)
     {
         int run = 0;
@@ -460,6 +525,9 @@ public static class AssuranceHeader
         return run;
     }
 
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=385A7F
+    // Broiler-Falsified-If: a marker on a line after the leading comment run is returned
+    // Broiler-Human:        PENDING
     private static int MarkerIn(AssuranceLines lines, int run)
     {
         for (int index = 0; index < run; index++)
@@ -477,6 +545,9 @@ public static class AssuranceHeader
     /// line the generator writes. A <c>///</c> line or an assurance block line
     /// is neither, so a run holding one is never a copy.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=BCE73F
+    // Broiler-Falsified-If: a leading run that holds a documentation line or an assurance block line before its own marker is reported as a copy
+    // Broiler-Human:        PENDING
     private static bool LeadingRunIsGeneratedCopy(AssuranceLines lines)
     {
         int marker = MarkerIn(lines, LeadingCommentRun(lines));
@@ -497,6 +568,9 @@ public static class AssuranceHeader
     /// line after it: the owning component's rule for a forged block, applied
     /// only to a copy of the generated one.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=F419FE
+    // Broiler-Falsified-If: more than one blank line after the copy's marker is removed
+    // Broiler-Human:        PENDING
     private static void RemoveLeadingCommentRun(AssuranceLines lines)
     {
         int run = LeadingCommentRun(lines);
@@ -518,6 +592,9 @@ public static class AssuranceHeader
     /// the way the line model says every text ends: in a line with no
     /// terminator.
     /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=FDFB4C
+    // Broiler-Falsified-If: removing as many lines as the text holds leaves no line at all instead of one empty line
+    // Broiler-Human:        PENDING
     private static void RemoveLeading(AssuranceLines lines, int count)
     {
         if (count < lines.Count)
