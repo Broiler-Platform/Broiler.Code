@@ -84,6 +84,8 @@ public sealed class AssuranceVmGoldenTests
             "src/Broiler.VM.Ubc/Broiler.VM.Ubc.csproj"
           ],
           "spdx": { "copyright": [ "2026 Broiler Platform contributors" ], "license": "Apache-2.0" },
+          "excludeBuildOutputAtAnyDepth": false,
+          "exemptionPredicate": "owning-component",
           "forbidDirectives": true,
           "forgeryVocabulary": "strict",
           "closedToEscapeHatch": [ "Broiler.VM.Binary" ],
@@ -116,7 +118,7 @@ public sealed class AssuranceVmGoldenTests
         string root = VmCheckout.Root!;
         AssuranceComponentConfig config = AssuranceComponentConfig.Parse(ExternalConfig);
         ComponentCorpus loaded = ComponentCorpus.Load(root, config);
-        AssurancePlan plan = AssuranceGenerator.Plan(loaded.Corpus, new CSharpAssuranceFileScanner(config.PreprocessorSymbols), config);
+        AssurancePlan plan = AssuranceGenerator.Plan(loaded.Corpus, AssuranceCommand.ScannerFor(config), config);
 
         Assert.Empty(loaded.Problems);
         Assert.Empty(plan.Problems);

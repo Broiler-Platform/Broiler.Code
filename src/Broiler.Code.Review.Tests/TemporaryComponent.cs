@@ -33,6 +33,38 @@ internal sealed class TemporaryComponent : IDisposable
 
     public void Folder(string relative) => Directory.CreateDirectory(PathOf(relative));
 
+    /// <summary>
+    /// Makes <paramref name="relative"/> a link to the directory
+    /// <paramref name="target"/>: a symbolic link, or on a Windows account
+    /// without the privilege for one, a junction. False when neither can be
+    /// made here.
+    /// </summary>
+    public bool TryLinkDirectory(string relative, string target)
+    {
+        string link = PathOf(relative);
+        Directory.CreateDirectory(Path.GetDirectoryName(link)!);
+
+        try
+        {
+            Directory.CreateSymbolicLink(link, target);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            if (!OperatingSystem.IsWindows())
+                return false;
+        }
+
+        var start = new System.Diagnostics.ProcessStartInfo("cmd.exe") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true };
+        foreach (string argument in new[] { "/c", "mklink", "/J", link, target })
+            start.ArgumentList.Add(argument);
+
+        using var process = System.Diagnostics.Process.Start(start);
+        process?.StandardOutput.ReadToEnd();
+        process?.WaitForExit();
+        return Directory.Exists(link);
+    }
+
     public byte[] ReadBytes(string relative) => File.ReadAllBytes(PathOf(relative));
 
     public string Read(string relative) => Encoding.UTF8.GetString(ReadBytes(relative));

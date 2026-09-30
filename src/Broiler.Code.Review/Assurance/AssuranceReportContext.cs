@@ -28,6 +28,9 @@ public sealed record AssuranceReportContext(
     IReadOnlyList<string> Assemblies,
     IReadOnlyList<string> ClosedToEscapeHatch)
 {
+    /// <summary>Review records a person keeps beside the generated ones. See <see cref="AssuranceCorpus.SeparateRecords"/>.</summary>
+    public IReadOnlyList<string> SeparateRecords { get; init; } = [];
+
     /// <summary>The generate command the tool names when the configuration names none.</summary>
     public const string DefaultGenerateCommand = "broiler-review assurance generate";
 
@@ -47,7 +50,22 @@ public sealed record AssuranceReportContext(
         if (config.RegenerateCommand is not { Length: > 0 } generate)
             return (DefaultGenerateCommand, DefaultCheckCommand);
 
-        string[] words = generate.Split(' ');
+        return (generate, Sibling(generate, "check"));
+    }
+
+    /// <summary>
+    /// Another assurance command, written the way <paramref name="generateCommand"/>
+    /// is: the same text with the word <c>generate</c> replaced by
+    /// <paramref name="verb"/> when it occurs exactly once, and
+    /// <c>broiler-review assurance &lt;verb&gt;</c> otherwise.
+    /// </summary>
+    public static string Sibling(string generateCommand, string verb)
+    {
+        ArgumentNullException.ThrowIfNull(generateCommand);
+        ArgumentNullException.ThrowIfNull(verb);
+
+        string fallback = "broiler-review assurance " + verb;
+        string[] words = generateCommand.Split(' ');
         int found = -1;
         for (int index = 0; index < words.Length; index++)
         {
@@ -55,16 +73,16 @@ public sealed record AssuranceReportContext(
                 continue;
 
             if (found >= 0)
-                return (generate, DefaultCheckCommand);
+                return fallback;
 
             found = index;
         }
 
         if (found < 0)
-            return (generate, DefaultCheckCommand);
+            return fallback;
 
-        words[found] = "check";
-        return (generate, string.Join(' ', words));
+        words[found] = verb;
+        return string.Join(' ', words);
     }
 }
 

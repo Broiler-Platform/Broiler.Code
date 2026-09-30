@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Broiler.Code.Review.Assurance;
 
@@ -65,6 +66,13 @@ public static class AssuranceVocabulary
 
     /// <summary>The field that exempts a unit outright, ahead of every predicate.</summary>
     public const string ExemptField = "EXEMPT";
+
+    /// <summary>
+    /// The name of the one unit a file's top-level statements form together.
+    /// Angle brackets because no declaration can be called that: it is the
+    /// compiler's generated entry point, spelled so a reader sees what it is.
+    /// </summary>
+    public const string TopLevelStatements = "<top-level statements>";
 
     /// <summary>Where a unit's code came from.</summary>
     public static readonly string[] OriginValues =
@@ -140,71 +148,93 @@ public static class AssuranceVocabulary
         value is { Length: FingerprintWidth } &&
         AllHex(value);
 
+    /// <summary>The longest alias a human line may carry.</summary>
+    public const int MaxAliasLength = 64;
+
     /// <summary>
-    /// True when a name may stand as a reviewer on a human line.
+    /// Words that say something about a unit's state, or say that nobody is
+    /// there, rather than name a person. Matched case-insensitively against
+    /// every word of an alias, words being separated by a space, <c>.</c>,
+    /// <c>_</c>, <c>-</c> or <c>'</c>.
+    /// </summary>
+    private static readonly HashSet<string> PlaceholderWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "PENDING", "STALE", "TBF", "TBD", "TBA", "TBC", "TODO", "FIXME", "XXX", "WIP", "LATER",
+        "NONE", "NOBODY", "NOONE", "NOT", "NO", "NA", "NIL", "NULL", "UNKNOWN", "UNASSIGNED",
+        "ANONYMOUS", "SOMEONE", "SOMEBODY", "PLACEHOLDER", "MISSING", "SKIP", "SKIPPED", "EXEMPT",
+        "REVIEW", "REVIEWS", "REVIEWED", "REVIEWING", "REVIEWER", "UNREVIEWED", "NEEDS", "AWAITING", "WAITING",
+        "YES", "OK", "OKAY", "LGTM", "DONE", "APPROVE", "APPROVED", "ACCEPTED", "VERIFIED", "CHECKED",
+    };
+
+    /// <summary>
+    /// True when <paramref name="value"/> is an alias: something a human line
+    /// can name as the person who decided.
     ///
-    /// The owning component keeps no list of permitted reviewers, so there is no
-    /// roster to check a name against and this refuses nothing on the grounds of
-    /// who someone is. What it refuses is a name the format could not carry back:
+    /// The owning component calls an alias "a bare token" and accepts anything
+    /// without an <c>=</c> in its place, which makes <c>NOT REVIEWED</c>,
+    /// <c>Pending</c> and <c>PENDING</c> followed by a zero-width space into
+    /// reviewers — and the generator then binds each of them to the code as a
+    /// sealed approval nobody wrote. So an alias here is a name in shape:
     ///
     /// <list type="bullet">
-    /// <item><c>;</c> separates the parts of the line, so a name containing one
-    /// would come back as a different name with a field after it.</item>
-    /// <item><c>=</c> is what a field looks like, and that component reads a
-    /// first part containing one as a field rather than as a reviewer — its
-    /// generator then refuses to touch the line at all.</item>
-    /// <item><c>@</c> separates the name from the fingerprint when staleness is
-    /// later recorded as <c>Previous=name@fingerprint</c>.</item>
-    /// <item>A line break, which would end the comment.</item>
-    /// <item>Either reserved word, which names a state rather than a person.</item>
-    /// <item>Nothing visible. A zero-width space is not whitespace to
-    /// <c>char.IsWhiteSpace</c>, so a body made only of format characters would
-    /// pass an emptiness check and be sealed into an approval attributed to a
-    /// name nobody can see, read out or type again.</item>
+    /// <item>It opens with a letter and is at most <see cref="MaxAliasLength"/>
+    /// characters long.</item>
+    /// <item>It holds letters, digits, combining marks, <c>.</c>, <c>_</c>,
+    /// <c>-</c> and <c>'</c>, and single spaces between words, because the
+    /// editor signs with a person's configured name. Nothing else: <c>;</c>
+    /// separates the parts of the line, <c>=</c> is what a field looks like,
+    /// <c>@</c> separates the name from the fingerprint in
+    /// <c>Previous=name@fingerprint</c>, and a format character such as a
+    /// zero-width space occupies no room and names nobody anyone can see.</item>
+    /// <item>No word of it is one of the placeholder words: the two reserved
+    /// states, and the words a line says "nobody yet" or "fine" with.</item>
     /// </list>
     ///
-    /// Refusing costs one message naming the name. Writing one costs a line that
-    /// component's generator throws on, which is a review nobody can seal.
+    /// There is still no roster of permitted reviewers, so nothing is refused
+    /// on the grounds of who someone is.
     /// </summary>
-    public static bool IsWritableReviewer(string? reviewer)
+    public static bool IsAlias(string? value)
     {
-        if (string.IsNullOrWhiteSpace(reviewer))
+        if (value is null || value.Length is 0 or > MaxAliasLength || !char.IsLetter(value[0]) || value[^1] == ' ')
             return false;
 
-        string trimmed = reviewer.Trim();
-        if (trimmed.AsSpan().IndexOfAny(";=@") >= 0)
-            return false;
-
-        if (trimmed.AsSpan().IndexOfAny('\r', '\n') >= 0)
-            return false;
-
-        if (!HasVisibleCharacter(trimmed))
-            return false;
-
-        return !trimmed.StartsWith(Pending, StringComparison.Ordinal) &&
-            !trimmed.StartsWith(Stale, StringComparison.Ordinal);
-    }
-
-    private static bool HasVisibleCharacter(string value)
-    {
+        char previous = '\0';
         foreach (char character in value)
         {
-            if (char.IsWhiteSpace(character) || char.IsControl(character))
-                continue;
+            bool allowed = character == ' '
+                ? previous != ' '
+                : char.IsLetterOrDigit(character) || character is '.' or '_' or '-' or '\'' ||
+                  System.Globalization.CharUnicodeInfo.GetUnicodeCategory(character) is
+                      System.Globalization.UnicodeCategory.NonSpacingMark or
+                      System.Globalization.UnicodeCategory.SpacingCombiningMark;
 
-            // Format characters — zero-width spaces, joiners, the byte-order
-            // mark — occupy no space and name nobody.
-            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(character) ==
-                System.Globalization.UnicodeCategory.Format)
-            {
-                continue;
-            }
+            if (!allowed)
+                return false;
 
-            return true;
+            previous = character;
         }
 
-        return false;
+        foreach (string word in value.Split([' ', '.', '_', '-', '\''], StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (PlaceholderWords.Contains(word))
+                return false;
+        }
+
+        return true;
     }
+
+    /// <summary>
+    /// True when a name may stand as a reviewer on a human line: when it is an
+    /// alias (<see cref="IsAlias"/>) once trimmed.
+    ///
+    /// The editor and the generator hold a name to the same rule. A name the
+    /// editor wrote and the generator then refused would be a review nobody can
+    /// seal; a name the generator accepted and the editor refused would be one
+    /// a person could only type by hand. Refusing costs one message naming the
+    /// name.
+    /// </summary>
+    public static bool IsWritableReviewer(string? reviewer) =>
+        reviewer is not null && IsAlias(reviewer.Trim());
 
     private static bool AllHex(string value)
     {

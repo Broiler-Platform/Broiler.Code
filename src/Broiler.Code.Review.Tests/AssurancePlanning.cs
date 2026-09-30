@@ -10,7 +10,14 @@ namespace Broiler.Code.Review.Tests;
 /// </summary>
 internal static class AssurancePlanning
 {
-    public static readonly CSharpAssuranceFileScanner Scanner = new();
+    /// <summary>The scanner the default configuration asks for: default symbols, strict predicate.</summary>
+    public static readonly CSharpAssuranceFileScanner Scanner = new(null, AssuranceExemptionPredicate.Strict);
+
+    /// <summary>The scanner <paramref name="config"/> asks for, as the command builds it.</summary>
+    public static IAssuranceFileScanner ScannerFor(AssuranceComponentConfig config) =>
+        config.PreprocessorSymbols is null && config.ExemptionPredicate == AssuranceExemptionPredicate.Strict
+            ? Scanner
+            : new CSharpAssuranceFileScanner(config.PreprocessorSymbols, config.ExemptionPredicate);
 
     public const string Copyright = "2026 Broiler Platform contributors";
 
@@ -38,7 +45,7 @@ internal static class AssurancePlanning
             artefacts ?? new Dictionary<string, string>());
 
     public static AssurancePlan Plan(AssuranceComponentConfig config, params (string Path, string Text)[] files) =>
-        AssuranceGenerator.Plan(Corpus(null, files), Scanner, config);
+        AssuranceGenerator.Plan(Corpus(null, files), ScannerFor(config), config);
 
     public static AssurancePlan Plan(params (string Path, string Text)[] files) => Plan(Config(), files);
 
@@ -52,7 +59,7 @@ internal static class AssurancePlanning
                 first.Artefacts
                     .Where(static artefact => artefact.Kind != AssuranceArtefactKind.Source)
                     .ToDictionary(static artefact => artefact.RelativePath, static artefact => artefact.Desired)),
-            Scanner,
+            ScannerFor(config),
             config);
 
     public static string Desired(AssurancePlan plan, string path) =>

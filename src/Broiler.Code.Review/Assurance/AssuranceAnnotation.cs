@@ -136,6 +136,11 @@ public sealed class AssuranceAnnotation
     /// inside <c>Previous=</c>, and that person is not the reviewer of the code
     /// as it stands now — reporting them here would credit an approval that has
     /// already lapsed.
+    ///
+    /// Null, too, when the head of the line is not an alias
+    /// (<see cref="AssuranceVocabulary.IsAlias"/>): <c>NOT REVIEWED</c> or
+    /// <c>TODO</c> names nobody, and a line that names nobody is no approval,
+    /// whatever fingerprint stands beside it.
     /// </summary>
     public string? Reviewer
     {
@@ -146,7 +151,7 @@ public sealed class AssuranceAnnotation
 
             int semicolon = HumanBody.IndexOf(';', StringComparison.Ordinal);
             string name = (semicolon < 0 ? HumanBody : HumanBody[..semicolon]).Trim();
-            return name.Length == 0 ? null : name;
+            return AssuranceVocabulary.IsAlias(name) ? name : null;
         }
     }
 

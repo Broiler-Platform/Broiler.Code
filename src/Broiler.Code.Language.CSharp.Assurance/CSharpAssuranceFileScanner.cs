@@ -12,7 +12,8 @@ namespace Broiler.Code.Language.CSharp.Assurance;
 /// <summary>
 /// The whole-file scan the command-line tool needs: every unit with its place
 /// on the line and the assurance comments the parser attaches to it, the file
-/// fingerprint, the directives, and every assurance comment in the file.
+/// fingerprint, the directives, every assurance comment in the file, and every
+/// line of every comment.
 ///
 /// Units, names, exemptions and fingerprints come from
 /// <see cref="CSharpAssuranceScanner"/>, so the two scanners cannot disagree
@@ -32,16 +33,20 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
     ];
 
     private readonly CSharpParseOptions _parseOptions;
+    private readonly AssuranceExemptionPredicate _predicate;
 
     /// <summary>
     /// A file scanner parsing under <paramref name="preprocessorSymbols"/>, or
     /// under <see cref="CSharpAssuranceScanner.DefaultPreprocessorSymbols"/> when
-    /// that is null.
+    /// that is null, applying <paramref name="predicate"/>.
     /// </summary>
-    public CSharpAssuranceFileScanner(IEnumerable<string>? preprocessorSymbols = null)
+    public CSharpAssuranceFileScanner(
+        IEnumerable<string>? preprocessorSymbols = null,
+        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent)
     {
         _parseOptions = CSharpAssuranceScanner.OptionsFor(
             preprocessorSymbols ?? CSharpAssuranceScanner.DefaultPreprocessorSymbols);
+        _predicate = predicate;
     }
 
     /// <inheritdoc/>
@@ -55,9 +60,10 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
         SourceText source = tree.GetText();
 
         var units = new List<AssuranceFileUnit>();
-        foreach (MemberDeclarationSyntax declaration in CSharpAssuranceScanner.CodeUnits(root))
+        foreach (ScannedDeclaration found in CSharpAssuranceScanner.Units(tree, _predicate))
         {
-            AssuranceScannedUnit unit = CSharpAssuranceScanner.Describe(tree, declaration);
+            MemberDeclarationSyntax declaration = found.Declaration;
+            AssuranceScannedUnit unit = found.Unit;
             TextLine line = source.Lines[unit.DeclarationLine];
             string before = source.ToString(TextSpan.FromBounds(line.Start, declaration.SpanStart));
             bool ownLine = IsBlank(before);
@@ -102,8 +108,12 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
             .ToList();
 
         var commentLines = new SortedSet<int>();
+        var comments = new List<AssuranceCommentLine>();
         foreach (SyntaxTrivia trivia in root.DescendantTrivia(descendIntoTrivia: true))
         {
+            if (IsCommentLike(trivia))
+                comments.AddRange(LinesOf(source, trivia));
+
             if (!trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) || !OpensWithMarker(trivia.ToString()))
                 continue;
 
@@ -119,18 +129,52 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
             CSharpAssuranceScanner.Fingerprint(root),
             directives,
             [.. commentLines],
-            source.Lines.Count);
+            source.Lines.Count)
+        {
+            CommentLines = comments,
+        };
+    }
+
+    /// <summary>
+    /// Trivia a reader takes for prose: every kind of comment, documentation
+    /// comments included, and disabled text, which reads like code but is
+    /// shown to nobody as code. A forged summary can be written in any of them.
+    /// </summary>
+    private static bool IsCommentLike(SyntaxTrivia trivia) =>
+        trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+        trivia.IsKind(SyntaxKind.MultiLineCommentTrivia) ||
+        trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia) ||
+        trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia) ||
+        trivia.IsKind(SyntaxKind.DisabledTextTrivia);
+
+    /// <summary>One entry per physical line the trivia spans, with that line's part of it.</summary>
+    private static IEnumerable<AssuranceCommentLine> LinesOf(SourceText source, SyntaxTrivia trivia)
+    {
+        TextSpan span = trivia.FullSpan;
+        int first = source.Lines.GetLineFromPosition(span.Start).LineNumber;
+        int last = source.Lines.GetLineFromPosition(Math.Max(span.Start, span.End - 1)).LineNumber;
+
+        for (int number = first; number <= last; number++)
+        {
+            TextLine line = source.Lines[number];
+            int start = Math.Max(line.Start, span.Start);
+            int end = Math.Min(line.End, span.End);
+            if (end > start)
+                yield return new AssuranceCommentLine(number, source.ToString(TextSpan.FromBounds(start, end)));
+        }
     }
 
     /// <summary>
     /// The token where a declaration's header ends and its content begins. An
     /// assurance comment above this token and below the declaration's first
-    /// token is inside the header, where no declaration picks it up.
+    /// token is inside the header, where no declaration picks it up. The
+    /// top-level unit has no header: its block goes above its first statement.
     /// </summary>
     private static SyntaxToken HeaderEnd(MemberDeclarationSyntax declaration)
     {
         SyntaxToken end = declaration switch
         {
+            GlobalStatementSyntax statement => statement.GetFirstToken(),
             TypeDeclarationSyntax type => Present(type.OpenBraceToken) ?? type.SemicolonToken,
             EnumDeclarationSyntax @enum => @enum.OpenBraceToken,
             BaseMethodDeclarationSyntax method =>

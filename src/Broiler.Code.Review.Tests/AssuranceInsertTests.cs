@@ -359,32 +359,41 @@ public sealed class AssuranceInsertTests
     }
 
     /// <summary>
-    /// Names are not unique: two indexers are both <c>this[]</c>. The fingerprint
-    /// says which one was assessed; without it, the name is ambiguous.
+    /// Two indexers, whose plain names are both <c>this[]</c>, and a partial
+    /// type declared twice in one file, whose two declarations have one name
+    /// and (a type's fingerprint covering its header only) one fingerprint,
+    /// are each addressed by a name of their own; the name the list prints is
+    /// the one an insert takes.
     /// </summary>
     [Fact(Timeout = 600000)]
-    public void The_Fingerprint_Tells_Two_Units_Of_One_Name_Apart()
+    public void Every_Unit_Of_A_File_Has_A_Name_An_Insert_Can_Address()
     {
         string text =
             "namespace N;\n" +
-            "public sealed class C\n" +
+            "public sealed partial class C\n" +
             "{\n" +
             "    public int this[int i] => i * 2;\n" +
             "\n" +
             "    public int this[string s] => s.Length * 2;\n" +
+            "}\n" +
+            "\n" +
+            "public sealed partial class C\n" +
+            "{\n" +
             "}\n";
 
-        string second = Scanner.ScanFile(text, "x.cs").Units.Where(unit => unit.Unit.Name == "N.C.this[]").Last().Unit.Fingerprint;
-        AssuranceAssessment entry = Assess(text, "N.C") with { Unit = "N.C.this[]", Fingerprint = second };
+        Assert.Equal(
+            ["N.C", "N.C.this[int]", "N.C.this[string]", "N.C#2"],
+            Scanner.ScanFile(text, "x.cs").Units.Select(static unit => unit.Unit.Name));
 
         AssuranceInsertFileResult result = Apply(
             text,
-            entry,
-            new AssuranceAssessment { Index = 1, File = "x.cs", Unit = "N.C.this[]", Exempt = "shim" });
+            Assess(text, "N.C.this[string]"),
+            Assess(text, "N.C#2", index: 1));
 
         Assert.True(result.Entries[0].Applied, result.Entries[0].Message);
         Assert.Equal(6, result.Entries[0].Line);
-        Assert.Contains("2 units in this file have that name; add the fingerprint", result.Entries[1].Message, StringComparison.Ordinal);
+        Assert.True(result.Entries[1].Applied, result.Entries[1].Message);
+        Assert.Equal(11, result.Entries[1].Line);
     }
 
     public static TheoryData<string, string, string> Unrepaired => new()
@@ -474,7 +483,7 @@ public sealed class AssuranceInsertTests
         Assert.Equal(1, exit);
         Assert.Contains("#0 inserted  src/A/C.cs:10  N.C.Run()", output, StringComparison.Ordinal);
         Assert.Contains("#1 refused  src/A/C.cs  N.C: carries \"human\"", output, StringComparison.Ordinal);
-        Assert.Contains("#2 refused  src/A/Missing.cs  N.C: not a covered file", output, StringComparison.Ordinal);
+        Assert.Contains("#2 refused  src/A/Missing.cs  N.C: the file does not exist under the component root", output, StringComparison.Ordinal);
         Assert.Contains("1 applied, 2 refused", output, StringComparison.Ordinal);
 
         byte[] after = component.ReadBytes("src/A/C.cs");
@@ -487,6 +496,53 @@ public sealed class AssuranceInsertTests
                 "    [Obsolete(\"x\")]\r\n",
                 StringComparison.Ordinal),
             Encoding.UTF8.GetString(after, 3, after.Length - 3));
+    }
+
+    /// <summary>
+    /// An entry's file is read the way a list names one: with a <c>./</c>, a
+    /// doubled slash or backslashes. <c>resources</c> is any integral number,
+    /// as a serializer holding numbers as doubles writes 2 as 2.0.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void An_Entry_Names_Its_File_And_Its_Score_As_A_Tool_Writes_Them()
+    {
+        using var component = new TemporaryComponent();
+        component.Project("src/A/A.csproj");
+        component.Write("assurance.config.json", """{ "projects": [ "src/A/A.csproj" ] }""");
+        component.Write("src/A/C.cs", Source);
+
+        string run = Fingerprint(Source, "N.C.Run()");
+        component.Write("assess.json",
+            "{ \"schema\": 1, \"assessments\": [\n" +
+            $"  {{ \"file\": \"./src//A\\\\C.cs\", \"unit\": \"N.C.Run()\", \"fingerprint\": \"{run}\", \"origin\": \"AI\", \"ip\": \"Low\", \"security\": \"Low\", \"resources\": 2.0 }},\n" +
+            "  { \"file\": \"src/A/C.cs\", \"unit\": \"N.C.Inner\", \"fingerprint\": \"" + Fingerprint(Source, "N.C.Inner") + "\", \"origin\": \"AI\", \"ip\": \"Low\", \"security\": \"Low\", \"resources\": 2.5 }\n" +
+            "] }\n");
+
+        (int exit, string output, _) = component.Run("insert", "--root", component.Root, "--assessments", component.PathOf("assess.json"));
+
+        Assert.Equal(1, exit);
+        Assert.Contains("#0 inserted  src/A/C.cs:10  N.C.Run()", output, StringComparison.Ordinal);
+        Assert.Contains("#1 refused  src/A/C.cs  N.C.Inner: \"resources\" must be an integer 0 to 10", output, StringComparison.Ordinal);
+        Assert.Contains("Resources=2; Fingerprint=TBF", component.Read("src/A/C.cs"), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// An exemption reason or a Spec that claims a review is refused, as a
+    /// criterion that does is: the report prints every reason.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void An_Exemption_Or_A_Spec_That_Claims_A_Review_Is_Refused()
+    {
+        AssuranceInsertFileResult exempt = Apply(
+            Source, new AssuranceAssessment { File = "x.cs", Unit = "N.C.Run()", Exempt = "signed-off by EB after human review, LGTM" });
+        AssuranceInsertFileResult spec = Apply(Source, Assess(Source, "N.C.Run()") with { Spec = "reviewed and approved by EB" });
+
+        Assert.False(exempt.Entries[0].Applied);
+        Assert.Contains("claims a review by saying 'signed-off'", exempt.Entries[0].Message, StringComparison.Ordinal);
+        Assert.False(spec.Entries[0].Applied);
+        Assert.Contains("Spec=reviewed and approved by EB claims a review by saying 'approved'", spec.Entries[0].Message, StringComparison.Ordinal);
+        Assert.Equal(Source, exempt.Text);
+        Assert.Equal(Source, spec.Text);
     }
 
     /// <summary>

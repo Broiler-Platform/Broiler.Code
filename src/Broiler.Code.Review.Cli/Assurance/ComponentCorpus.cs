@@ -90,6 +90,8 @@ internal sealed class ComponentCorpus
         foreach (string path in new[] { config.Artefacts.Report, config.Artefacts.Manifest, config.Artefacts.HumanReview })
         {
             string full = Path.Combine(fullRoot, path.Replace('/', Path.DirectorySeparatorChar));
+            CheckWritable(fullRoot, path, full);
+
             if (!File.Exists(full))
             {
                 artefacts[path] = new ComponentArtefact(path, full, null, "\n");
@@ -114,9 +116,65 @@ internal sealed class ComponentCorpus
             files,
             [.. set.Excluded.Select(static excluded => new AssuranceExcludedSource(excluded.RelativePath, excluded.Reason))],
             [.. set.Projects.Select(static project => project.AssemblyName).Distinct(StringComparer.Ordinal)],
-            current);
+            current)
+        {
+            SeparateRecords = SeparateRecords(fullRoot, config.Artefacts),
+        };
 
         return new ComponentCorpus(corpus, set, sources, artefacts, problems);
+    }
+
+    /// <summary>
+    /// Refuses an artefact path the generator must not write: one that passes
+    /// through a junction or symbolic link (which can lead out of the root), a
+    /// <c>.git</c> directory, or a directory holding a <c>.git</c> entry (another
+    /// component's checkout), or that is itself a link. The configuration has
+    /// already refused a rooted path and a <c>..</c> segment; these are the
+    /// questions only the disk can answer.
+    /// </summary>
+    private static void CheckWritable(string root, string relative, string full)
+    {
+        string? directory = Path.GetDirectoryName(relative.Replace('/', Path.DirectorySeparatorChar))?.Replace('\\', '/');
+        if (directory is { Length: > 0 } && ComponentSources.Unenterable(root, directory) is { } barrier)
+        {
+            throw new ComponentSourceException(
+                $"{AssuranceComponentConfig.FileName}: the artefact '{relative}' lies inside '{barrier.Directory}', which " +
+                $"{barrier.What}; the generator writes nothing there");
+        }
+
+        if (ComponentSources.IsLink(full))
+        {
+            throw new ComponentSourceException(
+                $"{AssuranceComponentConfig.FileName}: the artefact '{relative}' is a symbolic link; the generator " +
+                "writes nothing through a link");
+        }
+    }
+
+    /// <summary>
+    /// A hand-written review record at an artefact's default path while the
+    /// configuration writes that artefact elsewhere: a component that keeps a
+    /// signed <c>HUMAN_REVIEW.md</c> and points the per-unit record at another
+    /// file. A file there the generator wrote is not one.
+    /// </summary>
+    private static IReadOnlyList<string> SeparateRecords(string root, AssuranceArtefactPaths paths)
+    {
+        var configured = new[] { paths.Report, paths.HumanReview, paths.Manifest };
+        var records = new List<string>();
+
+        foreach (string path in new[] { new AssuranceArtefactPaths().HumanReview, new AssuranceArtefactPaths().Report })
+        {
+            if (configured.Contains(path, StringComparer.OrdinalIgnoreCase))
+                continue;
+
+            string full = Path.Combine(root, path);
+            if (File.Exists(full) && AssuranceSourceText.TryRead(full, out AssuranceSourceText? text, out _) &&
+                !AssuranceGenerator.IsGenerated(text!.Text))
+            {
+                records.Add(path);
+            }
+        }
+
+        return records;
     }
 
     /// <summary>

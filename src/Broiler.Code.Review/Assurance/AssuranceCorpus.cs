@@ -33,7 +33,17 @@ public sealed record AssuranceCorpus(
     IReadOnlyList<AssuranceSource> Files,
     IReadOnlyList<AssuranceExcludedSource> Excluded,
     IReadOnlyList<string> Assemblies,
-    IReadOnlyDictionary<string, string> Artefacts);
+    IReadOnlyDictionary<string, string> Artefacts)
+{
+    /// <summary>
+    /// Review records a person keeps beside the generated ones: a file at an
+    /// artefact's default path (<c>HUMAN_REVIEW.md</c>, <c>CODE-ASSURANCE.md</c>)
+    /// that exists while the configuration writes that artefact elsewhere. The
+    /// report names them, so that it is not read as the component's only word
+    /// on review.
+    /// </summary>
+    public IReadOnlyList<string> SeparateRecords { get; init; } = [];
+}
 
 /// <summary>
 /// One code unit of the component, placed in its file: what the report,
@@ -79,4 +89,13 @@ public sealed record AssuranceCorpusUnit(string File, string Assembly, Assurance
 /// <param name="File">The root-relative file it is about, or null for the component.</param>
 /// <param name="Line">The 1-based line, when there is one.</param>
 /// <param name="Message">The message, in the owning component's words where it has them.</param>
-public sealed record AssuranceViolation(string Rule, string? File, int? Line, string Message);
+public sealed record AssuranceViolation(string Rule, string? File, int? Line, string Message)
+{
+    /// <summary>
+    /// The command that resolves the violation, where there is one, for a
+    /// reader who has only the annotation in front of them: <c>generate</c> for
+    /// a fingerprint, <c>list</c> and <c>insert</c> for a missing block. Kept
+    /// apart from <see cref="Message"/>, which is the owning component's text.
+    /// </summary>
+    public string? Remedy { get; init; }
+}

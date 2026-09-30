@@ -21,8 +21,9 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// summarizes.
 ///
 /// Exit codes: 0 done (or, for <c>check</c>, nothing wrong), 1 something was
-/// refused or violated, 2 a usage or configuration error, before anything was
-/// written.
+/// refused or violated (or, after a command's own writes, its JSON report
+/// could not be written), 2 a usage or configuration error, before anything
+/// was written.
 /// </summary>
 internal static partial class AssuranceCommand
 {
@@ -34,7 +35,7 @@ internal static partial class AssuranceCommand
 
     private static readonly string[] ListOptions = ["--root", "--files", "--json"];
 
-    private static readonly string[] ListFlags = ["--all-units"];
+    private static readonly string[] ListFlags = ["--all-units", "--strict"];
 
     private static readonly string[] InsertOptions = ["--root", "--assessments", "--json"];
 
@@ -44,7 +45,7 @@ internal static partial class AssuranceCommand
 
     private static readonly string[] GenerateFlags = ["--dry-run", "--adopt"];
 
-    private static readonly string[] CheckOptions = ["--root", "--config", "--json"];
+    private static readonly string[] CheckOptions = ["--root", "--config", "--json", "--annotation-prefix", "--annotation-limit"];
 
     private static readonly string[] CheckFlags = ["--release", "--sources-only"];
 
@@ -56,10 +57,16 @@ internal static partial class AssuranceCommand
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(error);
 
-        if (args.Count == 0 || args[0] is "-h" or "--help" or "help")
+        if (args.Count == 0)
+        {
+            error.Write(Usage);
+            return UsageError;
+        }
+
+        if (args[0] is "-h" or "--help" or "help")
         {
             output.Write(Usage);
-            return args.Count == 0 ? UsageError : Done;
+            return Done;
         }
 
         try
@@ -87,24 +94,34 @@ internal static partial class AssuranceCommand
         }
     }
 
+    /// <summary>The file scanner a configuration asks for: its symbols and its exemption predicate.</summary>
+    internal static CSharpAssuranceFileScanner ScannerFor(AssuranceComponentConfig? config) =>
+        config is null
+            ? new CSharpAssuranceFileScanner(null, AssuranceExemptionPredicate.Strict)
+            : new CSharpAssuranceFileScanner(config.PreprocessorSymbols, config.ExemptionPredicate);
+
     private static int List(Options options, TextWriter output, TextWriter error)
     {
         string root = RootOf(options);
+        string? jsonPath = options.Value("--json");
+        PrepareOut(jsonPath);
+
         AssuranceComponentConfig? config = LoadConfig(root);
         ComponentSourceSet set = ComponentSources.Discover(root, config);
         var notes = new List<string>(set.Notes);
+        IReadOnlyList<ComponentUnknownPath>? unknown = null;
 
         if (options.Value("--files") is { } listFile)
         {
             if (!File.Exists(listFile))
                 throw new UsageException($"--files: '{listFile}' does not exist");
 
-            set = ComponentSources.Restrict(set, File.ReadAllLines(listFile), out IReadOnlyList<string> unknown);
-            foreach (string path in unknown)
-                notes.Add($"--files names '{path}', which is not a covered file");
+            set = ComponentSources.Restrict(set, root, File.ReadAllLines(listFile), out unknown);
+            foreach (ComponentUnknownPath path in unknown)
+                notes.Add($"--files names '{path.Path}', which {path.Reason}");
         }
 
-        var scanner = new CSharpAssuranceFileScanner(config?.PreprocessorSymbols);
+        CSharpAssuranceFileScanner scanner = ScannerFor(config);
         var files = new List<ListedFile>(set.Files.Count);
         foreach (ComponentSourceFile file in set.Files)
         {
@@ -124,14 +141,18 @@ internal static partial class AssuranceCommand
         foreach (string note in notes)
             error.WriteLine($"broiler-review assurance: {note}");
 
-        if (options.Value("--json") is { } jsonPath)
-        {
-            WriteOut(jsonPath, AssuranceJson.List(component, set, files, allUnits, notes), output, error);
-            return Done;
-        }
+        // A run that could not read a covered file has not listed everything
+        // there is, and one told to be strict about its --files list has not
+        // listed what it was asked for: neither is a clean "nothing left".
+        bool unreadable = files.Any(static file => file.Problem is not null);
+        bool strayed = options.Has("--strict") && unknown is { Count: > 0 };
+        int exit = unreadable || strayed ? Refused : Done;
+
+        if (jsonPath is not null)
+            return WriteOut(jsonPath, AssuranceJson.List(component, set, files, allUnits, notes, unknown ?? []), output, error) ? exit : Refused;
 
         WriteListText(component, set, files, allUnits, output);
-        return Done;
+        return exit;
     }
 
     private static void WriteListText(
@@ -162,9 +183,15 @@ internal static partial class AssuranceCommand
             {
                 AssuranceScannedUnit unit = candidate.Unit;
                 string where = Invariant($"{unit.DeclarationLine + 1}:{unit.DeclarationColumn + 1}");
+
+                // A detail that already opens with its reason says it once.
                 string status = candidate.Insertable
                     ? "insertable"
-                    : candidate.Detail is null ? candidate.Reason : $"{candidate.Reason}: {candidate.Detail}";
+                    : candidate.Detail is null
+                        ? candidate.Reason
+                        : candidate.Detail.StartsWith(candidate.Reason, StringComparison.Ordinal)
+                            ? candidate.Detail
+                            : $"{candidate.Reason}: {candidate.Detail}";
 
                 output.WriteLine(
                     $"  {where,-9} {unit.Kind,-12} {unit.Fingerprint}  {unit.Name}  [{AssuranceStateMachine.Name(candidate.State)}] {status}");
@@ -181,6 +208,9 @@ internal static partial class AssuranceCommand
         string assessmentsPath = options.Value("--assessments")
             ?? throw new UsageException("insert needs --assessments <file.json>");
 
+        string? jsonPath = options.Value("--json");
+        PrepareOut(jsonPath);
+
         AssuranceComponentConfig config = OwnedConfig(root, "insert");
 
         if (!File.Exists(assessmentsPath))
@@ -190,26 +220,32 @@ internal static partial class AssuranceCommand
         ComponentSourceSet set = ComponentSources.Discover(root, config);
         bool dryRun = options.Has("--dry-run");
 
-        var covered = set.Files.ToDictionary(static file => file.RelativePath, StringComparer.Ordinal);
-        var excluded = set.Excluded.ToDictionary(static file => file.RelativePath, StringComparer.Ordinal);
         var closed = new HashSet<string>(config.ClosedToEscapeHatch, StringComparer.Ordinal);
-        var scanner = new CSharpAssuranceFileScanner(config.PreprocessorSymbols);
-
+        CSharpAssuranceFileScanner scanner = ScannerFor(config);
         var results = new List<AssuranceInsertEntryResult>(input.Refused);
-        foreach (IGrouping<string, AssuranceAssessment> group in input.Entries
-            .GroupBy(static entry => entry.File, StringComparer.Ordinal)
-            .OrderBy(static group => group.Key, StringComparer.Ordinal))
-        {
-            List<AssuranceAssessment> entries = [.. group.OrderBy(static entry => entry.Index)];
 
-            if (!covered.TryGetValue(group.Key, out ComponentSourceFile? file))
-            {
-                string why = excluded.TryGetValue(group.Key, out ComponentExcludedFile? exclusion)
-                    ? $"the file is excluded from coverage ({exclusion.Reason})"
-                    : "not a covered file; 'assurance list' prints the covered files and their paths";
-                results.AddRange(entries.Select(entry => new AssuranceInsertEntryResult(entry, false, why)));
-                continue;
-            }
+        // Each entry's file is read the way a --files list is: relative or
+        // absolute under the root, with either slash, and (on Windows) in any
+        // case. An entry keeps the covered file's own spelling from here on.
+        var located = new List<(AssuranceAssessment Entry, ComponentSourceFile? File, string? Why)>();
+        foreach (AssuranceAssessment entry in input.Entries)
+        {
+            ComponentSourceFile? file = ComponentSources.Find(set, root, entry.File, out ComponentUnknownPath? unknown);
+            located.Add(file is null
+                ? (entry, null, unknown!.Reason)
+                : (entry with { File = file.RelativePath }, file, null));
+        }
+
+        foreach ((AssuranceAssessment entry, _, string? why) in located.Where(static entry => entry.File is null))
+            results.Add(new AssuranceInsertEntryResult(entry, false, $"the file {why}"));
+
+        foreach (IGrouping<ComponentSourceFile, (AssuranceAssessment Entry, ComponentSourceFile? File, string? Why)> group in located
+            .Where(static entry => entry.File is not null)
+            .GroupBy(static entry => entry.File!)
+            .OrderBy(static group => group.Key.RelativePath, StringComparer.Ordinal))
+        {
+            ComponentSourceFile file = group.Key;
+            List<AssuranceAssessment> entries = [.. group.Select(static entry => entry.Entry).OrderBy(static entry => entry.Index)];
 
             if (!AssuranceSourceText.TryRead(file.FullPath, out AssuranceSourceText? source, out string? problem))
             {
@@ -249,13 +285,18 @@ internal static partial class AssuranceCommand
 
         // With the JSON report on standard output, the text report moves to
         // standard error so that the output stays one parseable document.
-        string? jsonPath = options.Value("--json");
         WriteInsertText(results, dryRun, jsonPath == "-" ? error : output);
 
-        if (jsonPath is not null)
-            WriteOut(jsonPath, AssuranceJson.InsertReport(results, dryRun), output, error);
+        int exit = results.All(static result => result.Applied) ? Done : Refused;
+        if (jsonPath is not null && !WriteOut(jsonPath, AssuranceJson.InsertReport(results, dryRun), output, error))
+        {
+            if (!dryRun && results.Any(static result => result.Applied))
+                error.WriteLine("broiler-review assurance: the blocks reported above as inserted were written to the sources.");
 
-        return results.All(static result => result.Applied) ? Done : Refused;
+            return Refused;
+        }
+
+        return exit;
     }
 
     private static void WriteInsertText(IReadOnlyList<AssuranceInsertEntryResult> results, bool dryRun, TextWriter output)
@@ -302,20 +343,65 @@ internal static partial class AssuranceCommand
         return root;
     }
 
-    private static void WriteOut(string path, string content, TextWriter output, TextWriter error)
+    /// <summary>
+    /// Refuses a <c>--json</c> target that cannot be written, before the
+    /// command reads or writes anything else, so that a report path mistake
+    /// never leaves an insert applied with no report of it. A file that did
+    /// not exist is created to find out, and removed again.
+    /// </summary>
+    private static void PrepareOut(string? path)
+    {
+        if (path is null or "-")
+            return;
+
+        try
+        {
+            string full = Path.GetFullPath(path);
+            if (Directory.Exists(full))
+                throw new UsageException($"--json: '{path}' is a directory");
+
+            if (Path.GetDirectoryName(full) is { Length: > 0 } directory)
+                Directory.CreateDirectory(directory);
+
+            bool existed = File.Exists(full);
+            using (new FileStream(full, FileMode.OpenOrCreate, FileAccess.Write))
+            {
+            }
+
+            if (!existed)
+                File.Delete(full);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            throw new UsageException($"--json: '{path}' cannot be written: {exception.Message}");
+        }
+    }
+
+    /// <summary>Writes a report, and says so; false, with the reason on standard error, when it cannot.</summary>
+    private static bool WriteOut(string path, string content, TextWriter output, TextWriter error)
     {
         if (path == "-")
         {
             output.Write(content);
-            return;
+            return true;
         }
 
-        string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
-        if (directory is { Length: > 0 })
-            Directory.CreateDirectory(directory);
+        try
+        {
+            string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
+            if (directory is { Length: > 0 })
+                Directory.CreateDirectory(directory);
 
-        File.WriteAllText(path, content);
+            File.WriteAllText(path, content);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            error.WriteLine($"broiler-review assurance: could not write {path}: {exception.Message}");
+            return false;
+        }
+
         error.WriteLine($"broiler-review assurance: wrote {path}");
+        return true;
     }
 
     private static Options Parse(IReadOnlyList<string> args, string[] valued, string[] flags)
@@ -352,16 +438,20 @@ internal static partial class AssuranceCommand
     private const string Usage =
         """
         Usage:
-          broiler-review assurance list   --root <dir> [--files <list>] [--json <out>|-] [--all-units]
+          broiler-review assurance list   --root <dir> [--files <list>] [--strict] [--json <out>|-] [--all-units]
           broiler-review assurance insert --root <dir> --assessments <file.json> [--dry-run] [--json <out>|-]
           broiler-review assurance generate --root <dir> [--dry-run] [--adopt]
           broiler-review assurance check  --root <dir> [--config <file>] [--release] [--sources-only] [--json <out>|-]
+                                          [--annotation-prefix <path>] [--annotation-limit <n>]
           broiler-review assurance status --root <dir> [--config <file>]
 
         list    Relevant units that carry no annotation block, with the file, line, column, indent,
                 qualified name, kind, fingerprint and extent a tool needs to write one, and whether
                 one can be inserted there now (and if not, why). --all-units lists every unit.
-                --files restricts the run to the root-relative paths in a file, one per line.
+                --files restricts the run to the paths in a file, one per line ('#' starts a
+                comment): root-relative or absolute under --root, either slash, any case on Windows.
+                A path that is not a covered file is reported (unknownFiles in JSON), and with
+                --strict fails the run. A covered file that cannot be read always does.
         insert  Writes machine assessments above those units:
                   { "schema": 1, "assessments": [ { "file", "unit", "fingerprint", "origin",
                     "spec"?, "ip", "security", "resources", "falsifiedIf"? } ] }
@@ -379,10 +469,15 @@ internal static partial class AssuranceCommand
                 --release). --sources-only compares only the covered files and the manifest's
                 arrays, for a component whose own tooling owns the prose. --config reads the
                 configuration from elsewhere, for a component that has none.
+                --annotation-prefix puts a path before every file= (the component's directory,
+                when the workflow runs from a parent); --annotation-limit caps the ::error lines
+                per rule and counts the rest.
         status  A short summary of units, annotations and states.
 
-        Exit codes: 0 done, 1 something was refused or check found a violation,
-        2 usage or configuration error.
+        Exit codes: 0 done, 1 something was refused, check found a violation, list could
+        not read a covered file (or, with --strict, was named a path that is not one), or
+        a JSON report could not be written after the command's own writes; 2 usage or
+        configuration error, before anything was written.
 
         """;
 

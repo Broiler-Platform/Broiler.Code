@@ -35,6 +35,28 @@ public enum AssuranceForgeryVocabulary
     Strict,
 }
 
+/// <summary>Which exemption predicate decides that a unit needs no review.</summary>
+public enum AssuranceExemptionPredicate
+{
+    /// <summary>
+    /// The owning component's eight cases, narrowed where they would exempt code
+    /// that runs: a field or auto-property is exempt only when its initializer,
+    /// if it has one, is inert (a literal, a name, <c>default</c>, <c>nameof</c>,
+    /// <c>typeof</c>, a parameterless <c>new()</c>, or arithmetic over those); an
+    /// expression body that throws is exempt only when the exception's arguments
+    /// are inert; and a member of a type named <c>AssemblyMarker</c> gets no
+    /// exemption for where it lives. An initializer that calls something or
+    /// holds a lambda is code nobody else reviews, so its unit is relevant.
+    /// </summary>
+    Strict = 0,
+
+    /// <summary>
+    /// The owning component's predicate exactly, for a component whose record
+    /// that component's own generator writes (Broiler.VM).
+    /// </summary>
+    OwningComponent,
+}
+
 /// <summary>A file pattern the component leaves out of the covered set, and why.</summary>
 /// <param name="Glob">The pattern.</param>
 /// <param name="Reason">Why, in words a report can print beside each file it excludes.</param>
@@ -112,6 +134,19 @@ public sealed record AssuranceComponentConfig
 
     /// <summary>Files left out of the covered set, each with the reason a report prints.</summary>
     public IReadOnlyList<AssuranceExclusion> Exclude { get; init; } = [];
+
+    /// <summary>
+    /// Whether a <c>bin</c> or <c>obj</c> directory below a project's root is
+    /// left out as well as the project's own. On by default, because some
+    /// components track stale build output; the files it leaves out are listed
+    /// as not covered. The owning component, like the SDK's default compile
+    /// items, leaves out only the project's own <c>bin</c> and <c>obj</c>, and
+    /// covers a file in a deeper one: set this to false for its rule.
+    /// </summary>
+    public bool ExcludeBuildOutputAtAnyDepth { get; init; } = true;
+
+    /// <summary>Which exemption predicate the scanner applies.</summary>
+    public AssuranceExemptionPredicate ExemptionPredicate { get; init; } = AssuranceExemptionPredicate.Strict;
 
     /// <summary>The SPDX lines for every covered file no override matches. Null until configured.</summary>
     public AssuranceSpdx? Spdx { get; init; }
@@ -243,7 +278,7 @@ public sealed record AssuranceComponentConfig
                         break;
 
                     case "component":
-                        config = config with { Component = RequiredString(value, path) };
+                        config = config with { Component = SingleLine(value, path) };
                         break;
 
                     case "mode":
@@ -265,6 +300,22 @@ public sealed record AssuranceComponentConfig
 
                     case "exclude":
                         config = config with { Exclude = Exclusions(value, path) };
+                        break;
+
+                    case "excludeBuildOutputAtAnyDepth":
+                        config = config with { ExcludeBuildOutputAtAnyDepth = RequiredBool(value, path) };
+                        break;
+
+                    case "exemptionPredicate":
+                        config = config with
+                        {
+                            ExemptionPredicate = RequiredString(value, path) switch
+                            {
+                                "strict" => AssuranceExemptionPredicate.Strict,
+                                "owning-component" => AssuranceExemptionPredicate.OwningComponent,
+                                _ => throw Error(path, "must be \"strict\" or \"owning-component\""),
+                            },
+                        };
                         break;
 
                     case "spdx":
@@ -552,6 +603,11 @@ public sealed record AssuranceComponentConfig
 
         if (value.Split('/').Any(static segment => segment is ".." or "." or ""))
             throw Error(path, $"'{value}' has an empty, '.' or '..' segment");
+
+        // Git's own directory, in any case: a file written there is not part
+        // of the tree, and some of them git executes.
+        if (value.Split('/').Any(static segment => string.Equals(segment, ".git", StringComparison.OrdinalIgnoreCase)))
+            throw Error(path, $"'{value}' names a path inside a '.git' directory");
 
         return value;
     }

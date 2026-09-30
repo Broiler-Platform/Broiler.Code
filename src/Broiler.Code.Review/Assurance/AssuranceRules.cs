@@ -48,12 +48,15 @@ public static partial class AssuranceRules
     /// well formed or absent.
     ///
     /// A criterion names one observation that would make the unit wrong. It is
-    /// prose: a <c>Key=Value</c> pair there would be an unchecked claim sitting
-    /// where a reader takes it for a checked one, so it is refused. The test is
-    /// narrow on purpose, so comparisons written with <c>==</c>, <c>!=</c>,
-    /// <c>&lt;=</c> or <c>&gt;=</c> are still prose. A criterion also never says
-    /// that somebody looked; the review terms are matched as substrings, which
-    /// is stricter than the whole-word match used on generated text.
+    /// prose: one of this format's own fields written there (<c>Security=Low</c>,
+    /// <c>Fingerprint=...</c>) would be an unchecked claim sitting where a
+    /// reader takes it for a checked one, so it is refused. The owning
+    /// component refuses any <c>Key=Value</c>, which also refuses the
+    /// observation a criterion for network code is made of
+    /// (<c>a cookie with SameSite=None is sent</c>); this refuses the format's
+    /// fields only. Comparisons written with <c>==</c>, <c>!=</c>, <c>&lt;=</c>
+    /// or <c>&gt;=</c> are prose. A criterion also never says that somebody
+    /// looked (<see cref="ReviewClaimsIn"/>).
     /// </summary>
     public static IEnumerable<string> CriterionProblems(string? criterion)
     {
@@ -73,15 +76,74 @@ public static partial class AssuranceRules
                 "and a falsification criterion is prose, not data";
         }
 
-        string lowered = criterion.ToLowerInvariant();
-        foreach (string term in ReviewClaimTerms)
+        foreach (string term in ReviewClaimsIn(criterion))
         {
-            if (lowered.Contains(term, StringComparison.Ordinal))
-            {
-                yield return $"{AssuranceVocabulary.FalsifiedIfMarker} claims a review by saying '{term}', " +
-                    "and a falsification criterion states what would make the unit wrong, never that anyone read it";
-            }
+            yield return $"{AssuranceVocabulary.FalsifiedIfMarker} claims a review by saying '{term}', " +
+                "and a falsification criterion states what would make the unit wrong, never that anyone read it";
         }
+    }
+
+    /// <summary>
+    /// Every problem with the reason of an <c>EXEMPT=</c> field beyond its
+    /// shape: a reason says why a unit needs no review, and never that it had
+    /// one. The report prints every reason, so a claim here would be printed
+    /// there as though the record held it.
+    /// </summary>
+    public static IEnumerable<string> ExemptionReasonProblems(string? reason)
+    {
+        if (reason is null)
+            yield break;
+
+        foreach (string term in ReviewClaimsIn(reason))
+        {
+            yield return $"EXEMPT={reason} claims a review by saying '{term}', and an exemption states why a unit " +
+                "needs no review, never that it had one";
+        }
+    }
+
+    /// <summary>
+    /// Every problem with a <c>Spec=</c> value beyond its shape: it cites what
+    /// the unit implements, and never who read it.
+    /// </summary>
+    public static IEnumerable<string> SpecProblems(string? spec)
+    {
+        if (spec is null)
+            yield break;
+
+        foreach (string term in ReviewClaimsIn(spec))
+        {
+            yield return $"Spec={spec} claims a review by saying '{term}', and a Spec cites what the unit " +
+                "implements, never who read it";
+        }
+    }
+
+    /// <summary>
+    /// The review claims a piece of assessment prose makes, each once, in lower
+    /// case, in the order they appear: <c>verified</c>, <c>approve</c> and its
+    /// forms, <c>reviewer</c>, <c>reviewed by</c>, <c>human review</c> and its
+    /// forms, <c>eligible for release</c>, <c>signed off</c> and
+    /// <c>sign-off</c>, <c>certified</c>, <c>attested</c>, <c>LGTM</c>,
+    /// <c>looks good to me</c> and <c>checked by</c>.
+    ///
+    /// Matched as whole words, so <c>unverified</c> and <c>verification</c>
+    /// are not claims: a criterion about code that verifies a certificate has
+    /// to be able to say so. The owning component matches its terms as
+    /// substrings, which refuses those too. Every term of its list is one of
+    /// these, so a claim it finds standing as a word is found here as well.
+    /// </summary>
+    public static IReadOnlyList<string> ReviewClaimsIn(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        var terms = new List<string>();
+        foreach (Match match in ReviewClaim().Matches(text))
+        {
+            string term = WhitespaceRun().Replace(match.Value.ToLowerInvariant(), " ");
+            if (!terms.Contains(term, StringComparer.Ordinal))
+                terms.Add(term);
+        }
+
+        return terms;
     }
 
     /// <summary>
@@ -104,6 +166,9 @@ public static partial class AssuranceRules
 
             if (annotation.Fields.Count > 1)
                 yield return "EXEMPT is stated beside other fields; an exemption is not an assessment";
+
+            foreach (string problem in ExemptionReasonProblems(reason))
+                yield return problem;
 
             yield break;
         }
@@ -133,6 +198,9 @@ public static partial class AssuranceRules
             if (problem is not null)
                 yield return $"{field.Key}={field.Value} {problem}";
         }
+
+        foreach (string problem in SpecProblems(annotation.Field("Spec")))
+            yield return problem;
 
         static string? Closed(string value, string[] allowed) =>
             allowed.Contains(value, StringComparer.Ordinal)
@@ -174,9 +242,22 @@ public static partial class AssuranceRules
     }
 
     /// <summary>
-    /// A <c>Key=Value</c> field: an identifier, an <c>=</c> that is not part of
-    /// a comparison operator, and a value. The owning component's expression.
+    /// One of this format's fields written as <c>Key=Value</c>: a field name of
+    /// the machine or the human line, in any case, an <c>=</c> that is not part
+    /// of a comparison operator, and a value. The owning component's
+    /// expression with its identifier narrowed to those names.
     /// </summary>
-    [GeneratedRegex(@"(?<![=!<>])\b[A-Za-z_][A-Za-z0-9_.-]*\s*=\s*(?![=])\S+")]
+    [GeneratedRegex(
+        @"(?<![=!<>\w.-])\b(?:Origin|Spec|IP|Security|Resources|Fingerprint|EXEMPT|Previous)\s*=\s*(?![=])\S+",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex FieldOnACriterion();
+
+    /// <summary>A review claim as a whole word or phrase. See <see cref="ReviewClaimsIn"/>.</summary>
+    [GeneratedRegex(
+        @"\b(?:verified|approv(?:e|es|ed|al|als|ing)|reviewers?|reviewed[\s-]+by|human[\s-]*review(?:ed|s)?|eligible\s+for\s+release|sign(?:ed)?[\s-]*off|certified|attested|lgtm|looks\s+good\s+to\s+me|checked[\s-]+by)\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ReviewClaim();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRun();
 }

@@ -97,9 +97,12 @@ public sealed record AssurancePlan(
 /// record, from every file's units as the pass leaves them.
 ///
 /// The format is the owning component's, byte for byte, and so is every
-/// transition. Where that generator would throw (an undefined human line, an
-/// invented reviewer) or delete a comment it cannot prove it wrote, this
-/// refuses the file and says why; nothing is written while any refusal stands.
+/// transition, except that a bare alias is bound only to the version the
+/// machine line records (see <see cref="AssuranceHumanLine"/>). Where that
+/// generator would throw (an undefined human line, an invented reviewer) or
+/// delete a comment it cannot prove it wrote, this refuses the file and says
+/// why, or leaves the comment where it is; nothing is written while any
+/// refusal stands.
 /// </summary>
 public static class AssuranceGenerator
 {
@@ -123,7 +126,10 @@ public static class AssuranceGenerator
             [.. sources.Select(static source => source.RelativePath)],
             corpus.Excluded,
             corpus.Assemblies,
-            config.ClosedToEscapeHatch);
+            config.ClosedToEscapeHatch)
+        {
+            SeparateRecords = corpus.SeparateRecords,
+        };
 
         var problems = new List<AssuranceViolation>();
         var files = new List<AssurancePlannedFile>(sources.Count);
@@ -187,27 +193,35 @@ public static class AssuranceGenerator
     /// <summary>
     /// The first line where an artefact and its regeneration part company, in
     /// the owning component's words, naming the command that fixes it.
+    ///
+    /// An artefact that does not exist is compared as an empty text, as the
+    /// owning component compares it, so the message is that component's (line
+    /// 1, nothing on disk); a line saying that the file is missing follows,
+    /// because an empty "on disk" does not say it.
     /// </summary>
     public static string Describe(AssuranceArtefact artefact, string generateCommand)
     {
         ArgumentNullException.ThrowIfNull(artefact);
         ArgumentNullException.ThrowIfNull(generateCommand);
 
-        if (!artefact.Exists)
-            return $"{artefact.RelativePath} does not exist, and the generator would write it.\n  Run: {generateCommand}";
-
-        return Describe(artefact.RelativePath, artefact.Current, artefact.Desired, 0, generateCommand);
+        return artefact.Exists
+            ? Describe(artefact.RelativePath, artefact.Current, artefact.Desired, 0, generateCommand)
+            : Describe(artefact.RelativePath, string.Empty, artefact.Desired, 0, generateCommand,
+                $"{artefact.RelativePath} does not exist, and the generator would write it.");
     }
 
     /// <summary>
     /// <see cref="Describe(AssuranceArtefact, string)"/> over two texts, with
     /// <paramref name="lineOffset"/> added to the line number reported, for a
-    /// comparison of part of a file.
+    /// comparison of part of a file, and <paramref name="note"/>, when given,
+    /// as a line of its own before the command.
     /// </summary>
-    internal static string Describe(string path, string current, string desired, int lineOffset, string generateCommand)
+    internal static string Describe(
+        string path, string current, string desired, int lineOffset, string generateCommand, string? note = null)
     {
         var onDisk = new AssuranceLines(current);
         var generated = new AssuranceLines(desired);
+        string noted = note is null ? string.Empty : $"\n  {note}";
 
         for (int line = 0; line < Math.Max(onDisk.Count, generated.Count); line++)
         {
@@ -220,7 +234,7 @@ public static class AssuranceGenerator
                     CultureInfo.InvariantCulture,
                     $"{path}({line + 1 + lineOffset}) is not what the generator would write." +
                     $"\n  on disk:   {left}" +
-                    $"\n  generated: {right}" +
+                    $"\n  generated: {right}{noted}" +
                     $"\n  Run: {generateCommand}");
             }
         }
@@ -331,8 +345,15 @@ public static class AssuranceGenerator
 
         // What the generator writes is comments. If the code reads differently
         // afterwards, something was written somewhere it must not be, and the
-        // file is refused rather than written.
-        if (ChangedCode(scan, rescanned, desiredLines) is { } change)
+        // file is refused rather than written. And the header must describe the
+        // file it heads: if what it counted is not what the written file holds
+        // (a block went with a removed comment run, say), it would publish
+        // figures for a file that no longer exists.
+        string? change = ChangedCode(scan, rescanned, desiredLines);
+        if (change is null && AssuranceSummary.Of(after) != AssuranceSummary.Of(counted))
+            change = "the header would count annotations the written file does not carry";
+
+        if (change is not null)
         {
             problems.Add(new AssuranceViolation(
                 "J5",
@@ -369,9 +390,10 @@ public static class AssuranceGenerator
             if (annotation.FalsifiedIfLine is { } criterion)
                 lines.Replace(criterion, AssuranceAnnotation.RenderFalsifiedIfLine(indent, annotation.Criterion));
 
-            string body = AssuranceHumanLine.Refreshed(annotation, fingerprint);
+            string body;
             try
             {
+                body = AssuranceHumanLine.Refreshed(annotation, fingerprint, unit.Where);
                 AssuranceHumanLine.RefuseInventedApproval(unit.Where, annotation.HumanBody, body);
             }
             catch (AssuranceRefusalException refusal)

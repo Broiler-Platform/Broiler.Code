@@ -49,17 +49,86 @@ public sealed class AssuranceGeneratorTests
         Assert.Equal(AssuranceUnitState.HumanPending, After(Plan(("x.cs", text)), ".Fold(int[])").State);
     }
 
+    /// <summary>
+    /// A reviewer who left the fingerprint to the machine gets the version the
+    /// machine line records, which is the one the last generation wrote down
+    /// and the one they can have been reading.
+    /// </summary>
     [Theory(Timeout = 600000)]
     [InlineData("EB")]
     [InlineData("EB; Fingerprint=TBF")]
     [InlineData("  EB ;Fingerprint=TBF ")]
+    [InlineData("Maik Ratzmer")]
     public void A_Reviewer_Who_Left_The_Fingerprint_Gets_It_Filled(string body)
     {
-        AssurancePlan plan = Plan(("x.cs", Probe(body)));
+        AssurancePlan plan = Plan(("x.cs", Probe(body, aiFingerprint: FoldFingerprint)));
+        string reviewer = body.Split(';')[0].Trim();
 
-        Assert.Equal($"// Broiler-Human:        EB; Fingerprint={FoldFingerprint}", LineWith(Desired(plan, "x.cs"), "// Broiler-Human:").TrimStart());
+        Assert.Equal($"// Broiler-Human:        {reviewer}; Fingerprint={FoldFingerprint}", LineWith(Desired(plan, "x.cs"), "// Broiler-Human:").TrimStart());
         Assert.Equal(AssuranceUnitState.Verified, After(plan, ".Fold(int[])").State);
         Assert.Contains("// Human-reviewed:   1/2\n", Desired(plan, "x.cs"), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The code moved after the version the machine line records: whoever
+    /// approved it read that version, so the approval is recorded as outrun
+    /// against it, not sealed onto the rewrite. The owning component seals it.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_Bare_Approval_Of_Code_That_Moved_Since_The_Last_Generation_Becomes_Stale()
+    {
+        string moved = Probe("EB", aiFingerprint: FoldFingerprint)
+            .Replace("        return total;\n", "        System.IO.File.Delete(\"C:/important\");\n        return total;\n", StringComparison.Ordinal);
+        AssurancePlan plan = Plan(("x.cs", moved));
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal($"// Broiler-Human:        STALE; Previous=EB@{FoldFingerprint}", LineWith(Desired(plan, "x.cs"), "// Broiler-Human:").TrimStart());
+        Assert.Equal(AssuranceUnitState.Stale, After(plan, ".Fold(int[])").State);
+    }
+
+    /// <summary>
+    /// A bare approval above a machine line that records no fingerprint yet
+    /// names no version at all, and nothing is written.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_Bare_Approval_Before_Any_Generation_Is_Refused()
+    {
+        string text = Probe("EB");
+        AssurancePlan plan = Plan(("x.cs", text));
+
+        AssuranceViolation refusal = Assert.Single(plan.Problems);
+        Assert.Equal("J4", refusal.Rule);
+        Assert.StartsWith(
+            "The assurance generator will not bind the approval on x.cs(7): Probe.Folds.Fold(int[]) to a version: its " +
+            "human line reads 'EB' and its machine line records Fingerprint=TBF, so nothing says which version EB approved.",
+            refusal.Message,
+            StringComparison.Ordinal);
+        Assert.Equal(text, Desired(plan, "x.cs"));
+    }
+
+    /// <summary>
+    /// A placeholder is not a reviewer. The owning component takes any head
+    /// without an <c>=</c> for one and seals it into a verified approval; here
+    /// each is refused and nothing is written, and none of them counts.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("NOT REVIEWED")]
+    [InlineData("Pending")]
+    [InlineData("PENDING\u200B")]
+    [InlineData("TODO")]
+    [InlineData("n/a")]
+    [InlineData("not-reviewed; Fingerprint=TBF")]
+    public void A_Placeholder_On_The_Human_Line_Is_Refused_And_Never_Verified(string body)
+    {
+        string text = Probe(body, aiFingerprint: FoldFingerprint);
+        AssurancePlan plan = Plan(("x.cs", text));
+
+        AssuranceViolation refusal = Assert.Single(plan.Problems);
+        Assert.Equal("J4", refusal.Rule);
+        Assert.Contains("will not rewrite the human line", refusal.Message, StringComparison.Ordinal);
+        Assert.Equal(text, Desired(plan, "x.cs"));
+        Assert.NotEqual(AssuranceUnitState.Verified, After(plan, ".Fold(int[])").State);
+        Assert.Null(After(plan, ".Fold(int[])").Annotation!.Reviewer);
     }
 
     /// <summary>A reviewer's own assessment is theirs, and survives; the fingerprint moves last.</summary>
@@ -68,7 +137,7 @@ public sealed class AssuranceGeneratorTests
     {
         Assert.Equal(
             $"// Broiler-Human:        EB; Security=High; Resources=1; Fingerprint={FoldFingerprint}",
-            Rewritten(Probe("EB; Fingerprint=TBF; Security=High; Resources=1"), "// Broiler-Human:"));
+            Rewritten(Probe("EB; Fingerprint=TBF; Security=High; Resources=1", aiFingerprint: FoldFingerprint), "// Broiler-Human:"));
     }
 
     [Fact(Timeout = 600000)]
@@ -119,7 +188,9 @@ public sealed class AssuranceGeneratorTests
         Assert.Equal(
             "The assurance generator will not rewrite the human line on x.cs(7): Probe.Folds.Fold(int[]), which " +
             $"reads '{body}'. A human line is one of 'PENDING', a reviewer, a reviewer with a Fingerprint, or " +
-            "'STALE; Previous=<reviewer>@<fingerprint>'. Only a human may create an approval.",
+            "'STALE; Previous=<reviewer>@<fingerprint>'. Only a human may create an approval. A reviewer is an " +
+            "alias: it opens with a letter, holds letters, digits, '.', '_', '-', ''' and single spaces, is at most " +
+            "64 characters long, and is not a placeholder such as TODO, NONE or NOT REVIEWED.",
             refusal.Message);
         Assert.Equal(text, Desired(plan, "x.cs"));
     }
@@ -153,6 +224,13 @@ public sealed class AssuranceGeneratorTests
     [InlineData("Fingerprint=112233", false)]
     [InlineData("EB; Reviewed=yes", false)]
     [InlineData("", false)]
+    [InlineData("NOT REVIEWED", false)]
+    [InlineData("Pending", false)]
+    [InlineData("PENDING​", false)]
+    [InlineData("TODO; Fingerprint=44EBF3", false)]
+    [InlineData("José Menéndez", true)]
+    [InlineData("Two  Spaces", false)]
+    [InlineData("EB@example", false)]
     public void The_Defined_Human_Line_Shapes(string body, bool defined) =>
         Assert.Equal(defined, AssuranceHumanLine.IsDefined(body));
 
@@ -166,7 +244,7 @@ public sealed class AssuranceGeneratorTests
         AssuranceComponentConfig config = Config();
         (string, string)[] files =
         [
-            ("a/Crlf.cs", Probe("EB").Replace("\n", "\r\n", StringComparison.Ordinal)),
+            ("a/Crlf.cs", Probe("EB", aiFingerprint: FoldFingerprint).Replace("\n", "\r\n", StringComparison.Ordinal)),
             ("a/Mixed.cs", "namespace M;\r\npublic sealed class C\n{\r\n    public int Twice(int x) => x * 2;\n}"),
             ("a/Empty.cs", string.Empty),
             ("a/GlobalUsings.cs", "global using System;\nglobal using System.Linq;\n"),
@@ -213,7 +291,7 @@ public sealed class AssuranceGeneratorTests
     [Fact(Timeout = 600000)]
     public void The_Header_Counts_The_Refreshed_States()
     {
-        string desired = Desired(Plan(("x.cs", Probe("EB", security: "High", criterion: "a negative value reaches the total"))), "x.cs");
+        string desired = Desired(Plan(("x.cs", Probe("EB", FoldFingerprint, security: "High", criterion: "a negative value reaches the total"))), "x.cs");
 
         Assert.StartsWith(Header(2, 1, 0, 1, "Low", "High", "1/1", "3/10 max", 1), desired, StringComparison.Ordinal);
     }
@@ -231,6 +309,47 @@ public sealed class AssuranceGeneratorTests
 
         Assert.EndsWith("\n\n" + text, desired, StringComparison.Ordinal);
         Assert.Empty(Replan(plan, Config()).Changes);
+    }
+
+    /// <summary>
+    /// A leading comment that reads like the summary under either vocabulary —
+    /// one opening with a row label, a licence notice saying "OSI-approved",
+    /// a documentation comment saying "approved" above an annotated type — is
+    /// kept by the first generation and by every one after it, block and all:
+    /// two runs give the same bytes, and the header counts what is there. The
+    /// owning component deleted each of them on the second run.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData(AssuranceForgeryVocabulary.Narrow, "// Annotated: grammar tables follow ECMA-262 Annex A.\n")]
+    [InlineData(AssuranceForgeryVocabulary.Narrow,
+        "// Exempt: this table is generated from UnicodeData.txt.\n" +
+        "// Copyright (c) 1991-2024 Unicode, Inc. See https://www.unicode.org/license.txt.\n")]
+    [InlineData(AssuranceForgeryVocabulary.Strict,
+        "// Portions (c) 2009 A Person, under the OSI-approved BSD-3-Clause licence.\n" +
+        "// This notice must be kept.\n")]
+    [InlineData(AssuranceForgeryVocabulary.Strict, "/// <summary>Tracks whether a request was approved.</summary>\n")]
+    public void A_Leading_Comment_In_The_Summarys_Words_Survives_Every_Generation(AssuranceForgeryVocabulary vocabulary, string comment)
+    {
+        AssuranceComponentConfig config = Config(vocabulary);
+        string body =
+            "// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=TBF\n" +
+            "// Broiler-Human:        PENDING\n" +
+            "public class A\n" +
+            "{\n" +
+            "    public int Count;\n" +
+            "}\n";
+        string text = comment + body;
+
+        AssurancePlan first = Plan(config, ("x.cs", text));
+        Assert.Empty(first.Problems);
+        string once = Desired(first, "x.cs");
+        Assert.Contains(comment + "// Broiler-AI:", once, StringComparison.Ordinal);
+        Assert.Contains("// Annotated:        1/1\n", once, StringComparison.Ordinal);
+
+        AssurancePlan second = Replan(first, config);
+        Assert.Empty(second.Problems);
+        Assert.Equal(once, Desired(second, "x.cs"));
+        Assert.All(second.Artefacts, artefact => Assert.True(artefact.IsCurrent, artefact.RelativePath));
     }
 
     [Fact(Timeout = 600000)]

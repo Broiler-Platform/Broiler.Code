@@ -126,7 +126,7 @@ internal sealed class AssuranceSourceText
         {
             if (!File.ReadAllBytes(path).AsSpan().SequenceEqual(Original))
             {
-                problem = "changed on disk while the insert ran; nothing was written to it";
+                problem = "changed on disk since it was read; nothing was written to it";
                 return false;
             }
 

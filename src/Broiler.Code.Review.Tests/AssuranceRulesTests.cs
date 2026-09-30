@@ -124,18 +124,56 @@ public sealed class AssuranceRulesTests
     }
 
     /// <summary>
-    /// Review words are matched as substrings, so a criterion cannot say that
-    /// anyone looked, however it is spelled.
+    /// A criterion cannot say that anyone looked, in any case or spacing, and
+    /// the claim words are whole words: <c>unverified</c> describes code.
     /// </summary>
     [Fact(Timeout = 600000)]
     public void A_Criterion_Never_Claims_A_Review()
     {
         Assert.Equal(
             [
-                "// Broiler-Falsified-If: claims a review by saying 'verified', and a falsification criterion states what would make the unit wrong, never that anyone read it",
                 "// Broiler-Falsified-If: claims a review by saying 'signed off', and a falsification criterion states what would make the unit wrong, never that anyone read it",
             ],
-            AssuranceRules.CriterionProblems("Unverified input is returned; this was Signed Off"));
+            AssuranceRules.CriterionProblems("Unverified input is returned; this was Signed  Off"));
+
+        Assert.Equal(
+            ["approves", "lgtm", "signed-off", "verified"],
+            AssuranceRules.ReviewClaimsIn("never: EB approves this unit, LGTM and signed-off; it is verified"));
+    }
+
+    /// <summary>
+    /// Natural criteria for network code: an unverified peer, and a cookie
+    /// attribute written as the protocol writes it. Neither is a claim or one
+    /// of this format's fields.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("an unverified receiver is accepted as a class instance")]
+    [InlineData("a cookie with SameSite=None is sent on a cross-site request")]
+    [InlineData("a certificate that fails chain verification is accepted")]
+    public void Prose_About_Verification_And_Protocol_Fields_Is_A_Criterion(string criterion) =>
+        Assert.Empty(AssuranceRules.CriterionProblems(criterion));
+
+    /// <summary>
+    /// An exemption reason and a Spec are printed into the report; neither may
+    /// say that somebody reviewed the unit, and the check reads both.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void An_Exemption_Reason_Or_A_Spec_Never_Claims_A_Review()
+    {
+        AssuranceAnnotation exempt = Parse(
+            "// Broiler-AI: EXEMPT=signed-off by EB after human review, LGTM\n// Broiler-Human: PENDING", out _)!;
+        Assert.Equal(
+            ["EXEMPT=signed-off by EB after human review, LGTM claims a review by saying 'signed-off', and an exemption states why a unit needs no review, never that it had one",
+             "EXEMPT=signed-off by EB after human review, LGTM claims a review by saying 'human review', and an exemption states why a unit needs no review, never that it had one",
+             "EXEMPT=signed-off by EB after human review, LGTM claims a review by saying 'lgtm', and an exemption states why a unit needs no review, never that it had one"],
+            AssuranceRules.VocabularyProblems(exempt));
+
+        AssuranceAnnotation spec = Parse(
+            "// Broiler-AI: Origin=AI; Spec=reviewed and approved by EB; IP=Low; Security=Low; Resources=0; Fingerprint=TBF\n// Broiler-Human: PENDING",
+            out _)!;
+        Assert.Equal(
+            ["Spec=reviewed and approved by EB claims a review by saying 'approved', and a Spec cites what the unit implements, never who read it"],
+            AssuranceRules.VocabularyProblems(spec));
     }
 
     [Theory(Timeout = 600000)]

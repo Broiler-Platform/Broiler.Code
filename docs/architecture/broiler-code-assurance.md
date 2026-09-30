@@ -125,7 +125,12 @@ needs a real C# parser. `IAssuranceUnitScanner` is that seam and
 that the [command-line tool](broiler-code-assurance-cli.md) can use it too. The
 desktop heads compose it; `Broiler.Code.Core` does not reference it, which is the
 constraint Phase 0's payload probes produced and which
-`CodeEditorArchitectureTests` still asserts.
+`CodeEditorArchitectureTests` still asserts. The heads compose it with the owning
+component's predicate and preprocessor symbols; they do not read a component's
+`assurance.config.json`. In a component configured with the command-line tool's
+stricter predicate the pane can therefore count a unit exempt that the tool
+counts relevant, and the header guard above is what keeps that from being
+written anywhere.
 
 Where the second level is missing, the difference is reported rather than
 guessed. A unit whose approval names a fingerprint this build cannot compute
@@ -158,10 +163,17 @@ save between every declaration.
 
 There is no roster of permitted reviewers anywhere in the format, and nothing
 here refuses anybody on the grounds of who they are. What is refused is a name
-that would not survive the round trip: the human line is split on `;`, and
-staleness is later recorded as `Previous=name@fingerprint`, so a name carrying
-either delimiter would come back as a different name — or as a body nothing
-recognizes. `PENDING` and `STALE` are refused for the same reason.
+that would not survive the round trip, or that names nobody: the human line is
+split on `;`, and staleness is later recorded as `Previous=name@fingerprint`,
+so a name carrying either delimiter would come back as a different name — or as
+a body nothing recognizes. A name is an alias in the shape the command-line
+generator accepts (`AssuranceVocabulary.IsAlias`): it opens with a letter,
+holds letters, digits, `.`, `_`, `-`, `'` and single spaces, is at most 64
+characters long, carries no invisible character, and has no placeholder word in
+it (`PENDING`, `STALE`, `TODO`, `NONE`, `NOT`, `REVIEWED` and the like). The
+editor and the generator hold a name to the same rule, so the editor never
+writes a line the generator refuses, and a placeholder such as `NOT REVIEWED`
+never counts as an approval.
 
 ## What this closes in the review workspace
 

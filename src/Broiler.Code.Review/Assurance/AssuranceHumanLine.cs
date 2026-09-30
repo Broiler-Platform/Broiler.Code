@@ -31,6 +31,14 @@ public sealed class AssuranceRefusalException : Exception
 /// <c>STALE; Previous=reviewer@fingerprint</c>; and a <c>STALE</c> line stays as
 /// it is. Nothing here can produce a name the source did not already carry, and
 /// <see cref="RefuseInventedApproval"/> checks that on every line it writes.
+///
+/// Two things are narrower than the owning component's generator, and both
+/// close a way to seal an approval nobody gave. A reviewer is an alias
+/// (<see cref="AssuranceVocabulary.IsAlias"/>), not any text without an
+/// <c>=</c>. And a bare alias is bound only to the version the machine line
+/// records, which is the version the generator last wrote down and the one a
+/// reviewer can have been reading; if the code has moved since, the decision
+/// is recorded as outrun rather than moved onto code nobody saw.
 /// </summary>
 public static class AssuranceHumanLine
 {
@@ -42,15 +50,28 @@ public static class AssuranceHumanLine
     /// The body the generator writes for <paramref name="annotation"/>, whose
     /// unit now fingerprints to <paramref name="currentFingerprint"/>.
     /// </summary>
-    public static string Refreshed(AssuranceAnnotation annotation, string currentFingerprint)
+    /// <param name="annotation">The block as the source states it.</param>
+    /// <param name="currentFingerprint">The unit's fingerprint now.</param>
+    /// <param name="where">The unit, as <c>path(line): name</c>, for a refusal.</param>
+    /// <exception cref="AssuranceRefusalException">
+    /// A bare alias on a unit whose machine line records no fingerprint yet, so
+    /// nothing says which version was approved.
+    /// </exception>
+    public static string Refreshed(AssuranceAnnotation annotation, string currentFingerprint, string where)
     {
         ArgumentNullException.ThrowIfNull(annotation);
         ArgumentNullException.ThrowIfNull(currentFingerprint);
+        ArgumentNullException.ThrowIfNull(where);
 
         // PENDING stays PENDING, and a STALE line stays exactly as a human
         // will find it: only a human clears one.
         if (annotation.HumanIsPending || annotation.Reviewer is null)
             return annotation.HumanIsStale ? annotation.HumanBody : AssuranceVocabulary.Pending;
+
+        // A line outside the defined shapes is not rewritten here at all; the
+        // guard every rewrite passes through refuses it with its own reason.
+        if (!IsDefined(annotation.HumanBody))
+            return annotation.HumanBody;
 
         string reviewer = annotation.Reviewer;
         string? approved = annotation.HumanFingerprint;
@@ -66,9 +87,27 @@ public static class AssuranceHumanLine
 
         // A reviewer left the machine field to the machine. This is the only
         // transition into VERIFIED the generator makes, and the name was
-        // already on the line.
+        // already on the line. It is made only when the code is the version the
+        // machine line records: that is the version the last generation wrote
+        // down, and the only one the reviewer can be shown to have had in front
+        // of them. The owning component fills whatever the code is now, which
+        // seals a rewrite made after the reviewer read it.
         if (approved is null || string.Equals(approved, AssuranceVocabulary.ToBeFilled, StringComparison.Ordinal))
-            return $"{reviewer}{assessment}; {FingerprintMarker}{currentFingerprint}";
+        {
+            string? recorded = annotation.RecordedFingerprint;
+            if (string.Equals(recorded, currentFingerprint, StringComparison.Ordinal))
+                return $"{reviewer}{assessment}; {FingerprintMarker}{currentFingerprint}";
+
+            if (AssuranceVocabulary.IsWellFormedFingerprint(recorded))
+                return $"{AssuranceVocabulary.Stale}; {PreviousMarker}{reviewer}@{recorded}";
+
+            throw new AssuranceRefusalException(
+                $"The assurance generator will not bind the approval on {where} to a version: its human line " +
+                $"reads '{annotation.HumanBody}' and its machine line records " +
+                $"{(recorded is null ? "no Fingerprint" : $"Fingerprint={recorded}")}, so nothing says which " +
+                $"version {reviewer} approved. Run the generator before recording a decision, or state the " +
+                $"version approved as '{reviewer}; {FingerprintMarker}<six hex>'.");
+        }
 
         if (string.Equals(approved, currentFingerprint, StringComparison.Ordinal))
             return $"{reviewer}{assessment}; {FingerprintMarker}{approved}";
@@ -82,9 +121,11 @@ public static class AssuranceHumanLine
 
     /// <summary>
     /// True for the four human-line shapes the format defines and nothing else:
-    /// <c>PENDING</c>; a reviewer; a reviewer followed by any of
+    /// <c>PENDING</c>; a reviewer alias; an alias followed by any of
     /// <c>Fingerprint=</c>, <c>IP=</c>, <c>Security=</c> and <c>Resources=</c>;
-    /// or <c>STALE; Previous=reviewer@fingerprint</c>.
+    /// or <c>STALE; Previous=reviewer@fingerprint</c>. The head must be an
+    /// alias (<see cref="AssuranceVocabulary.IsAlias"/>), where the owning
+    /// component takes anything without an <c>=</c>.
     /// </summary>
     public static bool IsDefined(string body)
     {
@@ -104,11 +145,8 @@ public static class AssuranceHumanLine
                 parts[1].IndexOf('@', StringComparison.Ordinal) > PreviousMarker.Length;
         }
 
-        if (string.Equals(parts[0], AssuranceVocabulary.Pending, StringComparison.Ordinal) ||
-            parts[0].Contains('=', StringComparison.Ordinal))
-        {
+        if (!AssuranceVocabulary.IsAlias(parts[0]))
             return false;
-        }
 
         for (int index = 1; index < parts.Length; index++)
         {
@@ -176,7 +214,10 @@ public static class AssuranceHumanLine
                 $"reads '{before}'. A human line is one of '{AssuranceVocabulary.Pending}', a " +
                 "reviewer, a reviewer with a Fingerprint, or " +
                 $"'{AssuranceVocabulary.Stale}; {PreviousMarker}<reviewer>@<fingerprint>'. " +
-                "Only a human may create an approval.");
+                "Only a human may create an approval." +
+                $" A reviewer is an alias: it opens with a letter, holds letters, digits, '.', '_', '-', ''' and " +
+                $"single spaces, is at most {AssuranceVocabulary.MaxAliasLength} characters long, and is not a " +
+                "placeholder such as TODO, NONE or NOT REVIEWED.");
         }
 
         IReadOnlySet<string> permitted = ReviewerNames(before);

@@ -181,9 +181,18 @@ public sealed class AssuranceCheckTests
             "  Run: broiler-review assurance generate",
             stale.Message);
 
-        Assert.Contains(
-            AssuranceChecks.Run(plan, Config(), new AssuranceCheckOptions()),
-            static violation => violation.Message.StartsWith("CODE-ASSURANCE.md does not exist, and the generator would write it.", StringComparison.Ordinal));
+        // A missing artefact is compared as an empty file, in the owning
+        // component's words, at line 1, and then said to be missing.
+        AssuranceViolation missing = AssuranceChecks.Run(plan, Config(), new AssuranceCheckOptions())
+            .Single(static violation => violation.Rule == "J5" && violation.File == "CODE-ASSURANCE.md");
+        Assert.Equal(1, missing.Line);
+        Assert.Equal(
+            "CODE-ASSURANCE.md(1) is not what the generator would write.\n" +
+            "  on disk:   \n" +
+            "  generated: # Probe Code Assurance\n" +
+            "  CODE-ASSURANCE.md does not exist, and the generator would write it.\n" +
+            "  Run: broiler-review assurance generate",
+            missing.Message);
     }
 
     /// <summary>
@@ -237,6 +246,165 @@ public sealed class AssuranceCheckTests
         Assert.True(AssuranceHeader.IsSummaryLine("/// generated - do not edit manually", AssuranceForgeryVocabulary.Narrow));
         Assert.False(AssuranceHeader.IsSummaryLine("// The reviewer approved it.", AssuranceForgeryVocabulary.Narrow));
         Assert.False(AssuranceHeader.IsSummaryLine("string s = \"// Exempt: x\";", AssuranceForgeryVocabulary.Strict));
+    }
+
+    /// <summary>
+    /// A forged summary in a block comment is a comment like any other, and a
+    /// reworded one — the banner inside a sentence, doubled spaces, a tab, a
+    /// space before the colon, a space for the hyphen — reads as what it
+    /// imitates, under the default vocabulary. A string is still not a comment.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData(
+        "/*\n" +
+        "   Broiler Code Assurance\n" +
+        "   ----------------------\n" +
+        "   Human-reviewed: 3/3 (reviewer: EB, approved, eligible for release)\n" +
+        "   Unverified: 0\n" +
+        "   GENERATED - DO NOT EDIT MANUALLY\n" +
+        "*/\n",
+        "Broiler Code Assurance")]
+    [InlineData("// Note - Broiler Code Assurance summary\n", "// Note - Broiler Code Assurance summary")]
+    [InlineData("//   Human reviewed:  3/3 (reviewer EB, approved)\n", "//   Human reviewed:  3/3 (reviewer EB, approved)")]
+    [InlineData("// Broiler  Code  Assurance\n", "// Broiler  Code  Assurance")]
+    [InlineData("//\tHuman-reviewed : 3/3\n", "//\tHuman-reviewed : 3/3")]
+    [InlineData("/** Unverified: 0 */\n", "/** Unverified: 0 */")]
+    public void J5_A_Forged_Summary_Is_Found_In_Any_Comment_And_In_Any_Spelling(string forgery, string reported)
+    {
+        foreach (AssuranceForgeryVocabulary vocabulary in new[] { AssuranceForgeryVocabulary.Narrow, AssuranceForgeryVocabulary.Strict })
+        {
+            string text = Folds().Replace("public static class Folds", forgery + "public static class Folds", StringComparison.Ordinal);
+
+            AssuranceViolation forged = Assert.Single(
+                CheckGenerated(Config(vocabulary), null, ("x.cs", text)),
+                static violation => violation.Rule == "J5" && violation.Message.Contains("summary line", StringComparison.Ordinal));
+            Assert.Contains($"carries the assurance summary line '{reported}'", forged.Message, StringComparison.Ordinal);
+        }
+
+        string quoted = Folds().Replace(
+            "public static class Folds\n{\n",
+            "public static class Folds\n{\n    private static string s_text = \"\"\"\n        // Human-reviewed: 3/3\n        \"\"\";\n",
+            StringComparison.Ordinal);
+        Assert.Empty(CheckGenerated(Config(), null, ("x.cs", quoted)));
+    }
+
+    /// <summary>
+    /// A tree the generator has just written passes the check, in a file
+    /// whose units used to share names: a partial type declared twice and
+    /// overloaded indexers. No annotation work was needed to get there.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void J7_A_Freshly_Generated_Tree_With_Partials_And_Indexers_Has_No_Duplicate_Names()
+    {
+        const string Text =
+            "namespace Probe;\n" +
+            "\n" +
+            "public sealed partial class Box\n" +
+            "{\n" +
+            "    public int this[int i] => i * 2;\n" +
+            "\n" +
+            "    public int this[string s] => s.Length * 2;\n" +
+            "}\n" +
+            "\n" +
+            "public sealed partial class Box\n" +
+            "{\n" +
+            "}\n";
+
+        IReadOnlyList<AssuranceViolation> found = CheckGenerated(Config(), null, ("x.cs", Text));
+
+        Assert.DoesNotContain(found, static violation => violation.Rule == "J7");
+        Assert.Equal(
+            ["x.cs(20): Probe.Box", "x.cs(22): Probe.Box.this[int]", "x.cs(24): Probe.Box.this[string]", "x.cs(27): Probe.Box#2"],
+            found.Where(static violation => violation.Rule == "J1").Select(static violation => violation.Message.Split(" is relevant", 2)[0]));
+    }
+
+    /// <summary>
+    /// A manifest violation about a unit or a file of the tree is anchored at
+    /// that unit's line or that file, so a pull request shows it beside the
+    /// change; one about an entry the tree lacks stays on the manifest. Every
+    /// one names the command that resolves it.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void J7_Violations_Land_On_The_Unit_They_Are_About()
+    {
+        AssuranceComponentConfig config = Config();
+        AssurancePlan current = Replan(Plan(config, ("x.cs", Folds())), config);
+        AssuranceArtefact manifest = current.Artefacts.Single(static artefact => artefact.Kind == AssuranceArtefactKind.Manifest);
+        string fold = Fingerprint(Folds(), ".Fold(int[])");
+
+        string tampered = manifest.Current
+            .Replace($"\"fingerprint\": \"{fold}\"", "\"fingerprint\": \"000000\"", StringComparison.Ordinal)
+            .Replace("\"name\": \"Probe.Folds\"", "\"name\": \"Probe.Gone\"", StringComparison.Ordinal);
+
+        AssuranceViolation[] found =
+        [
+            .. AssuranceManifest.Violations(
+                manifest.RelativePath,
+                current.Files.Select(static file => new AssuranceManifestFile(file.Source.RelativePath, file.FileFingerprint)),
+                current.UnitsAfter,
+                tampered,
+                "generate-it"),
+        ];
+
+        Assert.Equal(
+            [
+                ("x.cs", (int?)22, "x.cs: Probe.Folds is a code unit in the product tree and assurance.manifest.json does not cover it, so nothing records a change to it"),
+                ("x.cs", 26, $"x.cs: Probe.Folds.Fold(int[]) is recorded in assurance.manifest.json as 000000 and the current code computes {fold}"),
+                ("assurance.manifest.json", null, "x.cs: assurance.manifest.json carries an entry for Probe.Gone, which is not a code unit in the product tree"),
+            ],
+            found.Select(static violation => (violation.File, violation.Line, violation.Message)));
+        Assert.All(found, static violation => Assert.Equal("generate-it", violation.Remedy));
+    }
+
+    /// <summary>
+    /// With sources only, the manifest's prose is not compared, so it is read
+    /// for a review claim as it is on disk, and anything at its top beside its
+    /// three properties is reported.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Sources_Only_Still_Reads_The_Manifests_Prose_And_Shape_On_Disk()
+    {
+        AssuranceComponentConfig config = Config();
+        AssurancePlan current = Replan(Plan(config, ("x.cs", Folds())), config);
+        var artefacts = current.Artefacts.ToDictionary(static artefact => artefact.RelativePath, static artefact => artefact.Current);
+
+        artefacts["assurance.manifest.json"] = artefacts["assurance.manifest.json"]
+            .Replace(
+                "\"$comment\": [\n",
+                "\"$comment\": [\n    \"Every unit here was reviewed by EB and approved; eligible for release.\",\n",
+                StringComparison.Ordinal)
+            .Replace("  \"files\": [", "  \"approvals\": { \"reviewer\": \"EB\" },\n  \"files\": [", StringComparison.Ordinal);
+
+        AssurancePlan edited = AssuranceGenerator.Plan(
+            new AssuranceCorpus([.. current.Files.Select(static file => file.Source)], [], ["Probe"], artefacts), ScannerFor(config), config);
+
+        AssuranceViolation[] found = [.. AssuranceChecks.Run(edited, config, new AssuranceCheckOptions(SourcesOnly: true))];
+
+        Assert.Contains(found, static violation => violation.Rule == "J9" && violation.File == "assurance.manifest.json" &&
+            violation.Message.Contains("reviewed by EB and approved", StringComparison.Ordinal));
+        Assert.Contains(found, static violation => violation.Rule == "J7" &&
+            violation.Message == "assurance.manifest.json carries the top-level properties $comment, approvals, files, units; " +
+                "the generator writes $comment, files, units, in that order, and nothing else");
+    }
+
+    /// <summary>A missing block and a fingerprint out of date say which command resolves them.</summary>
+    [Fact(Timeout = 600000)]
+    public void J1_And_J3_Name_Their_Remedy()
+    {
+        AssuranceComponentConfig config = Config() with
+        {
+            RegenerateCommand = "dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -- assurance generate --root Probe",
+        };
+        IReadOnlyList<AssuranceViolation> found = AssuranceChecks.Run(Plan(config, ("x.cs", Unannotated)), config, new AssuranceCheckOptions());
+
+        Assert.Equal(
+            "dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -- assurance list --root Probe prints what the unit needs, " +
+            "and dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -- assurance insert --root Probe " +
+            "--assessments <file.json> writes an assessment (or write an EXEMPT= block where the configuration allows one)",
+            found.First(static violation => violation.Rule == "J1").Remedy);
+
+        IReadOnlyList<AssuranceViolation> stale = AssuranceChecks.Run(Plan(config, ("x.cs", Folds())), config, new AssuranceCheckOptions());
+        Assert.Equal(config.RegenerateCommand, stale.First(static violation => violation.Rule == "J3").Remedy);
     }
 
     [Fact(Timeout = 600000)]
@@ -335,12 +503,16 @@ public sealed class AssuranceCheckTests
             "Origin=AI; IP=Low; Security=Critical; Resources=1; Fingerprint=TBF", criterion: "a negative length is accepted"))));
     }
 
+    /// <summary>The method's assessment with the fingerprint a generation writes onto it.</summary>
+    private static string Generated(string fields = "Origin=AI; IP=Low; Security=Low; Resources=1") =>
+        $"{fields}; Fingerprint={Fingerprint(Folds(), ".Fold(int[])")}";
+
     [Fact(Timeout = 600000)]
     public void J11_Unresolved_Units_Block_Only_A_Release()
     {
         Assert.Empty(CheckGenerated(Config(), null, ("x.cs", Folds())));
 
-        string[] found = [.. CheckGenerated(Config(), new AssuranceCheckOptions(Release: true), ("x.cs", Folds(human: "EB")))
+        string[] found = [.. CheckGenerated(Config(), new AssuranceCheckOptions(Release: true), ("x.cs", Folds(Generated(), human: "EB")))
             .Select(static violation => $"{violation.Rule} {violation.Message}")];
 
         Assert.Equal(["J11 x.cs(22): Probe.Folds is HUMAN_PENDING and its human line reads 'PENDING'"], found);
@@ -354,9 +526,9 @@ public sealed class AssuranceCheckTests
     [Fact(Timeout = 600000)]
     public void J9_The_Generated_Text_Claims_No_Review_The_Annotations_Do_Not_Hold()
     {
-        string current = Folds(human: "EB");
+        string current = Folds(Generated(), human: "EB");
         string outrun = Folds(human: "EB; Fingerprint=112233").Replace("class Folds", "class Other", StringComparison.Ordinal);
-        string approved = Folds(human: "EB; Fingerprint=TBF", fields: "Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=TBF", criterion: "a zero is returned for a non-empty array")
+        string approved = Folds(human: "EB; Fingerprint=TBF", fields: Generated("Origin=AI; IP=Low; Security=High; Resources=1"), criterion: "a zero is returned for a non-empty array")
             .Replace("class Folds", "class Third", StringComparison.Ordinal);
 
         IReadOnlyList<AssuranceViolation> found = CheckGenerated(

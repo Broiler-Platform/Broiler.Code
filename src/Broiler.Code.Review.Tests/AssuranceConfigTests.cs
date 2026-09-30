@@ -29,6 +29,19 @@ public sealed class AssuranceConfigTests
         Assert.Equal("HUMAN_REVIEW.md", config.Artefacts.HumanReview);
         Assert.Equal("assurance.manifest.json", config.Artefacts.Manifest);
         Assert.Equal("docs/adr", config.AdrDirectory);
+        Assert.True(config.ExcludeBuildOutputAtAnyDepth);
+        Assert.Equal(AssuranceExemptionPredicate.Strict, config.ExemptionPredicate);
+    }
+
+    /// <summary>The owning component's rules, each by its own property.</summary>
+    [Fact(Timeout = 600000)]
+    public void The_Owning_Components_Rules_Are_Chosen_Explicitly()
+    {
+        AssuranceComponentConfig config = AssuranceComponentConfig.Parse(
+            """{ "projects": [ "a/a.csproj" ], "excludeBuildOutputAtAnyDepth": false, "exemptionPredicate": "owning-component" }""");
+
+        Assert.False(config.ExcludeBuildOutputAtAnyDepth);
+        Assert.Equal(AssuranceExemptionPredicate.OwningComponent, config.ExemptionPredicate);
     }
 
     [Fact(Timeout = 600000)]
@@ -105,6 +118,11 @@ public sealed class AssuranceConfigTests
     [InlineData("""{ "projects": [ "a/a.csproj", "a/a.csproj" ] }""", "names a project twice")]
     [InlineData("""{ "projects": [ "a/a.csproj" ], "manifestComment": [ "Hand-written." ] }""", "$.manifestComment must open with a line starting 'GENERATED - DO NOT EDIT MANUALLY'")]
     [InlineData("""{ "projects": [ "a/a.csproj" ], "manifestComment": [ "GENERATED - DO NOT EDIT MANUALLY.", 3 ] }""", "$.manifestComment[1] must be a string")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "artefacts": { "report": ".git/hooks/pre-commit" } }""", "names a path inside a '.git' directory")]
+    [InlineData("""{ "projects": [ "a/.GIT/a.csproj" ] }""", "names a path inside a '.git' directory")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "component": "Probe\necho owned" }""", "$.component must be one line")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "exemptionPredicate": "vm" }""", "must be \"strict\" or \"owning-component\"")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "excludeBuildOutputAtAnyDepth": "yes" }""", "must be true or false")]
     [InlineData("""[ ]""", "$ must be an object")]
     [InlineData("""{ "projects": """, "not valid JSON")]
     public void A_Mistake_Is_An_Error_Naming_Where_It_Is(string json, string expected)

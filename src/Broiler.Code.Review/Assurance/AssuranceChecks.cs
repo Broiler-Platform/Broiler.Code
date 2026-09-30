@@ -56,6 +56,11 @@ public static class AssuranceChecks
 
         var violations = new List<AssuranceViolation>(plan.Problems);
         var closed = new HashSet<string>(config.ClosedToEscapeHatch, StringComparer.Ordinal);
+        string generate = plan.Context.GenerateCommand;
+        string annotate =
+            $"{AssuranceReportContext.Sibling(generate, "list")} prints what the unit needs, and " +
+            $"{AssuranceReportContext.Sibling(generate, "insert")} --assessments <file.json> writes an assessment " +
+            "(or write an EXEMPT= block where the configuration allows one)";
 
         foreach (AssurancePlannedFile file in plan.Files)
         {
@@ -68,7 +73,12 @@ public static class AssuranceChecks
             foreach (AssuranceCorpusUnit unit in units)
             {
                 if (unit.IsRelevant && unit.Annotation is null)
-                    violations.Add(At("J1", unit, $"{unit.Where} is relevant and carries no assurance annotation"));
+                {
+                    violations.Add(At("J1", unit, $"{unit.Where} is relevant and carries no assurance annotation") with
+                    {
+                        Remedy = annotate,
+                    });
+                }
 
                 if (unit.Annotation?.ExemptReason is { } reason && closed.Contains(unit.Assembly))
                 {
@@ -92,12 +102,12 @@ public static class AssuranceChecks
             if (options.AdrRecords is { } records)
                 violations.AddRange(SpecViolations(units, records, config.AdrDirectory));
 
-            violations.AddRange(FingerprintViolations(units));
+            violations.AddRange(FingerprintViolations(units).Select(violation => violation with { Remedy = generate }));
 
             if (AssuranceHeader.DuplicateBanners(path, file.Source.Text) is { } duplicate)
                 violations.Add(duplicate);
 
-            if (AssuranceHeader.ForgedSummary(path, file.Source.Text, config.ForgeryVocabulary) is { } forged)
+            if (AssuranceHeader.ForgedSummary(path, file.Source.Text, file.Scan.CommentLines, config.ForgeryVocabulary) is { } forged)
                 violations.Add(forged);
 
             if (config.ForbidDirectives)
@@ -127,7 +137,8 @@ public static class AssuranceChecks
             manifest.RelativePath,
             plan.Files.Select(static file => new AssuranceManifestFile(file.Source.RelativePath, file.FileFingerprint)),
             plan.UnitsAfter,
-            manifest.Current));
+            manifest.Current,
+            generate));
 
         violations.AddRange(ReviewClaims(plan, options.SourcesOnly));
 
@@ -347,7 +358,7 @@ public static class AssuranceChecks
                 yield return new AssuranceViolation(
                     "J5",
                     artefact.RelativePath,
-                    artefact.Exists ? AssuranceGenerator.FirstDifference(artefact.Current, artefact.Desired) : null,
+                    artefact.Exists ? AssuranceGenerator.FirstDifference(artefact.Current, artefact.Desired) : 1,
                     AssuranceGenerator.Describe(artefact, generate));
                 continue;
             }
@@ -364,7 +375,7 @@ public static class AssuranceChecks
                 yield return new AssuranceViolation(
                     "J5",
                     artefact.RelativePath,
-                    null,
+                    artefact.Exists ? null : 1,
                     artefact.Exists
                         ? $"{artefact.RelativePath} has no 'files' array where the generator writes one.\n  Run: {generate}"
                         : AssuranceGenerator.Describe(artefact, generate));
@@ -388,6 +399,10 @@ public static class AssuranceChecks
     /// The review-claim rule over what the generator would write: the header
     /// of each source file against that file's units, and every other artefact
     /// against all of them.
+    ///
+    /// With sources only, the manifest is read as it is on disk instead. Its
+    /// prose is not compared there, so its <c>$comment</c> is text nothing
+    /// else holds to anything, and it is exactly where a claim would be put.
     /// </summary>
     private static IEnumerable<AssuranceViolation> ReviewClaims(AssurancePlan plan, bool sourcesOnly)
     {
@@ -398,13 +413,14 @@ public static class AssuranceChecks
             if (sourcesOnly && artefact.Kind is AssuranceArtefactKind.Report or AssuranceArtefactKind.HumanReview)
                 continue;
 
+            string text = sourcesOnly && artefact.Kind == AssuranceArtefactKind.Manifest ? artefact.Current : artefact.Desired;
             IReadOnlyList<AssuranceViolation> found = artefact.Kind == AssuranceArtefactKind.Source
                 ? AssuranceReviewClaims.Violations(
                     artefact.RelativePath,
                     AssuranceHeader.GeneratedHeaderLines(artefact.Desired),
                     [.. byFile[artefact.RelativePath]])
                 : AssuranceReviewClaims.Violations(
-                    artefact.RelativePath, Lines(artefact.Desired), plan.UnitsAfter);
+                    artefact.RelativePath, Lines(text), plan.UnitsAfter);
 
             foreach (AssuranceViolation violation in found)
                 yield return violation;

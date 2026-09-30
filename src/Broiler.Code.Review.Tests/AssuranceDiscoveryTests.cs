@@ -41,7 +41,164 @@ public sealed class AssuranceDiscoveryTests
 
         Assert.Equal(["src/A/Sub/Y.cs", "src/A/X.cs"], set.Files.Select(file => file.RelativePath));
         Assert.All(set.Files, file => Assert.Equal("Custom.A", file.Project.AssemblyName));
-        Assert.Equal([new ComponentExcludedFile("src/A/Gen/X.g.cs", "regenerated")], set.Excluded);
+
+        // The project's own bin is its build output and goes unmentioned;
+        // everything else left out is named, with why.
+        Assert.Equal(
+            [
+                ("src/A/Deep/obj/Debug/W.AssemblyAttributes.cs", "inside the build output directory 'src/A/Deep/obj/'"),
+                ("src/A/Gen/X.g.cs", "regenerated"),
+                ("src/A/Nested/", "a nested checkout: it holds a .git entry"),
+                ("src/A/Stale/", "a nested checkout: it holds a .git entry"),
+            ],
+            set.Excluded.Select(static file => (file.RelativePath, file.Reason.Split(", which", 2)[0].Split(", so", 2)[0])));
+    }
+
+    /// <summary>
+    /// The owning component's rule leaves out only a project's own build
+    /// output; a file in a deeper <c>obj</c> is compiled, and covered.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Build_Output_Below_The_Project_Root_Is_Covered_Under_The_Owning_Components_Rule()
+    {
+        using var component = new TemporaryComponent();
+        component.Project("src/A/A.csproj");
+        component.Write("src/A/obj/Debug/A.AssemblyInfo.cs", Relevant);
+        component.Write("src/A/Internal/obj/Gate.cs", Relevant);
+
+        ComponentSourceSet set = ComponentSources.Discover(
+            component.Root,
+            AssuranceComponentConfig.Parse("""{ "projects": [ "src/A/A.csproj" ], "excludeBuildOutputAtAnyDepth": false }"""));
+
+        Assert.Equal(["src/A/Internal/obj/Gate.cs"], set.Files.Select(file => file.RelativePath));
+        Assert.Empty(set.Excluded);
+    }
+
+    /// <summary>
+    /// A linked directory or file is not followed, and is named as not
+    /// covered: a link can lead out of the component, and writing through
+    /// one writes there.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Links_Are_Not_Followed_And_Are_Named()
+    {
+        using var component = new TemporaryComponent();
+        component.Project("src/A/A.csproj");
+        component.Write("src/A/X.cs", Relevant);
+        component.Write("elsewhere/Outside.cs", Relevant);
+        Assert.True(component.TryLinkDirectory("src/A/Linked", component.PathOf("elsewhere")), "no link could be made");
+
+        ComponentSourceSet set = ComponentSources.Discover(
+            component.Root, AssuranceComponentConfig.Parse("""{ "projects": [ "src/A/A.csproj" ] }"""));
+
+        Assert.Equal(["src/A/X.cs"], set.Files.Select(file => file.RelativePath));
+        ComponentExcludedFile linked = Assert.Single(set.Excluded);
+        Assert.Equal("src/A/Linked/", linked.RelativePath);
+        Assert.Equal("a junction or symbolic link, which the tool does not follow", linked.Reason);
+    }
+
+    /// <summary>
+    /// A project whose directory is reached through a link is refused, as is
+    /// an artefact written through one: either would write outside the root.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_Project_Or_An_Artefact_Behind_A_Link_Is_Refused()
+    {
+        using var component = new TemporaryComponent();
+        using var outside = new TemporaryComponent();
+        outside.Project("Ext.csproj");
+        outside.Write("Outside.cs", Relevant);
+        Assert.True(component.TryLinkDirectory("ext", outside.Root), "no link could be made");
+
+        ComponentSourceException project = Assert.Throws<ComponentSourceException>(() => ComponentSources.Discover(
+            component.Root, AssuranceComponentConfig.Parse("""{ "projects": [ "ext/Ext.csproj" ] }""")));
+        Assert.Contains("lies inside 'ext', which is a junction or symbolic link", project.Message, StringComparison.Ordinal);
+
+        component.Project("src/A/A.csproj");
+        component.Write("assurance.config.json",
+            """{ "projects": [ "src/A/A.csproj" ], "artefacts": { "manifest": "ext/assurance.manifest.json" }, "spdx": { "copyright": [ "x" ], "license": "MIT" } }""");
+
+        (int exit, _, string error) = component.Run("generate", "--root", component.Root);
+        Assert.Equal(AssuranceCommand.UsageError, exit);
+        Assert.Contains("the artefact 'ext/assurance.manifest.json' lies inside 'ext', which is a junction or symbolic link", error, StringComparison.Ordinal);
+        Assert.False(File.Exists(outside.PathOf("assurance.manifest.json")));
+    }
+
+    /// <summary>
+    /// A file a project compiles in from outside its directory is covered and
+    /// credited to that project's assembly; one outside the root is named as
+    /// not covered, and so is an include this tool cannot evaluate.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Files_A_Project_Compiles_In_From_Elsewhere_Are_Covered_Or_Named()
+    {
+        using var component = new TemporaryComponent();
+        component.Write("src/Prod/Prod.csproj",
+            "<Project Sdk=\"Microsoft.NET.Sdk\">\n" +
+            "  <ItemGroup>\n" +
+            "    <Compile Include=\"..\\Shared\\Linked.cs\" Link=\"Linked.cs\" />\n" +
+            "    <Compile Include=\"..\\..\\..\\Outside.cs\" />\n" +
+            "    <Compile Include=\"$(SharedRoot)\\Other.cs\" />\n" +
+            "    <Compile Include=\"..\\Glob\\**\\*.cs\" />\n" +
+            "  </ItemGroup>\n" +
+            "</Project>\n");
+        component.Write("src/Directory.Build.props",
+            "<Project><ItemGroup><Compile Include=\"$(MSBuildThisFileDirectory)SharedAssemblyInfo.cs\" /></ItemGroup></Project>\n");
+        component.Write("src/Prod/Widget.cs", Relevant);
+        component.Write("src/Shared/Linked.cs", Relevant);
+        component.Write("src/SharedAssemblyInfo.cs", "[assembly: System.CLSCompliant(false)]\n");
+        component.Write("src/Glob/Deep/G.cs", Relevant);
+        component.Write("src/Glob/G.txt", "not code\n");
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(component.Root)!, "Outside.cs"), Relevant);
+
+        try
+        {
+            ComponentSourceSet set = ComponentSources.Discover(
+                component.Root, AssuranceComponentConfig.Parse("""{ "projects": [ "src/Prod/Prod.csproj" ] }"""));
+
+            Assert.Equal(
+                ["src/Glob/Deep/G.cs", "src/Prod/Widget.cs", "src/Shared/Linked.cs", "src/SharedAssemblyInfo.cs"],
+                set.Files.Select(file => file.RelativePath));
+            Assert.All(set.Files, file => Assert.Equal("Prod", file.Project.AssemblyName));
+
+            Assert.Equal(
+                [
+                    ("$(SharedRoot)\\Other.cs", "a <Compile Include> in src/Prod/Prod.csproj that this tool cannot evaluate"),
+                    ("../Outside.cs", "compiled into Prod by <Compile Include=\"..\\..\\..\\Outside.cs\"> in src/Prod/Prod.csproj, and outside the component root"),
+                ],
+                set.Excluded.Select(static file => (file.RelativePath, file.Reason.Split(", so", 2)[0].Split(", where", 2)[0])));
+        }
+        finally
+        {
+            File.Delete(Path.Combine(Path.GetDirectoryName(component.Root)!, "Outside.cs"));
+        }
+    }
+
+    /// <summary>
+    /// An assembly name the tool cannot read off the project file is refused
+    /// rather than guessed, and so is an assembly closed to the escape hatch
+    /// that no configured project builds: either would close nothing while the
+    /// report said it was closed.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Assembly_Names_Are_Read_Exactly_Or_Refused()
+    {
+        using var component = new TemporaryComponent();
+        component.Write("src/Product/Product.csproj",
+            "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup Condition=\"'$(Configuration)' == 'Release'\">" +
+            "<AssemblyName>Prod</AssemblyName></PropertyGroup></Project>\n");
+        component.Project("src/B/B.csproj", assemblyName: "Broiler.B");
+
+        ComponentSourceException conditional = Assert.Throws<ComponentSourceException>(() => ComponentSources.Discover(
+            component.Root, AssuranceComponentConfig.Parse("""{ "projects": [ "src/Product/Product.csproj" ] }""")));
+        Assert.Contains("sets AssemblyName to 'Prod' under a condition", conditional.Message, StringComparison.Ordinal);
+
+        ComponentSourceException closed = Assert.Throws<ComponentSourceException>(() => ComponentSources.Discover(
+            component.Root,
+            AssuranceComponentConfig.Parse("""{ "projects": [ "src/B/B.csproj" ], "closedToEscapeHatch": [ "B" ] }""")));
+        Assert.Equal(
+            "assurance.config.json: $.closedToEscapeHatch names 'B', which no configured project builds; they build Broiler.B",
+            closed.Message);
     }
 
     /// <summary>
@@ -121,10 +278,82 @@ public sealed class AssuranceDiscoveryTests
         ComponentSourceSet set = ComponentSources.Discover(
             component.Root, AssuranceComponentConfig.Parse("""{ "projects": [ "src/A/A.csproj" ] }"""));
         ComponentSourceSet restricted = ComponentSources.Restrict(
-            set, ["# changed files", "src\\A\\Y.cs", "./README.md", ""], out IReadOnlyList<string> unknown);
+            set,
+            component.Root,
+            ["# changed files", "src\\A\\Y.cs", ".//src//A/./X.cs", Path.Combine(component.Root, "src", "A", "Y.cs"), "./README.md", "src/A/Typo.cs", ""],
+            out IReadOnlyList<ComponentUnknownPath> unknown);
 
-        Assert.Equal(["src/A/Y.cs"], restricted.Files.Select(file => file.RelativePath));
-        Assert.Equal(["README.md"], unknown);
+        Assert.Equal(["src/A/X.cs", "src/A/Y.cs"], restricted.Files.Select(file => file.RelativePath));
+        Assert.Equal(
+            [
+                new ComponentUnknownPath("README.md", "does not exist under the component root"),
+                new ComponentUnknownPath("src/A/Typo.cs", "does not exist under the component root"),
+            ],
+            unknown);
+    }
+
+    /// <summary>
+    /// A path differing from a covered file only in case names that file on
+    /// Windows, whose file system does not tell them apart, and is reported
+    /// with the file it would have named elsewhere.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_Path_In_Another_Case_Names_The_File_Only_Where_The_File_System_Folds_Case()
+    {
+        using var component = new TemporaryComponent();
+        component.Project("src/A/A.csproj");
+        component.Write("src/A/Widget.cs", Relevant);
+
+        ComponentSourceSet set = ComponentSources.Discover(
+            component.Root, AssuranceComponentConfig.Parse("""{ "projects": [ "src/A/A.csproj" ] }"""));
+        ComponentSourceFile? found = ComponentSources.Find(set, component.Root, "SRC/a/widget.CS", out ComponentUnknownPath? problem);
+
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.Equal("src/A/Widget.cs", found?.RelativePath);
+        }
+        else
+        {
+            Assert.Null(found);
+            Assert.Contains("is not a covered file; the covered file 'src/A/Widget.cs' differs from it in case only", problem!.Reason, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
+    /// A list run that matched nothing it was named, or could not read a
+    /// covered file, does not report success: an agent confirming that no
+    /// unit is left must not be told so by a typo.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_Files_List_That_Names_Nothing_Covered_Says_So_And_Fails_When_Strict()
+    {
+        using var component = new TemporaryComponent();
+        component.Project("src/A/A.csproj");
+        component.Write("assurance.config.json", """{ "projects": [ "src/A/A.csproj" ], "exclude": [ { "glob": "**/*.g.cs", "reason": "regenerated" } ] }""");
+        component.Write("src/A/X.cs", Relevant);
+        component.Write("src/A/X.g.cs", Relevant);
+        component.Write("list.txt", "src/A/Xx.cs\nsrc/A/X.g.cs\n");
+
+        (int exit, string output, _) = component.Run("list", "--root", component.Root, "--files", component.PathOf("list.txt"), "--json", "-");
+        Assert.Equal(0, exit);
+
+        using JsonDocument report = JsonDocument.Parse(output);
+        Assert.Equal(2, report.RootElement.GetProperty("totals").GetProperty("unknown").GetInt32());
+        Assert.Equal(
+            [("src/A/X.g.cs", "is not covered: regenerated"), ("src/A/Xx.cs", "does not exist under the component root")],
+            report.RootElement.GetProperty("unknownFiles").EnumerateArray()
+                .Select(static file => (file.GetProperty("file").GetString(), file.GetProperty("reason").GetString())));
+        Assert.Equal(
+            ["src/A/X.g.cs"],
+            report.RootElement.GetProperty("excluded").EnumerateArray().Select(static file => file.GetProperty("file").GetString()));
+
+        (int strict, _, _) = component.Run("list", "--root", component.Root, "--files", component.PathOf("list.txt"), "--strict");
+        Assert.Equal(AssuranceCommand.Refused, strict);
+
+        component.WriteBytes("src/A/X.cs", [0x6E, 0x61, 0x6D, 0xE9, 0x0A]);
+        (int unreadable, string text, _) = component.Run("list", "--root", component.Root);
+        Assert.Equal(AssuranceCommand.Refused, unreadable);
+        Assert.Contains("src/A/X.cs  unreadable: the file is not valid UTF-8", text, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -229,6 +458,12 @@ public sealed class AssuranceDiscoveryTests
             "N.C.Run()  [NEW] half-block: line 4 carries an assurance line with no '// Broiler-AI:' line above it",
             output,
             StringComparison.Ordinal);
+
+        // A detail that already names its reason is printed once.
+        component.Write("src/A/Y.cs", "namespace N;\npublic sealed class D\n{\n    public int Count;\n}\n");
+        (_, string all, _) = component.Run("list", "--root", component.Root, "--all-units");
+        Assert.Contains("N.D.Count  [EXEMPT] exempt: FieldDeclaringStorage", all, StringComparison.Ordinal);
+        Assert.DoesNotContain("exempt: exempt:", all, StringComparison.Ordinal);
     }
 
     [Fact(Timeout = 600000)]

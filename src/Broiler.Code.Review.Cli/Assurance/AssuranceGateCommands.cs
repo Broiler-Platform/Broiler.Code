@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Broiler.Code.Language.CSharp.Assurance;
 using Broiler.Code.Review.Assurance;
 
 namespace Broiler.Code.Review.Cli.Assurance;
@@ -27,42 +26,42 @@ internal static partial class AssuranceCommand
         RequireSpdx(config);
 
         ComponentCorpus loaded = ComponentCorpus.Load(root, config);
-        AssurancePlan plan = AssuranceGenerator.Plan(
-            loaded.Corpus, new CSharpAssuranceFileScanner(config.PreprocessorSymbols), config);
+        AssurancePlan plan = AssuranceGenerator.Plan(loaded.Corpus, ScannerFor(config), config);
         string component = ComponentName(root, config);
 
-        // Any refusal stops the whole run. A refused file is carried through
-        // unchanged, so writing the rest would leave a report and a manifest
-        // that describe a tree the files do not match.
+        // Any refusal stops the whole run, and every refusal is reported in
+        // the same run, so fixing one does not uncover the next. A refused
+        // file is carried through unchanged, so writing the rest would leave a
+        // report and a manifest that describe a tree the files do not match.
         List<AssuranceViolation> refusals = [.. loaded.Problems, .. plan.Problems];
-        if (refusals.Count > 0)
-        {
-            error.WriteLine($"broiler-review assurance: the generator refused {Plural(refusals.Count, "time")}; nothing was written:");
-            foreach (AssuranceViolation refusal in refusals)
-                error.WriteLine($"  {refusal.Rule} {Indent(refusal.Message)}");
-
-            return Refused;
-        }
-
         List<AssuranceArtefact> changes = [.. plan.Changes];
 
-        List<AssuranceArtefact> handWritten = [.. changes.Where(static artefact =>
-            artefact.Kind != AssuranceArtefactKind.Source &&
-            artefact.Exists &&
-            artefact.Current.Length > 0 &&
-            !AssuranceGenerator.IsGenerated(artefact.Current))];
+        List<AssuranceArtefact> handWritten = options.Has("--adopt")
+            ? []
+            : [.. changes.Where(static artefact =>
+                artefact.Kind != AssuranceArtefactKind.Source &&
+                artefact.Exists &&
+                artefact.Current.Length > 0 &&
+                !AssuranceGenerator.IsGenerated(artefact.Current))];
 
-        if (handWritten.Count > 0 && !options.Has("--adopt"))
+        if (refusals.Count > 0)
         {
-            foreach (AssuranceArtefact artefact in handWritten)
-            {
-                error.WriteLine(
-                    $"broiler-review assurance: {artefact.RelativePath} exists and was not written by the generator " +
-                    $"(it carries no '{AssuranceGenerator.GeneratedNotice}' line). Point " +
-                    $"\"artefacts.{AssuranceGenerator.ConfigKey(artefact.Kind)}\" in {AssuranceComponentConfig.FileName} " +
-                    "at another file to keep it, or pass --adopt to replace it.");
-            }
+            error.WriteLine($"broiler-review assurance: the generator refused {Plural(refusals.Count, "time")}:");
+            foreach (AssuranceViolation refusal in refusals)
+                error.WriteLine($"  {refusal.Rule} {Indent(refusal.Message)}");
+        }
 
+        foreach (AssuranceArtefact artefact in handWritten)
+        {
+            error.WriteLine(
+                $"broiler-review assurance: {artefact.RelativePath} exists and was not written by the generator " +
+                $"(it carries no '{AssuranceGenerator.GeneratedNotice}' line). Point " +
+                $"\"artefacts.{AssuranceGenerator.ConfigKey(artefact.Kind)}\" in {AssuranceComponentConfig.FileName} " +
+                "at another file to keep it, or pass --adopt to replace it.");
+        }
+
+        if (refusals.Count > 0 || handWritten.Count > 0)
+        {
             error.WriteLine("broiler-review assurance: nothing was written.");
             return Refused;
         }
@@ -85,7 +84,9 @@ internal static partial class AssuranceCommand
 
         // Sources first: the component artefacts describe them, and a failure
         // part way leaves the record stale, which check then reports, rather
-        // than a record describing files that were never written.
+        // than a record describing files that were never written. A write that
+        // fails (the file changed on disk meanwhile, or could not be written)
+        // does not undo the writes before it; the next run writes the rest.
         var failed = new List<string>();
         foreach (AssuranceArtefact artefact in changes.OrderBy(static artefact => artefact.Kind))
         {
@@ -108,12 +109,24 @@ internal static partial class AssuranceCommand
     private static int Check(Options options, TextWriter output, TextWriter error)
     {
         string root = RootOf(options);
+        string? jsonPath = options.Value("--json");
+        PrepareOut(jsonPath);
+
+        string? prefix = options.Value("--annotation-prefix");
+        int? limit = null;
+        if (options.Value("--annotation-limit") is { } text)
+        {
+            if (!int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int value))
+                throw new UsageException($"--annotation-limit: '{text}' is not a whole number");
+
+            limit = value;
+        }
+
         AssuranceComponentConfig config = ReadableConfig(root, options, "check");
         RequireSpdx(config);
 
         ComponentCorpus loaded = ComponentCorpus.Load(root, config);
-        AssurancePlan plan = AssuranceGenerator.Plan(
-            loaded.Corpus, new CSharpAssuranceFileScanner(config.PreprocessorSymbols), config);
+        AssurancePlan plan = AssuranceGenerator.Plan(loaded.Corpus, ScannerFor(config), config);
 
         bool release = options.Has("--release");
         bool sourcesOnly = options.Has("--sources-only");
@@ -122,18 +135,35 @@ internal static partial class AssuranceCommand
 
         List<AssuranceViolation> violations = [.. loaded.Problems, .. AssuranceChecks.Run(plan, config, checkOptions)];
         string component = ComponentName(root, config);
-        string? jsonPath = options.Value("--json");
 
         // With the JSON report on standard output, the annotations move to
         // standard error so that the output stays one parseable document.
         TextWriter annotations = jsonPath == "-" ? error : output;
+        var shown = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (AssuranceViolation violation in violations)
-            annotations.WriteLine(WorkflowCommand(violation));
+        {
+            int count = shown.GetValueOrDefault(violation.Rule) + 1;
+            shown[violation.Rule] = count;
+            if (limit is null || count <= limit)
+                annotations.WriteLine(WorkflowCommand(violation, prefix));
+        }
+
+        // A runner shows a handful of annotations per step, and a component
+        // that has just adopted the scheme has thousands; the count says what
+        // the lines left out, and the JSON report holds every one.
+        foreach ((string rule, int count) in shown.OrderBy(static pair => RuleOrder(pair.Key)))
+        {
+            if (limit is { } most && count > most)
+                annotations.WriteLine(Invariant($"{component}: {count - most} further {rule} violations are not shown as annotations (--annotation-limit {most})."));
+        }
 
         annotations.WriteLine(Summary(component, violations, release, sourcesOnly));
 
-        if (jsonPath is not null)
-            WriteOut(jsonPath, AssuranceJson.CheckReport(component, release, sourcesOnly, violations), output, error);
+        if (jsonPath is not null &&
+            !WriteOut(jsonPath, AssuranceJson.CheckReport(component, release, sourcesOnly, violations), output, error))
+        {
+            return Refused;
+        }
 
         return violations.Count == 0 ? Done : Refused;
     }
@@ -145,8 +175,7 @@ internal static partial class AssuranceCommand
         RequireSpdx(config);
 
         ComponentCorpus loaded = ComponentCorpus.Load(root, config);
-        AssurancePlan plan = AssuranceGenerator.Plan(
-            loaded.Corpus, new CSharpAssuranceFileScanner(config.PreprocessorSymbols), config);
+        AssurancePlan plan = AssuranceGenerator.Plan(loaded.Corpus, ScannerFor(config), config);
         IReadOnlyList<AssuranceCorpusUnit> units = plan.UnitsBefore;
         AssuranceSummary summary = AssuranceSummary.Of(units);
 
@@ -236,19 +265,25 @@ internal static partial class AssuranceCommand
     /// <summary>
     /// A GitHub workflow command, so each violation lands on its file in a
     /// pull request's diff. Its message may span lines; they are escaped as
-    /// the runner requires.
+    /// the runner requires. A remedy follows the message as a <c>Run:</c>
+    /// line. <paramref name="prefix"/> goes before the file's root-relative
+    /// path, for a workflow that runs from a directory above the component.
     /// </summary>
-    internal static string WorkflowCommand(AssuranceViolation violation)
+    internal static string WorkflowCommand(AssuranceViolation violation, string? prefix = null)
     {
         var properties = new List<string>();
         if (violation.File is { } file)
-            properties.Add("file=" + EscapeProperty(file));
+        {
+            string located = prefix is { Length: > 0 } ? prefix.Replace('\\', '/').TrimEnd('/') + "/" + file : file;
+            properties.Add("file=" + EscapeProperty(located));
+        }
 
         if (violation.Line is { } line)
             properties.Add("line=" + line.ToString(CultureInfo.InvariantCulture));
 
+        string remedy = violation.Remedy is null ? string.Empty : $"\n  Run: {violation.Remedy}";
         string head = properties.Count == 0 ? "::error" : "::error " + string.Join(',', properties);
-        return $"{head}::{EscapeData(violation.Rule + " " + violation.Message)}";
+        return $"{head}::{EscapeData(violation.Rule + " " + violation.Message + remedy)}";
     }
 
     private static string EscapeData(string value) => value

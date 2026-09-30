@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace Broiler.Code.Review.Assurance;
 
@@ -11,11 +12,18 @@ namespace Broiler.Code.Review.Assurance;
 ///
 /// The removal follows the owning component's generator: a file whose first
 /// line is an SPDX line has its leading <c>//</c> run removed through the
-/// <c>GENERATED</c> marker and one blank line, and then every further leading
-/// comment run that reads like a summary block. Where that generator would
-/// delete something it cannot prove it wrote, this refuses instead:
+/// <c>GENERATED</c> marker and one blank line. That generator then removes
+/// every further leading comment run that reads like a summary block; this one
+/// removes a further run only when it is a copy of the generated block itself
+/// (every line one the generator writes, through a marker of its own). Where
+/// that generator would delete something it cannot prove it wrote, this
+/// leaves it or refuses instead:
 ///
 /// <list type="bullet">
+/// <item>a comment run under the header that merely uses the summary's
+/// words — a licence notice mentioning an OSI-approved licence, a comment
+/// opening with <c>Exempt:</c>, a documentation comment, a block — is left
+/// where it is, and the check reports it if it reads as a summary;</item>
 /// <item>a line between the SPDX lines and the marker that is neither a header
 /// line nor summary vocabulary, such as a licence sentence someone put
 /// there;</item>
@@ -31,6 +39,12 @@ namespace Broiler.Code.Review.Assurance;
 /// </summary>
 public static class AssuranceHeader
 {
+    /// <summary>
+    /// The nine row labels in the narrow vocabulary's form: lower case, a hyphen
+    /// read as a space, without the colon.
+    /// </summary>
+    private static readonly string[] NormalizedRowLabels =
+        [.. AssuranceBanner.RowLabels.Select(static label => label.TrimEnd(':').Replace('-', ' ').ToLowerInvariant())];
     /// <summary>
     /// The owning component's summary vocabulary, matched case-insensitively
     /// anywhere in a comment line. Its <c>reviewer</c> and <c>approved</c> are
@@ -120,15 +134,76 @@ public static class AssuranceHeader
     }
 
     /// <summary>
-    /// A violation naming the first summary line below the generated marker,
-    /// and how many there are; otherwise null. Below the header, the generator
-    /// neither writes nor strips anything, so a summary block there survives
-    /// every generation and only this finds it.
+    /// True for one line of comment text that reads like part of a generated
+    /// summary, wherever the comment is and whatever delimits it: a
+    /// <c>//</c>, <c>///</c> or <c>/* */</c> comment, or disabled text.
+    ///
+    /// The text is compared after its delimiters are removed, its whitespace
+    /// collapsed and its case folded, so rewording by spacing, tabs, case or a
+    /// hyphen does not hide it. Under the narrow vocabulary it is a summary
+    /// line when it mentions the banner or the marker anywhere, or when it
+    /// opens with one of the nine row labels followed by a colon (a space may
+    /// stand for the hyphen in <c>Human-reviewed</c>, and spaces may stand
+    /// before the colon). The strict vocabulary adds the owning component's
+    /// words anywhere in the line.
     /// </summary>
-    public static AssuranceViolation? ForgedSummary(string path, string text, AssuranceForgeryVocabulary vocabulary)
+    public static bool IsSummaryComment(string comment, AssuranceForgeryVocabulary vocabulary)
+    {
+        ArgumentNullException.ThrowIfNull(comment);
+
+        string content = CommentContent(comment);
+        if (content.Length == 0)
+            return false;
+
+        if (vocabulary == AssuranceForgeryVocabulary.Strict &&
+            StrictVocabulary.Any(term => content.Contains(term, StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        // Every run of anything but a letter or a digit read as one space, so
+        // "Broiler-Code  Assurance" and "GENERATED: do not edit, manually" are
+        // the phrases they imitate.
+        string words = WordsOf(content);
+        if (words.Contains("broiler code assurance", StringComparison.Ordinal) ||
+            words.Contains("generated do not edit manually", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        string labelled = content.Replace('-', ' ');
+        foreach (string label in NormalizedRowLabels)
+        {
+            if (!labelled.StartsWith(label, StringComparison.Ordinal))
+                continue;
+
+            if (labelled[label.Length..].TrimStart().StartsWith(':'))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// A violation naming the first summary comment line below the generated
+    /// marker, and how many there are; otherwise null. Below the header, the
+    /// generator neither writes nor strips anything, so a summary block there
+    /// survives every generation and only this finds it.
+    ///
+    /// The comments are read from the parser's trivia, so a row label inside a
+    /// string is not one, and one inside a block comment, a documentation
+    /// comment or disabled text is.
+    /// </summary>
+    /// <param name="path">The file, for the message.</param>
+    /// <param name="text">The file's text, to find its header.</param>
+    /// <param name="comments">Every comment line of the file, as the scanner reports them.</param>
+    /// <param name="vocabulary">What marks a line as a summary line.</param>
+    public static AssuranceViolation? ForgedSummary(
+        string path, string text, IReadOnlyList<AssuranceCommentLine> comments, AssuranceForgeryVocabulary vocabulary)
     {
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(comments);
 
         var lines = new AssuranceLines(text);
         int header = -1;
@@ -141,28 +216,82 @@ public static class AssuranceHeader
             }
         }
 
-        int first = -1;
+        AssuranceCommentLine? first = null;
         int count = 0;
-        for (int index = header + 1; index < lines.Count; index++)
+        foreach (AssuranceCommentLine comment in comments)
         {
-            if (!IsSummaryLine(lines[index], vocabulary))
+            if (comment.Line <= header || !IsSummaryComment(comment.Text, vocabulary))
                 continue;
 
-            if (first < 0)
-                first = index;
-
+            first ??= comment;
             count++;
         }
 
-        return first < 0
+        return first is not { } found
             ? null
             : new AssuranceViolation(
                 "J5",
                 path,
-                first + 1,
+                found.Line + 1,
                 string.Create(
                     CultureInfo.InvariantCulture,
-                    $"{path}({first + 1}) carries the assurance summary line '{lines[first].Trim()}' below the generated header, and {count} such line(s) sit there; the generated block is the only one a file may carry"));
+                    $"{path}({found.Line + 1}) carries the assurance summary line '{found.Text.Trim()}' below the generated header, and {count} such line(s) sit there; the generated block is the only one a file may carry"));
+    }
+
+    /// <summary>
+    /// A comment line without its delimiters, whitespace collapsed to single
+    /// spaces, in lower case: <c>"  //\tHuman-reviewed : 3/3"</c> is
+    /// <c>"human-reviewed : 3/3"</c>.
+    /// </summary>
+    private static string CommentContent(string comment)
+    {
+        string text = comment.Trim();
+        if (text.EndsWith("*/", StringComparison.Ordinal))
+            text = text[..^2];
+
+        text = text.TrimStart('/', '*', '!').Trim();
+
+        var content = new StringBuilder(text.Length);
+        bool space = false;
+        foreach (char character in text)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                space = content.Length > 0;
+                continue;
+            }
+
+            if (space)
+                content.Append(' ');
+
+            space = false;
+            content.Append(char.ToLowerInvariant(character));
+        }
+
+        return content.ToString();
+    }
+
+    private static string WordsOf(string content)
+    {
+        var words = new StringBuilder(content.Length);
+        bool gap = false;
+        foreach (char character in content)
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                if (gap && words.Length > 0)
+                    words.Append(' ');
+
+                gap = false;
+                words.Append(character);
+            }
+            else
+            {
+                gap = true;
+            }
+        }
+
+        return words.ToString();
     }
 
     /// <summary>
@@ -259,7 +388,8 @@ public static class AssuranceHeader
                     CultureInfo.InvariantCulture,
                     $"{path} opens with a comment run the generator did not write (line {index + 1}: " +
                     $"'{lines[index]}'). It will neither delete that run nor stack a second licence header " +
-                    $"above it: state its SPDX lines in spdx or spdxOverrides and delete the run, or exclude the file.");
+                    $"above it: state exactly the run's lines in spdx or in an spdxOverrides entry for this file, " +
+                    $"so that the generated header replaces the run, or exclude the file.");
             }
 
             through = run;
@@ -275,9 +405,16 @@ public static class AssuranceHeader
         RemoveLeading(lines, through);
         separators = removed;
 
-        // A summary block pasted directly under the real one would otherwise be
-        // carried through verbatim by every generation.
-        while (LeadingRunIsSummary(lines, vocabulary))
+        // A copy of the generated block pasted directly under the real one
+        // would otherwise be carried through verbatim by every generation, so
+        // it goes too — but only a copy: every line of the run through its own
+        // marker is a line the generator writes. A run that merely uses the
+        // summary's words is somebody's comment. The owning component deletes
+        // that as well, which on a second run took away a licence notice or a
+        // documentation comment, and the assurance block under it, that the
+        // first run had kept; it stays, and the check reports it if it reads
+        // as a summary.
+        while (LeadingRunIsGeneratedCopy(lines))
             RemoveLeadingCommentRun(lines);
 
         return null;
@@ -334,31 +471,40 @@ public static class AssuranceHeader
         return -1;
     }
 
-    private static bool LeadingRunIsSummary(AssuranceLines lines, AssuranceForgeryVocabulary vocabulary)
+    /// <summary>
+    /// True when the file opens with a copy of the generated block: a
+    /// <c>//</c> run holding the marker, every line of it up to that marker a
+    /// line the generator writes. A <c>///</c> line or an assurance block line
+    /// is neither, so a run holding one is never a copy.
+    /// </summary>
+    private static bool LeadingRunIsGeneratedCopy(AssuranceLines lines)
     {
-        int run = LeadingCommentRun(lines);
-        for (int index = 0; index < run; index++)
+        int marker = MarkerIn(lines, LeadingCommentRun(lines));
+        if (marker < 0)
+            return false;
+
+        for (int index = 0; index <= marker; index++)
         {
-            if (IsSummaryLine(lines[index], vocabulary))
-                return true;
+            if (!IsHeaderShaped(lines[index]))
+                return false;
         }
 
-        return false;
+        return true;
     }
 
     /// <summary>
-    /// Removes the leading <c>//</c> run through its own marker when it has
-    /// one, else whole, and one blank line after it: the owning component's
-    /// rule for a forged block.
+    /// Removes the leading <c>//</c> run through its own marker, and one blank
+    /// line after it: the owning component's rule for a forged block, applied
+    /// only to a copy of the generated one.
     /// </summary>
     private static void RemoveLeadingCommentRun(AssuranceLines lines)
     {
         int run = LeadingCommentRun(lines);
-        if (run == 0)
+        int marker = MarkerIn(lines, run);
+        if (marker < 0)
             return;
 
-        int marker = MarkerIn(lines, run);
-        int through = marker >= 0 ? marker + 1 : run;
+        int through = marker + 1;
 
         if (through < lines.Count && lines[through].Trim().Length == 0)
             through++;

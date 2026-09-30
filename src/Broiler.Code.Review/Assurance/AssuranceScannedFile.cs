@@ -76,7 +76,21 @@ public sealed record AssuranceScannedFile(
     string FileFingerprint,
     IReadOnlyList<AssuranceDirective> Directives,
     IReadOnlyList<int> AssuranceCommentLines,
-    int LineCount);
+    int LineCount)
+{
+    /// <summary>
+    /// Every line of every comment in the file, documentation comments and
+    /// disabled text included, in document order: where a forged summary can
+    /// be written. A comment spanning three lines is three entries. Empty when
+    /// the scanner does not say.
+    /// </summary>
+    public IReadOnlyList<AssuranceCommentLine> CommentLines { get; init; } = [];
+}
+
+/// <summary>One physical line of one comment.</summary>
+/// <param name="Line">Zero-based line.</param>
+/// <param name="Text">The comment's text on that line, delimiters included: <c>// x</c>, <c>/* x</c>, <c> * x */</c>.</param>
+public readonly record struct AssuranceCommentLine(int Line, string Text);
 
 /// <summary>
 /// Scans a whole file for the command-line tool.

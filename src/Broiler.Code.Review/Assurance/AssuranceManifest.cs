@@ -150,30 +150,56 @@ public static class AssuranceManifest
 
     /// <summary>
     /// Every disagreement between a manifest text and the tree: missing,
-    /// extra, stale and duplicate unit and file entries, in the owning
+    /// extra, stale and duplicate unit and file entries, and anything at the
+    /// top of the manifest beside its three properties, in the owning
     /// component's words. Keys are (file, name), so two units of one name in
-    /// one file are reported, because an entry could not address either.
+    /// one file are reported, because an entry could not address either (the
+    /// scanner makes names unique within a file, so that is a defect here).
+    ///
+    /// A violation about a unit in the tree is anchored at that unit's file
+    /// and line, and one about a covered file at that file, so that a pull
+    /// request shows it beside the change that caused it; only an entry the
+    /// tree does not have, and the manifest's own shape, are anchored at the
+    /// manifest.
     /// </summary>
+    /// <param name="manifestPath">The manifest, for messages.</param>
+    /// <param name="files">The covered files and their fingerprints.</param>
+    /// <param name="units">Every unit of the tree.</param>
+    /// <param name="manifestText">The manifest as it is on disk; empty when it does not exist.</param>
+    /// <param name="remedy">The command that rewrites the manifest, for every violation it resolves.</param>
     public static IReadOnlyList<AssuranceViolation> Violations(
         string manifestPath,
         IEnumerable<AssuranceManifestFile> files,
         IEnumerable<AssuranceCorpusUnit> units,
-        string manifestText)
+        string manifestText,
+        string? remedy = null)
     {
         ArgumentNullException.ThrowIfNull(manifestPath);
         ArgumentNullException.ThrowIfNull(files);
+        ArgumentNullException.ThrowIfNull(units);
         ArgumentNullException.ThrowIfNull(manifestText);
 
-        var messages = new List<string>();
-        var expected = new Dictionary<(string File, string Name), AssuranceManifestEntry>();
+        var violations = new List<AssuranceViolation>();
+        var expected = new Dictionary<(string File, string Name), (AssuranceManifestEntry Entry, int Line)>();
 
-        foreach (AssuranceManifestEntry entry in Entries(units))
+        AssuranceViolation Whole(string message) => new("J7", manifestPath, null, message) { Remedy = remedy };
+
+        AssuranceViolation AtUnit(string file, int line, string message) => new("J7", file, line, message) { Remedy = remedy };
+
+        foreach ((AssuranceManifestEntry entry, int line) in units
+            .Select(static unit => (Entry: Entry(unit), unit.Line))
+            .OrderBy(static unit => unit.Entry.File, StringComparer.Ordinal)
+            .ThenBy(static unit => unit.Entry.Name, StringComparer.Ordinal)
+            .ThenBy(static unit => unit.Entry.Fingerprint, StringComparer.Ordinal))
         {
-            if (!expected.TryAdd((entry.File, entry.Name), entry))
+            if (!expected.TryAdd((entry.File, entry.Name), (entry, line)))
             {
-                messages.Add(
+                violations.Add(new AssuranceViolation(
+                    "J7",
+                    entry.File,
+                    line,
                     $"{entry.File} declares more than one unit named {entry.Name}, and a manifest " +
-                    "entry addresses a unit by its file and its name");
+                    "entry addresses a unit by its file and its name"));
             }
         }
 
@@ -181,39 +207,41 @@ public static class AssuranceManifest
         // component goes on to report every unit and every file as missing
         // from it, which for a large component is thousands of lines saying
         // the same thing.
+        var messages = new List<string>();
         List<AssuranceManifestEntry>? read = ReadUnits(manifestPath, manifestText, messages);
+        violations.AddRange(messages.Select(Whole));
         if (read is null)
-            return [.. messages.Select(message => new AssuranceViolation("J7", manifestPath, null, message))];
+            return violations;
 
         var recorded = new Dictionary<(string File, string Name), AssuranceManifestEntry>();
         foreach (AssuranceManifestEntry entry in read)
         {
             if (!recorded.TryAdd((entry.File, entry.Name), entry))
-                messages.Add($"{manifestPath} carries more than one entry for {entry.Name} in {entry.File}");
+                violations.Add(Whole($"{manifestPath} carries more than one entry for {entry.Name} in {entry.File}"));
         }
 
-        foreach (((string File, string Name) key, AssuranceManifestEntry entry) in expected.OrderBy(static pair => pair.Key, KeyOrder.Instance))
+        foreach (((string File, string Name) key, (AssuranceManifestEntry entry, int line)) in expected.OrderBy(static pair => pair.Key, KeyOrder.Instance))
         {
             if (!recorded.TryGetValue(key, out AssuranceManifestEntry? found))
             {
-                messages.Add(
+                violations.Add(AtUnit(entry.File, line,
                     $"{entry.File}: {entry.Name} is a code unit in the product tree and " +
-                    $"{manifestPath} does not cover it, so nothing records a change to it");
+                    $"{manifestPath} does not cover it, so nothing records a change to it"));
                 continue;
             }
 
             if (!string.Equals(found.Fingerprint, entry.Fingerprint, StringComparison.Ordinal))
             {
-                messages.Add(
+                violations.Add(AtUnit(entry.File, line,
                     $"{entry.File}: {entry.Name} is recorded in {manifestPath} as " +
-                    $"{found.Fingerprint} and the current code computes {entry.Fingerprint}");
+                    $"{found.Fingerprint} and the current code computes {entry.Fingerprint}"));
             }
 
             if (!string.Equals(found.Exemption, entry.Exemption, StringComparison.Ordinal) || found.Exempt != entry.Exempt)
             {
-                messages.Add(
+                violations.Add(AtUnit(entry.File, line,
                     $"{entry.File}: {entry.Name} is recorded in {manifestPath} as {found.Exemption} " +
-                    $"and the predicate answers {entry.Exemption}");
+                    $"and the predicate answers {entry.Exemption}"));
             }
         }
 
@@ -221,14 +249,64 @@ public static class AssuranceManifest
         {
             if (!expected.ContainsKey(key))
             {
-                messages.Add(
+                violations.Add(Whole(
                     $"{entry.File}: {manifestPath} carries an entry for {entry.Name}, which is not " +
-                    "a code unit in the product tree");
+                    "a code unit in the product tree"));
             }
         }
 
-        messages.AddRange(FileViolations(manifestPath, files, manifestText));
-        return [.. messages.Select(message => new AssuranceViolation("J7", manifestPath, null, message))];
+        foreach ((string? file, string message) in FileViolations(manifestPath, files, manifestText))
+        {
+            violations.Add(file is null
+                ? Whole(message)
+                : new AssuranceViolation("J7", file, null, message) { Remedy = remedy });
+        }
+
+        violations.AddRange(ShapeViolations(manifestPath, manifestText).Select(Whole));
+        return violations;
+    }
+
+    private static AssuranceManifestEntry Entry(AssuranceCorpusUnit unit) =>
+        new(unit.Name, unit.File, unit.IsExempt, unit.Exemption, unit.Fingerprint);
+
+    /// <summary>
+    /// Anything at the top of the manifest but its three properties, in their
+    /// order, and a <c>$comment</c> that is not an array of strings. A check
+    /// that compares only the arrays reads nothing else, so anything else there
+    /// is unread text in a generated record.
+    /// </summary>
+    private static IEnumerable<string> ShapeViolations(string manifestPath, string text)
+    {
+        JsonDocument document;
+        try
+        {
+            document = JsonDocument.Parse(text);
+        }
+        catch (JsonException)
+        {
+            yield break;
+        }
+
+        using (document)
+        {
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+                yield break;
+
+            string[] names = [.. document.RootElement.EnumerateObject().Select(static property => property.Name)];
+            string[] layout = ["$comment", "files", "units"];
+            if (!names.SequenceEqual(layout, StringComparer.Ordinal))
+            {
+                yield return $"{manifestPath} carries the top-level properties {string.Join(", ", names)}; " +
+                    $"the generator writes {string.Join(", ", layout)}, in that order, and nothing else";
+            }
+
+            if (document.RootElement.TryGetProperty("$comment", out JsonElement comment) &&
+                (comment.ValueKind != JsonValueKind.Array ||
+                 comment.EnumerateArray().Any(static line => line.ValueKind != JsonValueKind.String)))
+            {
+                yield return $"{manifestPath} carries a '$comment' that is not an array of strings";
+            }
+        }
     }
 
     /// <summary>
@@ -263,50 +341,56 @@ public static class AssuranceManifest
         return escaped.ToString();
     }
 
-    private static List<string> FileViolations(
+    /// <summary>
+    /// The file-entry disagreements, each with the covered file it is about,
+    /// or null when it is about the manifest itself.
+    /// </summary>
+    private static List<(string? File, string Message)> FileViolations(
         string manifestPath, IEnumerable<AssuranceManifestFile> files, string manifestText)
     {
-        var messages = new List<string>();
+        var found = new List<(string?, string)>();
         var expected = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (AssuranceManifestFile file in files)
             expected[file.File] = file.Fingerprint;
 
+        var messages = new List<string>();
         List<AssuranceManifestFile>? read = ReadFiles(manifestPath, manifestText, messages);
+        found.AddRange(messages.Select(static message => ((string?)null, message)));
         if (read is null)
-            return messages;
+            return found;
 
         var recorded = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (AssuranceManifestFile entry in read)
         {
             if (!recorded.TryAdd(entry.File, entry.Fingerprint))
-                messages.Add($"{manifestPath} carries more than one file entry for {entry.File}");
+                found.Add((null, $"{manifestPath} carries more than one file entry for {entry.File}"));
         }
 
         foreach ((string file, string fingerprint) in expected.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
         {
-            if (!recorded.TryGetValue(file, out string? found))
+            if (!recorded.TryGetValue(file, out string? recordedFingerprint))
             {
-                messages.Add(
+                found.Add((file,
                     $"{file} is a covered file and {manifestPath} records no fingerprint for it, so " +
-                    "nothing watches the whole of it");
+                    "nothing watches the whole of it"));
                 continue;
             }
 
-            if (!string.Equals(found, fingerprint, StringComparison.Ordinal))
+            if (!string.Equals(recordedFingerprint, fingerprint, StringComparison.Ordinal))
             {
-                messages.Add(
-                    $"{file} is recorded in {manifestPath} as file fingerprint {found} and the " +
-                    $"current file computes {fingerprint}");
+                found.Add((file,
+                    $"{file} is recorded in {manifestPath} as file fingerprint {recordedFingerprint} and the " +
+                    $"current file computes {fingerprint}"));
             }
         }
 
         foreach ((string file, _) in recorded.OrderBy(static pair => pair.Key, StringComparer.Ordinal))
         {
             if (!expected.ContainsKey(file))
-                messages.Add($"{manifestPath} carries a file entry for {file}, which is not a covered file");
+                found.Add((null, $"{manifestPath} carries a file entry for {file}, which is not a covered file"));
         }
 
-        return messages;
+        return found;
     }
 
     /// <summary>The unit entries, or null (with the reason added) when there are none to read.</summary>

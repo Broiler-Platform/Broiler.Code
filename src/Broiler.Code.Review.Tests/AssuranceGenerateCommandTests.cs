@@ -269,6 +269,205 @@ public sealed class AssuranceGenerateCommandTests
         Directory.EnumerateFiles(component.Root, "*", SearchOption.AllDirectories)
             .ToDictionary(path => Path.GetRelativePath(component.Root, path), File.ReadAllBytes);
 
+    /// <summary>
+    /// Beside a signed, hand-written review record the generated report says
+    /// what it measures — the human lines — and names that record as a
+    /// separate one, instead of saying nothing was reviewed.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void The_Report_Names_A_Hand_Written_Review_Record_It_Does_Not_Read()
+    {
+        using TemporaryComponent component = Component(
+            Config.Replace("\"spdx\"", "\"artefacts\": { \"humanReview\": \"HUMAN_REVIEW.units.md\" },\n  \"spdx\"", StringComparison.Ordinal));
+        component.Write("src/Probe/Counter.cs", Counter);
+        const string Signed = "# Human Review\n\nStatus: APPROVED WITH CONDITIONS for first preview use. Reviewer: a person.\n";
+        component.Write("HUMAN_REVIEW.md", Signed);
+
+        (int exit, _, string error) = component.Run("generate", "--root", component.Root);
+        Assert.True(exit == 0, error);
+
+        string report = component.Read("CODE-ASSURANCE.md");
+        Assert.Contains("**No code unit in this component carries a decision on its human line yet.**", report, StringComparison.Ordinal);
+        Assert.DoesNotContain("Nothing in this component has been reviewed", report, StringComparison.Ordinal);
+        Assert.Contains("`HUMAN_REVIEW.md` is a separate, hand-written review record of this component.", report, StringComparison.Ordinal);
+        Assert.Equal(Signed, component.Read("HUMAN_REVIEW.md"));
+        Assert.StartsWith("# Human Review: Probe", component.Read("HUMAN_REVIEW.units.md"), StringComparison.Ordinal);
+        Assert.Equal(0, component.Run("check", "--root", component.Root).Exit);
+    }
+
+    /// <summary>
+    /// A compiled file the walk does not cover is named as not covered, in the
+    /// report and in the status line, and never counted as covered by silence.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_File_In_Build_Output_Below_The_Project_Root_Is_Named_As_Not_Covered()
+    {
+        using TemporaryComponent component = Component();
+        component.Write("src/Probe/Counter.cs", Counter);
+        component.Write("src/Probe/Internal/obj/Gate.cs", "namespace Probe;\ninternal static class Gate { internal static bool Open(int key) => key == 4242; }\n");
+        component.Write("src/Probe/Vendor/.git", "gitdir: ../../../.git/modules/Vendor\n");
+        component.Write("src/Probe/Vendor/Backdoor.cs", "namespace Probe;\npublic static class Backdoor { }\n");
+
+        (_, string status, _) = component.Run("status", "--root", component.Root);
+        Assert.StartsWith("Probe: 1 covered files (2 not covered)", status, StringComparison.Ordinal);
+
+        Assert.Equal(0, component.Run("generate", "--root", component.Root).Exit);
+        string report = component.Read("CODE-ASSURANCE.md");
+        Assert.Contains("| Files not covered | 2 |", report, StringComparison.Ordinal);
+        Assert.Contains("| `src/Probe/Internal/obj/Gate.cs` | inside the build output directory 'src/Probe/Internal/obj/'", report, StringComparison.Ordinal);
+        Assert.Contains("| `src/Probe/Vendor/` | a nested checkout", report, StringComparison.Ordinal);
+        Assert.DoesNotContain("No file under a covered project's directory", report, StringComparison.Ordinal);
+        Assert.Equal(Encoding.UTF8.GetBytes("namespace Probe;\npublic static class Backdoor { }\n"), component.ReadBytes("src/Probe/Vendor/Backdoor.cs"));
+    }
+
+    /// <summary>
+    /// The generator writes nowhere but the component's own tree: not into
+    /// git's directory, not into another component's checkout, not through a
+    /// link, and not a component name that would start a new line in what it
+    /// writes.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("\"artefacts\": { \"report\": \".git/hooks/pre-commit\" }", "names a path inside a '.git' directory")]
+    [InlineData("\"artefacts\": { \"humanReview\": \"Other/HUMAN_REVIEW.md\" }", "lies inside 'Other', which holds a .git entry")]
+    [InlineData("\"component\": \"Probe\\necho owned\\n#\"", "$.component must be one line")]
+    public void Generate_Writes_Only_Inside_The_Components_Own_Tree(string property, string expected)
+    {
+        using TemporaryComponent component = Component(Config.Replace("\"projects\"", property + ",\n  \"projects\"", StringComparison.Ordinal));
+        component.Write("src/Probe/Counter.cs", Counter);
+        component.Write("Other/.git", "gitdir: ../.git/modules/Other\n");
+        Dictionary<string, byte[]> before = Snapshot(component);
+
+        (int exit, _, string error) = component.Run("generate", "--root", component.Root);
+
+        Assert.Equal(AssuranceCommand.UsageError, exit);
+        Assert.Contains(expected, error, StringComparison.Ordinal);
+        Assert.Equal(before, Snapshot(component));
+    }
+
+    /// <summary>A report path that cannot be written is refused before anything is written.</summary>
+    [Fact(Timeout = 600000)]
+    public void A_Json_Target_That_Cannot_Be_Written_Is_Refused_Before_Anything_Is_Written()
+    {
+        using TemporaryComponent component = Component();
+        component.Write("src/Probe/Counter.cs",
+            "namespace Probe;\n\npublic static class Loose\n{\n    public static int Twice(int x) => x * 2;\n}\n");
+        component.Write("list.json", "{}\n");
+        component.Write("assess.json",
+            "{ \"schema\": 1, \"assessments\": [ { \"file\": \"src/Probe/Counter.cs\", \"unit\": \"Probe.Loose\", \"exempt\": \"a generated shim\" } ] }\n");
+        Dictionary<string, byte[]> before = Snapshot(component);
+
+        (int exit, _, string error) = component.Run(
+            "insert", "--root", component.Root, "--assessments", component.PathOf("assess.json"), "--json", component.PathOf("list.json/r.json"));
+
+        Assert.Equal(AssuranceCommand.UsageError, exit);
+        Assert.Contains("--json: '", error, StringComparison.Ordinal);
+        Assert.Contains("cannot be written", error, StringComparison.Ordinal);
+        Assert.Equal(before, Snapshot(component));
+
+        Assert.Equal(AssuranceCommand.UsageError, component.Run("check", "--root", component.Root, "--json", component.PathOf("list.json/c.json")).Exit);
+    }
+
+    /// <summary>
+    /// The annotations a workflow shows: each with its remedy, under a prefix
+    /// that places the file when the workflow runs from above the component,
+    /// and capped per rule with a count of the rest.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Check_Annotations_Carry_Their_Remedy_A_Prefix_And_A_Limit()
+    {
+        using TemporaryComponent component = Component();
+        component.Write("src/Probe/Loose.cs",
+            "namespace Probe;\n\npublic static class Loose\n{\n    public static int Twice(int x) => x * 2;\n\n    public static int Thrice(int x) => x * 3;\n}\n");
+        Assert.Equal(0, component.Run("generate", "--root", component.Root).Exit);
+
+        (int exit, string output, _) = component.Run(
+            "check", "--root", component.Root, "--annotation-prefix", "Broiler.Probe/", "--annotation-limit", "1");
+
+        Assert.Equal(AssuranceCommand.Refused, exit);
+        string[] lines = output.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        string j1 = Assert.Single(lines, static line => line.StartsWith("::error", StringComparison.Ordinal) && line.Contains("::J1 ", StringComparison.Ordinal));
+        Assert.StartsWith(
+            "::error file=Broiler.Probe/src/Probe/Loose.cs,line=20::J1 src/Probe/Loose.cs(20): Probe.Loose is relevant and carries no assurance annotation" +
+            "%0A  Run: broiler-review assurance list prints what the unit needs",
+            j1,
+            StringComparison.Ordinal);
+        Assert.Contains("Probe: 2 further J1 violations are not shown as annotations (--annotation-limit 1).", lines);
+        Assert.Contains("Probe: 3 violations: J1 3.", lines);
+    }
+
+    /// <summary>
+    /// Every refusal is reported in one run: a licence run the generator will
+    /// not replace and a record it did not write, together.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void Generate_Reports_Every_Refusal_Together()
+    {
+        using TemporaryComponent component = Component();
+        component.Write("src/Probe/Counter.cs", "// SPDX-FileCopyrightText: 2009 A Person\n// SPDX-License-Identifier: BSD-3-Clause\n\n" + Counter);
+        component.Write("HUMAN_REVIEW.md", "# Human Review\n\nSigned by a person.\n");
+
+        (int exit, _, string error) = component.Run("generate", "--root", component.Root);
+
+        Assert.Equal(AssuranceCommand.Refused, exit);
+        Assert.Contains(
+            "src/Probe/Counter.cs opens with a comment run the generator did not write (line 1: '// SPDX-FileCopyrightText: 2009 A Person'). " +
+            "It will neither delete that run nor stack a second licence header above it: state exactly the run's lines in spdx or in " +
+            "an spdxOverrides entry for this file, so that the generated header replaces the run, or exclude the file.",
+            error,
+            StringComparison.Ordinal);
+        Assert.Contains("HUMAN_REVIEW.md exists and was not written by the generator", error, StringComparison.Ordinal);
+        Assert.EndsWith("nothing was written.", error.TrimEnd(), StringComparison.Ordinal);
+    }
+
+    /// <summary>With no command, the usage goes to standard error beside the exit code that says it is an error.</summary>
+    [Fact(Timeout = 600000)]
+    public void No_Command_Is_A_Usage_Error_On_Standard_Error()
+    {
+        using var component = new TemporaryComponent();
+
+        (int exit, string output, string error) = component.Run();
+
+        Assert.Equal(AssuranceCommand.UsageError, exit);
+        Assert.Empty(output);
+        Assert.StartsWith("Usage:", error, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Through the built program: the JSON on standard output is UTF-8
+    /// whatever the console's code page, so a name outside it survives.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void The_Programs_Json_On_Standard_Output_Is_Utf8()
+    {
+        string cli = Path.Combine(AppContext.BaseDirectory, "Broiler.Code.Review.Cli.dll");
+        Assert.True(File.Exists(cli), cli);
+
+        using TemporaryComponent component = Component();
+        component.Write("src/Probe/Maß.cs", "namespace Probe;\npublic sealed class Maß { public void Run() { System.Console.WriteLine(); } }\n");
+
+        var start = new System.Diagnostics.ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        foreach (string argument in new[] { cli, "assurance", "list", "--root", component.Root, "--json", "-" })
+            start.ArgumentList.Add(argument);
+
+        using var process = System.Diagnostics.Process.Start(start)!;
+        using var bytes = new MemoryStream();
+        process.StandardOutput.BaseStream.CopyTo(bytes);
+        string errors = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        Assert.True(process.ExitCode == 0, errors);
+        string json = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes.ToArray());
+        using JsonDocument report = JsonDocument.Parse(json);
+        Assert.Contains(
+            report.RootElement.GetProperty("units").EnumerateArray(),
+            static unit => unit.GetProperty("unit").GetString() == "Probe.Maß" && unit.GetProperty("file").GetString() == "src/Probe/Maß.cs");
+    }
+
     /// <summary>The workflow-command escaping the runner requires.</summary>
     [Fact(Timeout = 600000)]
     public void A_Workflow_Command_Escapes_What_The_Runner_Would_Misread()

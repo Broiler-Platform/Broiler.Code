@@ -114,6 +114,8 @@ public static class AssuranceInsertion
             if (!IsOneLine(reason))
                 problems.Add("the EXEMPT reason must be one line");
 
+            problems.AddRange(AssuranceRules.ExemptionReasonProblems(reason));
+
             if (entry.Fingerprint is not null && !AssuranceVocabulary.IsWellFormedFingerprint(entry.Fingerprint))
                 problems.Add($"fingerprint '{entry.Fingerprint}' is not six uppercase hex characters");
 
@@ -144,6 +146,8 @@ public static class AssuranceInsertion
 
             if (!IsOneLine(trimmed))
                 problems.Add("Spec must be one line");
+
+            problems.AddRange(AssuranceRules.SpecProblems(trimmed));
         }
 
         if (entry.FalsifiedIf is { } criterion)

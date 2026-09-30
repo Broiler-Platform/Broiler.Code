@@ -40,14 +40,22 @@ public static class AssuranceComponentReport
         report.Append("product tree.\n\n");
 
         // Derived, so that it cannot go on saying nothing was read after
-        // something has been.
+        // something has been. It speaks of the human lines, which are all this
+        // report reads: a component can carry a review of another kind, signed
+        // in a document of its own, and this sentence must not deny it.
         report.Append(summary.Verified == 0
-            ? "**Nothing in this component has been reviewed by a human.** This report records that\n" +
-              "absence precisely. It is not a claim that the code is reviewed, assured or safe, and the\n" +
-              "figures below are the measurement of how far from that claim the component is.\n\n"
+            ? "**No code unit in this component carries a decision on its human line yet.** This report\n" +
+              "records that absence precisely. It is not a claim that the code is reviewed, assured or safe,\n" +
+              "and the figures below are the measurement of how far from that claim the per-unit record is.\n\n"
             : $"**Human-reviewed: {AssuranceFormat.Count(summary.Verified)} of {AssuranceFormat.Count(summary.Relevant)} relevant units.** This report records what the\n" +
               "annotations state and no more. A decision recorded here is one person's, bound to one\n" +
               "version of one declaration, and it is not a claim that the code is assured or safe.\n\n");
+
+        foreach (string record in context.SeparateRecords)
+        {
+            report.Append($"`{record}` is a separate, hand-written review record of this component. This report\n");
+            report.Append("neither reads it nor summarizes it, and nothing in it is counted here.\n\n");
+        }
 
         report.Append("## Summary\n\n");
         report.Append("| Metric | Value |\n|---|---:|\n");
@@ -140,13 +148,15 @@ public static class AssuranceComponentReport
         report.Append("## Files not covered\n\n");
         if (context.Excluded.Count == 0)
         {
-            report.Append("The configuration leaves no file under a covered project out of the record.\n\n");
+            report.Append("No file under a covered project's directory, and no file a covered project compiles in\n");
+            report.Append("through a `<Compile Include>` it states, is left out of the record.\n\n");
         }
         else
         {
-            report.Append("The configuration leaves these files under a covered project out of the record. They carry\n");
-            report.Append($"no generated header, no unit of theirs is in `{paths.Manifest}`, and no figure in this\n");
-            report.Append("report counts them.\n\n");
+            report.Append("These files are under a covered project, or compiled into one, and are left out of the\n");
+            report.Append($"record. They carry no generated header, no unit of theirs is in `{paths.Manifest}`, and\n");
+            report.Append("no figure in this report counts them. A path ending in `/` is a directory the tool does not\n");
+            report.Append("enter, and none of its files is covered.\n\n");
             report.Append("| File | Reason |\n|---|---|\n");
             foreach (AssuranceExcludedSource excluded in context.Excluded)
                 report.Append($"| `{excluded.RelativePath}` | {excluded.Reason} |\n");

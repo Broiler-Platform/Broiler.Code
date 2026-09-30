@@ -159,10 +159,17 @@ internal static class AssuranceJson
 
             if (property.Name == "resources")
             {
-                if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int score))
-                    resources = score;
+                // An integral number however it is written: 2.0 is what a
+                // serializer that holds every number as a double writes for 2.
+                if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double score) &&
+                    score == Math.Floor(score) && score is >= int.MinValue and <= int.MaxValue)
+                {
+                    resources = (int)score;
+                }
                 else
+                {
                     problems.Add("\"resources\" must be an integer 0 to 10");
+                }
 
                 continue;
             }
@@ -200,13 +207,19 @@ internal static class AssuranceJson
         return (entry, problems.Count == 0 ? null : string.Join("; ", problems));
     }
 
-    /// <summary>The <c>assurance list</c> report.</summary>
+    /// <summary>
+    /// The <c>assurance list</c> report. <paramref name="unknown"/> is every
+    /// path a <c>--files</c> list named that is not a covered file, with why,
+    /// so that a caller confirming that nothing is left can tell "nothing
+    /// left" from "nothing matched".
+    /// </summary>
     public static string List(
         string component,
         ComponentSourceSet set,
         IReadOnlyList<ListedFile> files,
         bool allUnits,
-        IReadOnlyList<string> notes)
+        IReadOnlyList<string> notes,
+        IReadOnlyList<ComponentUnknownPath> unknown)
     {
         return Write(writer =>
         {
@@ -218,7 +231,19 @@ internal static class AssuranceJson
             ListTotals totals = ListTotals.Of(files, allUnits);
             writer.WriteStartObject("totals");
             totals.Write(writer);
+            writer.WriteNumber("unknown", unknown.Count);
             writer.WriteEndObject();
+
+            writer.WriteStartArray("unknownFiles");
+            foreach (ComponentUnknownPath path in unknown)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("file", path.Path);
+                writer.WriteString("reason", path.Reason);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
 
             writer.WriteStartArray("files");
             foreach (ListedFile file in files)
@@ -337,6 +362,9 @@ internal static class AssuranceJson
                     writer.WriteNumber("line", line);
 
                 writer.WriteString("message", violation.Message);
+                if (violation.Remedy is not null)
+                    writer.WriteString("remedy", violation.Remedy);
+
                 writer.WriteEndObject();
             }
 
