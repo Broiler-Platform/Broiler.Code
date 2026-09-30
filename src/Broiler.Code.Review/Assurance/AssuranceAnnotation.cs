@@ -74,6 +74,43 @@ public sealed class AssuranceAnnotation
     /// <summary>True when the block carries a falsification criterion.</summary>
     public bool HasCriterion => Criterion.Length > 0;
 
+    /// <summary>
+    /// True when the block has a <c>// Broiler-Falsified-If:</c> line, even an
+    /// empty one. This is what the owning component counts in the header's
+    /// <c>Criteria:</c> row; an empty criterion is reported as a problem there
+    /// rather than left uncounted.
+    /// </summary>
+    public bool HasCriterionLine => FalsifiedIfLine is not null;
+
+    /// <summary>
+    /// The criterion as the owning component exposes it: null when the block has
+    /// no criterion line, empty when it has one that says nothing.
+    /// </summary>
+    public string? FalsifiedIf => FalsifiedIfLine is null ? null : Criterion;
+
+    /// <summary>
+    /// The <c>Previous=reviewer@fingerprint</c> a stale human line preserves, or
+    /// null. Split at the last <c>@</c>; with none, the fingerprint is empty.
+    /// </summary>
+    public (string Reviewer, string Fingerprint)? Previous
+    {
+        get
+        {
+            const string prefix = "Previous=";
+            foreach (string part in HumanBody.Split(';', StringSplitOptions.TrimEntries))
+            {
+                if (!part.StartsWith(prefix, StringComparison.Ordinal))
+                    continue;
+
+                string value = part[prefix.Length..];
+                int at = value.LastIndexOf('@');
+                return at < 0 ? (value, string.Empty) : (value[..at], value[(at + 1)..]);
+            }
+
+            return null;
+        }
+    }
+
     /// <summary>The fingerprint the generator last stamped onto the machine's line.</summary>
     public string? RecordedFingerprint => Field(AssuranceVocabulary.FingerprintField);
 
@@ -99,6 +136,11 @@ public sealed class AssuranceAnnotation
     /// inside <c>Previous=</c>, and that person is not the reviewer of the code
     /// as it stands now — reporting them here would credit an approval that has
     /// already lapsed.
+    ///
+    /// Null, too, when the head of the line is not an alias
+    /// (<see cref="AssuranceVocabulary.IsAlias"/>): <c>NOT REVIEWED</c> or
+    /// <c>TODO</c> names nobody, and a line that names nobody is no approval,
+    /// whatever fingerprint stands beside it.
     /// </summary>
     public string? Reviewer
     {
@@ -109,7 +151,7 @@ public sealed class AssuranceAnnotation
 
             int semicolon = HumanBody.IndexOf(';', StringComparison.Ordinal);
             string name = (semicolon < 0 ? HumanBody : HumanBody[..semicolon]).Trim();
-            return name.Length == 0 ? null : name;
+            return AssuranceVocabulary.IsAlias(name) ? name : null;
         }
     }
 
@@ -215,6 +257,105 @@ public sealed class AssuranceAnnotation
     }
 
     /// <summary>
+    /// Reads the block at <paramref name="aiLine"/> the way the owning component
+    /// reads it, and says why when it cannot.
+    ///
+    /// <see cref="TryParse"/> is lenient because the editor has to show a
+    /// half-written block to the person writing it. A tool that decides whether
+    /// a unit is annotated must give the owning component's answer instead, so
+    /// this refuses what that component refuses: a field with no <c>=</c>, an
+    /// AI line with no fields, a second criterion line, and a human line that is
+    /// not directly underneath. Keys and values are trimmed around <c>=</c>, as
+    /// there. The problem strings are that component's, word for word.
+    /// </summary>
+    public static bool TryParseStrict(
+        AssuranceLines lines, int aiLine, out AssuranceAnnotation? annotation, out string? problem)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
+        annotation = null;
+        problem = null;
+
+        if (aiLine < 0 || aiLine >= lines.Count)
+        {
+            problem = $"line {aiLine + 1} is outside the file";
+            return false;
+        }
+
+        string ai = lines[aiLine].Trim();
+        if (!ai.StartsWith(AssuranceVocabulary.AiMarker, StringComparison.Ordinal))
+        {
+            problem = $"line {aiLine + 1} does not open with '{AssuranceVocabulary.AiMarker}'";
+            return false;
+        }
+
+        int next = aiLine + 1;
+        int? criterionLine = null;
+        string criterion = string.Empty;
+
+        if (next < lines.Count &&
+            lines[next].Trim().StartsWith(AssuranceVocabulary.FalsifiedIfMarker, StringComparison.Ordinal))
+        {
+            criterion = lines[next].Trim()[AssuranceVocabulary.FalsifiedIfMarker.Length..].Trim();
+            criterionLine = next;
+            next++;
+
+            if (next < lines.Count &&
+                lines[next].Trim().StartsWith(AssuranceVocabulary.FalsifiedIfMarker, StringComparison.Ordinal))
+            {
+                problem = $"line {next + 1} carries a second '{AssuranceVocabulary.FalsifiedIfMarker}' line, " +
+                    "and a falsification criterion is one line";
+                return false;
+            }
+        }
+
+        if (next >= lines.Count)
+        {
+            problem = $"line {aiLine + 1} has no '{AssuranceVocabulary.HumanMarker}' line under it";
+            return false;
+        }
+
+        string human = lines[next].Trim();
+        if (!human.StartsWith(AssuranceVocabulary.HumanMarker, StringComparison.Ordinal))
+        {
+            problem = $"line {aiLine + 1} is not immediately followed by a '{AssuranceVocabulary.HumanMarker}' line";
+            return false;
+        }
+
+        var fields = new List<AssuranceField>();
+        foreach (string part in ai[AssuranceVocabulary.AiMarker.Length..].Split(';'))
+        {
+            if (part.Trim().Length == 0)
+                continue;
+
+            int separator = part.IndexOf('=', StringComparison.Ordinal);
+            if (separator < 0)
+            {
+                problem = $"line {aiLine + 1} has a field with no '=': '{part.Trim()}'";
+                return false;
+            }
+
+            fields.Add(new AssuranceField(part[..separator].Trim(), part[(separator + 1)..].Trim()));
+        }
+
+        if (fields.Count == 0)
+        {
+            problem = $"line {aiLine + 1} carries no fields";
+            return false;
+        }
+
+        annotation = new AssuranceAnnotation(
+            aiLine,
+            criterionLine,
+            next,
+            AssuranceLines.IndentOf(lines[aiLine]),
+            fields,
+            criterion,
+            human[AssuranceVocabulary.HumanMarker.Length..].Trim());
+
+        return true;
+    }
+
+    /// <summary>
     /// Renders one line of a block: the indent, the marker padded to the shared
     /// width, one space, and the value.
     ///
@@ -269,6 +410,39 @@ public sealed class AssuranceAnnotation
     /// <summary>The human's line carrying <paramref name="body"/>.</summary>
     public string RenderHumanLine(string body) =>
         RenderLine(Indent, AssuranceVocabulary.HumanMarker, body);
+
+    /// <summary>
+    /// The machine's line as the generator writes it: every field as
+    /// <c>Key=Value</c>, joined by <c>"; "</c>, even when a value is empty.
+    ///
+    /// This differs from <see cref="RenderAiLine()"/>, which writes a bare key
+    /// for an empty value so that the editor gives back what it read. The
+    /// generator only rewrites blocks the strict parse accepted, and every
+    /// field of one of those had an <c>=</c>.
+    /// </summary>
+    public static string RenderAiLine(string indent, IEnumerable<AssuranceField> fields)
+    {
+        ArgumentNullException.ThrowIfNull(fields);
+
+        var builder = new StringBuilder();
+        foreach (AssuranceField field in fields)
+        {
+            if (builder.Length > 0)
+                builder.Append("; ");
+
+            builder.Append(field.Key).Append('=').Append(field.Value);
+        }
+
+        return RenderLine(indent, AssuranceVocabulary.AiMarker, builder.ToString());
+    }
+
+    /// <summary>The criterion line. The prose is carried through; the generator never authors one.</summary>
+    public static string RenderFalsifiedIfLine(string indent, string criterion) =>
+        RenderLine(indent, AssuranceVocabulary.FalsifiedIfMarker, criterion);
+
+    /// <summary>The human line at <paramref name="indent"/>.</summary>
+    public static string RenderHumanLine(string indent, string body) =>
+        RenderLine(indent, AssuranceVocabulary.HumanMarker, body);
 
     private static string Body(string line, string marker)
     {

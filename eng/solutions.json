@@ -27,6 +27,7 @@
       "description": "The Broiler Code test suite: workspaces, the shell and its adapters, the language services, and the review model. All net10.0, so it runs on either host.",
       "roots": [
         "src/Broiler.Code.Core.Tests/Broiler.Code.Core.Tests.csproj",
+        "src/Broiler.Code.Language.CSharp.Assurance.Tests/Broiler.Code.Language.CSharp.Assurance.Tests.csproj",
         "src/Broiler.Code.Language.CSharp.Tests/Broiler.Code.Language.CSharp.Tests.csproj",
         "src/Broiler.Code.Review.Tests/Broiler.Code.Review.Tests.csproj",
         "src/Broiler.Code.Workspaces.Tests/Broiler.Code.Workspaces.Tests.csproj"

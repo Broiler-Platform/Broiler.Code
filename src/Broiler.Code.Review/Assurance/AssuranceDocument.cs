@@ -267,8 +267,10 @@ public sealed class AssuranceDocument
                 AssuranceEditOutcome.NoReviewer,
                 reviewer is null || reviewer.Trim().Length == 0
                     ? "Set a reviewer name before signing a unit — an approval with no name is not evidence."
-                    : $"'{reviewer.Trim()}' cannot be written as a reviewer: a name may not contain " +
-                      "';', '=' or '@', and has to have something visible in it.");
+                    : $"'{reviewer.Trim()}' cannot be written as a reviewer: a name opens with a letter, " +
+                      "holds letters, digits, '.', '_', '-', ''' and single spaces, is at most " +
+                      $"{AssuranceVocabulary.MaxAliasLength} characters long, and is not a placeholder such as " +
+                      "TODO, NONE or PENDING.");
         }
 
         return Rewrite(unit, annotation, ApprovalBody(unit, reviewer), Approved(unit, reviewer));

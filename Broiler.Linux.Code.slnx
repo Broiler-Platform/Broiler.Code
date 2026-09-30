@@ -55,6 +55,7 @@
   </Folder>
   <Folder Name="/Dependencies/src/">
     <Project Path="src/Broiler.Code.Core/Broiler.Code.Core.csproj" />
+    <Project Path="src/Broiler.Code.Language.CSharp.Assurance/Broiler.Code.Language.CSharp.Assurance.csproj" />
     <Project Path="src/Broiler.Code.Language.CSharp.Roslyn/Broiler.Code.Language.CSharp.Roslyn.csproj" />
     <Project Path="src/Broiler.Code.Review/Broiler.Code.Review.csproj" />
     <Project Path="src/Broiler.Code.Workspaces/Broiler.Code.Workspaces.csproj" />

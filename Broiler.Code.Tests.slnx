@@ -6,6 +6,7 @@
   </Configurations>
   <Folder Name="/Entry points/">
     <Project Path="src/Broiler.Code.Core.Tests/Broiler.Code.Core.Tests.csproj" />
+    <Project Path="src/Broiler.Code.Language.CSharp.Assurance.Tests/Broiler.Code.Language.CSharp.Assurance.Tests.csproj" />
     <Project Path="src/Broiler.Code.Language.CSharp.Tests/Broiler.Code.Language.CSharp.Tests.csproj" />
     <Project Path="src/Broiler.Code.Review.Tests/Broiler.Code.Review.Tests.csproj" />
     <Project Path="src/Broiler.Code.Workspaces.Tests/Broiler.Code.Workspaces.Tests.csproj" />
@@ -53,6 +54,7 @@
   </Folder>
   <Folder Name="/Dependencies/src/">
     <Project Path="src/Broiler.Code.Core/Broiler.Code.Core.csproj" />
+    <Project Path="src/Broiler.Code.Language.CSharp.Assurance/Broiler.Code.Language.CSharp.Assurance.csproj" />
     <Project Path="src/Broiler.Code.Language.CSharp.Roslyn/Broiler.Code.Language.CSharp.Roslyn.csproj" />
     <Project Path="src/Broiler.Code.Language.CSharp.Syntax/Broiler.Code.Language.CSharp.Syntax.csproj" />
     <Project Path="src/Broiler.Code.Review.Cli/Broiler.Code.Review.Cli.csproj" />

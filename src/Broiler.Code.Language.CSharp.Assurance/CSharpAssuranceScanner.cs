@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Broiler.Code.Language.CSharp.Roslyn;
+namespace Broiler.Code.Language.CSharp.Assurance;
 
 /// <summary>
 /// Finds the code units of a C# file and fingerprints them the way the component
@@ -33,9 +33,28 @@ namespace Broiler.Code.Language.CSharp.Roslyn;
 /// order, because the reason a unit is exempt is reported to a reviewer and a
 /// plausible wrong reason is worse than none.
 ///
+/// Three things go further than the owning component, each invisible on its
+/// tree and each needed on the others'. None changes a name, a fingerprint or
+/// an exemption of a file that has no directive, no line break inside a
+/// literal or a parameter type, no top-level statement and no two units of one
+/// name — which is every file the owning component covers:
+/// <list type="bullet">
+/// <item>Line breaks inside a token (a verbatim or raw string) are hashed as
+/// LF, so a CRLF checkout of an LF blob fingerprints the same, and no name
+/// spans lines.</item>
+/// <item>Directives and disabled text inside a unit are hashed with it, so code
+/// under a <c>#else</c> cannot change under an approval.</item>
+/// <item>A file's top-level statements form one unit, and a name that would
+/// repeat within a file is made unique.</item>
+/// </list>
+///
 /// Nothing here decides a review. It reports what is, and the two things a
 /// mistake in it can cost are a unit shown under the wrong heading and a file
 /// header this editor then declines to recount — never an approval.
+///
+/// The editor and the command-line review tool share this one implementation.
+/// That is why it sits in an assembly whose only package is Roslyn, apart from
+/// the language service and its UI dependencies.
 /// </summary>
 public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
 {
@@ -43,11 +62,11 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// The preprocessor symbols the owning component parses under.
     ///
     /// Part of the algorithm rather than a detail of it. Code inside a region
-    /// whose symbol is undefined parses as disabled text, and disabled text
-    /// carries no tokens — so a scanner using the defaults would hash shipping
-    /// code as though it were absent and would agree with nobody.
+    /// whose symbol is undefined parses as disabled text, which is not a unit
+    /// of its own — so a scanner using the defaults would leave shipping code
+    /// out of every unit boundary and would agree with nobody.
     /// </summary>
-    private static readonly string[] PreprocessorSymbols =
+    private static readonly string[] DefaultSymbols =
     [
         "NET",
         "NETCOREAPP",
@@ -70,9 +89,45 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         "TRACE",
     ];
 
-    private static readonly CSharpParseOptions ParseOptions = CSharpParseOptions.Default
-        .WithLanguageVersion(LanguageVersion.Latest)
-        .WithPreprocessorSymbols(PreprocessorSymbols);
+    private static readonly CSharpParseOptions DefaultParseOptions = OptionsFor(DefaultSymbols);
+
+    private readonly CSharpParseOptions _parseOptions;
+    private readonly AssuranceExemptionPredicate _predicate;
+
+    /// <summary>A scanner parsing under <see cref="DefaultPreprocessorSymbols"/>, with the owning component's predicate.</summary>
+    public CSharpAssuranceScanner()
+        : this(null)
+    {
+    }
+
+    /// <summary>
+    /// A scanner parsing under <paramref name="preprocessorSymbols"/>, or under
+    /// <see cref="DefaultPreprocessorSymbols"/> when that is null.
+    ///
+    /// A component that builds with other symbols has to say so, because
+    /// code under an undefined symbol is disabled text: it is no unit of its
+    /// own and J1 never asks for a block on it.
+    /// </summary>
+    /// <param name="preprocessorSymbols">The symbols, or null for the owning component's.</param>
+    /// <param name="predicate">
+    /// Which exemption predicate to apply. The owning component's by default,
+    /// because the editor shows that component's files as its tools see them.
+    /// </param>
+    public CSharpAssuranceScanner(
+        IEnumerable<string>? preprocessorSymbols,
+        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent)
+    {
+        _parseOptions = preprocessorSymbols is null
+            ? DefaultParseOptions
+            : OptionsFor(preprocessorSymbols);
+        _predicate = predicate;
+    }
+
+    /// <summary>
+    /// The symbols the owning component parses under: every symbol a net10.0
+    /// build defines, plus DEBUG, RELEASE and TRACE.
+    /// </summary>
+    public static IReadOnlyList<string> DefaultPreprocessorSymbols => DefaultSymbols;
 
     /// <inheritdoc/>
     public IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path)
@@ -80,30 +135,197 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(path);
 
-        SyntaxTree tree = CSharpSyntaxTree.ParseText(text, ParseOptions, path: path);
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(text, _parseOptions, path: path);
+        return [.. Units(tree, _predicate).Select(static found => found.Unit)];
+    }
+
+    /// <summary>Parse options for one set of preprocessor symbols.</summary>
+    internal static CSharpParseOptions OptionsFor(IEnumerable<string> preprocessorSymbols) =>
+        CSharpParseOptions.Default
+            .WithLanguageVersion(LanguageVersion.Latest)
+            .WithPreprocessorSymbols(preprocessorSymbols);
+
+    /// <summary>
+    /// Every code unit under <paramref name="root"/>, in document order. The walk
+    /// is pre-order and does not descend into trivia, so a type comes before its
+    /// members and a declaration in disabled text is not found.
+    /// </summary>
+    internal static IEnumerable<MemberDeclarationSyntax> CodeUnits(SyntaxNode root) =>
+        root.DescendantNodes().OfType<MemberDeclarationSyntax>().Where(IsCodeUnit);
+
+    /// <summary>
+    /// Every unit of one file, in document order, with the syntax it was read
+    /// from: the file's top-level statements first when it has any, then each
+    /// declaration. Names are unique within the file.
+    ///
+    /// Both scanners enumerate through here, so the editor and the command-line
+    /// tool cannot name, bound or fingerprint a unit differently.
+    /// </summary>
+    internal static IReadOnlyList<ScannedDeclaration> Units(SyntaxTree tree, AssuranceExemptionPredicate predicate)
+    {
         SyntaxNode root = tree.GetRoot();
+        var found = new List<ScannedDeclaration>();
 
-        var units = new List<AssuranceScannedUnit>();
-        foreach (MemberDeclarationSyntax declaration in root
-            .DescendantNodes()
-            .OfType<MemberDeclarationSyntax>()
-            .Where(IsCodeUnit))
+        if (root is CompilationUnitSyntax compilationUnit &&
+            compilationUnit.Members.OfType<GlobalStatementSyntax>().ToList() is { Count: > 0 } statements)
         {
-            FileLinePositionSpan span = tree.GetLineSpan(declaration.Span);
-            AssuranceExemption exemption = ExemptionFor(declaration);
-
-            units.Add(new AssuranceScannedUnit(
-                NameOf(declaration),
-                MemberNameOf(declaration) + ParametersOf(declaration),
-                span.StartLinePosition.Line,
-                span.EndLinePosition.Line,
-                exemption != AssuranceExemption.None,
-                exemption.ToString(),
-                Fingerprint(declaration)));
+            found.Add(TopLevel(tree, statements));
         }
 
-        return units;
+        foreach (MemberDeclarationSyntax declaration in CodeUnits(root))
+            found.Add(new ScannedDeclaration(declaration, Describe(tree, declaration, predicate), IsTopLevel: false));
+
+        return Disambiguated(found);
     }
+
+    /// <summary>One unit as <see cref="IAssuranceUnitScanner"/> reports it, under its plain name.</summary>
+    private static AssuranceScannedUnit Describe(
+        SyntaxTree tree, MemberDeclarationSyntax declaration, AssuranceExemptionPredicate predicate)
+    {
+        FileLinePositionSpan span = tree.GetLineSpan(declaration.Span);
+        AssuranceExemption exemption = ExemptionFor(declaration, predicate == AssuranceExemptionPredicate.Strict);
+
+        return new AssuranceScannedUnit(
+            NameOf(declaration, detailed: false),
+            OneLine(MemberNameOf(declaration, detailed: false) + ParametersOf(declaration)),
+            span.StartLinePosition.Line,
+            span.EndLinePosition.Line,
+            exemption != AssuranceExemption.None,
+            exemption.ToString(),
+            Fingerprint(declaration))
+        {
+            Kind = KindOf(declaration),
+            DeclarationColumn = span.StartLinePosition.Character,
+        };
+    }
+
+    /// <summary>
+    /// A file's top-level statements, as one relevant unit.
+    ///
+    /// A statement is not a declaration, so no case of the whitelist names it,
+    /// and a program written as top-level statements would otherwise be a
+    /// covered file of executable code with nothing in it to review. Together
+    /// the statements are the entry point the compiler generates, so they are
+    /// one unit: its extent runs from the first statement to the last, its
+    /// block goes above the first, and its fingerprint covers all of them,
+    /// local functions included, because those are statements too.
+    /// </summary>
+    private static ScannedDeclaration TopLevel(SyntaxTree tree, IReadOnlyList<GlobalStatementSyntax> statements)
+    {
+        FileLinePositionSpan first = tree.GetLineSpan(statements[0].Span);
+        FileLinePositionSpan last = tree.GetLineSpan(statements[^1].Span);
+
+        var unit = new AssuranceScannedUnit(
+            AssuranceVocabulary.TopLevelStatements,
+            AssuranceVocabulary.TopLevelStatements,
+            first.StartLinePosition.Line,
+            last.EndLinePosition.Line,
+            IsExempt: false,
+            nameof(AssuranceExemption.None),
+            Hash(StreamOf(statements.SelectMany(static statement => statement.DescendantTokens()), includeFirstLeading: false)))
+        {
+            Kind = "top-level statements",
+            DeclarationColumn = first.StartLinePosition.Character,
+        };
+
+        return new ScannedDeclaration(statements[0], unit, IsTopLevel: true);
+    }
+
+    /// <summary>
+    /// The units with every name made unique within the file, changing only
+    /// the names that would otherwise repeat.
+    ///
+    /// A manifest entry, an insert and a check message all address a unit by
+    /// its file and its name, and three shapes give two units one name: a
+    /// partial type declared twice in one file, overloaded indexers (the plain
+    /// name of each is <c>this[]</c>), and members of <c>Foo</c> and
+    /// <c>Foo&lt;T&gt;</c> declared side by side (the plain name drops the
+    /// containing type's type parameters). A repeated name first gets the
+    /// detail the plain name leaves out — the containing types' type parameters
+    /// and an indexer's parameter types — and a name that still repeats gets
+    /// <c>#2</c>, <c>#3</c> and so on, in document order, after its first
+    /// occurrence. A file where no name repeats keeps the plain names, which
+    /// are the owning component's.
+    /// </summary>
+    private static IReadOnlyList<ScannedDeclaration> Disambiguated(List<ScannedDeclaration> found)
+    {
+        HashSet<string> repeated = Repeated(found);
+        if (repeated.Count == 0)
+            return found;
+
+        for (int index = 0; index < found.Count; index++)
+        {
+            ScannedDeclaration unit = found[index];
+            if (unit.IsTopLevel || !repeated.Contains(unit.Unit.Name))
+                continue;
+
+            found[index] = unit with
+            {
+                Unit = unit.Unit with
+                {
+                    Name = NameOf(unit.Declaration, detailed: true),
+                    DisplayName = OneLine(MemberNameOf(unit.Declaration, detailed: true) + ParametersOf(unit.Declaration)),
+                },
+            };
+        }
+
+        repeated = Repeated(found);
+        if (repeated.Count == 0)
+            return found;
+
+        var seen = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (int index = 0; index < found.Count; index++)
+        {
+            ScannedDeclaration unit = found[index];
+            string name = unit.Unit.Name;
+            if (!repeated.Contains(name))
+                continue;
+
+            int occurrence = seen.TryGetValue(name, out int before) ? before + 1 : 1;
+            seen[name] = occurrence;
+            if (occurrence == 1)
+                continue;
+
+            string suffix = "#" + occurrence.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            found[index] = unit with
+            {
+                Unit = unit.Unit with { Name = name + suffix, DisplayName = unit.Unit.DisplayName + suffix },
+            };
+        }
+
+        return found;
+
+        static HashSet<string> Repeated(IEnumerable<ScannedDeclaration> units) =>
+            units.GroupBy(static unit => unit.Unit.Name, StringComparer.Ordinal)
+                .Where(static group => group.Count() > 1)
+                .Select(static group => group.Key)
+                .ToHashSet(StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// The declaration kind in lower-case words. A type declaration Roslyn adds
+    /// later (C# 14's extension block is one) is named by its own keyword.
+    /// </summary>
+    private static string KindOf(MemberDeclarationSyntax declaration) => declaration switch
+    {
+        RecordDeclarationSyntax record =>
+            record.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword) ? "record struct" : "record",
+        TypeDeclarationSyntax type => type.Keyword.ValueText,
+        EnumDeclarationSyntax => "enum",
+        DelegateDeclarationSyntax => "delegate",
+        MethodDeclarationSyntax => "method",
+        ConstructorDeclarationSyntax => "constructor",
+        DestructorDeclarationSyntax => "destructor",
+        OperatorDeclarationSyntax => "operator",
+        ConversionOperatorDeclarationSyntax => "conversion",
+        PropertyDeclarationSyntax => "property",
+        IndexerDeclarationSyntax => "indexer",
+        EventDeclarationSyntax => "event",
+        EventFieldDeclarationSyntax => "event field",
+        FieldDeclarationSyntax => "field",
+        EnumMemberDeclarationSyntax => "enum member",
+        _ => "member",
+    };
 
     /// <summary>
     /// The fingerprint of one declaration: SHA-256 over its token texts joined by
@@ -115,17 +337,20 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// annotation included. A fingerprint that covered its own annotation could
     /// never be written down, because writing it would change it.
     ///
-    /// Nothing inside a token is canonicalized either. <c>1_000</c> and
-    /// <c>1000</c> are different fingerprints on purpose: how a literal is
-    /// spelled is part of the source, and the conservative answer is the useful
-    /// one for a question about whether code changed.
+    /// Nothing inside a token is canonicalized either, with one exception.
+    /// <c>1_000</c> and <c>1000</c> are different fingerprints on purpose: how a
+    /// literal is spelled is part of the source, and the conservative answer is
+    /// the useful one for a question about whether code changed. The exception
+    /// is a line break inside a verbatim or raw string, which is hashed as LF:
+    /// that one is not spelled by the author but by the checkout, and a CRLF
+    /// working tree of an LF blob would otherwise compute a different value
+    /// from the same commit.
     /// </summary>
     public static string Fingerprint(SyntaxNode declaration)
     {
         ArgumentNullException.ThrowIfNull(declaration);
 
-        byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(TokenStream(declaration)));
-        return Convert.ToHexString(digest)[..AssuranceVocabulary.FingerprintWidth];
+        return Hash(TokenStream(declaration));
     }
 
     /// <summary>
@@ -134,12 +359,20 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// Exposed because a reviewer told only that six hex characters moved has
     /// been told nothing they can act on. What changed is answerable from this,
     /// and a pane that can show it is worth more than one that cannot.
+    ///
+    /// Two kinds of trivia are code and are in it: a preprocessor directive, and
+    /// the disabled text a directive leaves behind, tokenized the same way, so
+    /// rewrapping it moves nothing and rewriting it moves the value. Without
+    /// them the <c>#else</c> branch of a method compiled under the other
+    /// configuration could be rewritten under an approval. For a declaration,
+    /// the trivia before its first token is not its own (a block or a region
+    /// above it) and is left out; for a whole file nothing is.
     /// </summary>
     public static string TokenStream(SyntaxNode declaration)
     {
         ArgumentNullException.ThrowIfNull(declaration);
 
-        return string.Join(" ", Tokens(declaration).Select(static token => token.Text));
+        return StreamOf(Tokens(declaration), includeFirstLeading: declaration is CompilationUnitSyntax);
     }
 
     /// <summary>
@@ -155,8 +388,67 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(path);
 
-        return Fingerprint(CSharpSyntaxTree.ParseText(text, ParseOptions, path: path).GetRoot());
+        return Fingerprint(CSharpSyntaxTree.ParseText(text, DefaultParseOptions, path: path).GetRoot());
     }
+
+    private static string Hash(string stream)
+    {
+        byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(stream));
+        return Convert.ToHexString(digest)[..AssuranceVocabulary.FingerprintWidth];
+    }
+
+    /// <summary>
+    /// The token texts joined by one space, each preceded by the code its
+    /// leading trivia hides (directives and disabled text), except the first
+    /// token's unless <paramref name="includeFirstLeading"/>.
+    /// </summary>
+    private static string StreamOf(IEnumerable<SyntaxToken> tokens, bool includeFirstLeading)
+    {
+        var parts = new List<string>();
+        bool first = true;
+
+        foreach (SyntaxToken token in tokens)
+        {
+            if (!first || includeFirstLeading)
+                parts.AddRange(HiddenCode(token.LeadingTrivia));
+
+            first = false;
+            parts.Add(Normalized(token.Text));
+        }
+
+        return string.Join(" ", parts);
+    }
+
+    /// <summary>
+    /// The code a stretch of trivia carries: each directive's tokens, and the
+    /// tokens of each run of disabled text. Comments, whitespace and a
+    /// directive's message text are not code and are not here.
+    /// </summary>
+    private static IEnumerable<string> HiddenCode(SyntaxTriviaList trivia)
+    {
+        foreach (SyntaxTrivia item in trivia)
+        {
+            IEnumerable<SyntaxToken> tokens;
+            if (item.IsKind(SyntaxKind.DisabledTextTrivia))
+                tokens = SyntaxFactory.ParseTokens(item.ToFullString());
+            else if (item.GetStructure() is DirectiveTriviaSyntax directive)
+                tokens = directive.DescendantTokens();
+            else
+                continue;
+
+            foreach (SyntaxToken token in tokens)
+            {
+                if (token.Text.Length > 0)
+                    yield return Normalized(token.Text);
+            }
+        }
+    }
+
+    /// <summary>A token's text with every line break inside it as LF.</summary>
+    private static string Normalized(string text) =>
+        text.Contains('\r', StringComparison.Ordinal)
+            ? text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n')
+            : text;
 
     /// <summary>
     /// Which tokens a declaration contributes.
@@ -194,7 +486,8 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// bodiless members, fields, enum members and type declarations rather than
     /// only the things with executable bodies. A local function is not here and
     /// needs no entry: it is a statement, and its tokens are already inside the
-    /// member that declares it.
+    /// member that declares it. Top-level statements are not here either; they
+    /// form the one unit <see cref="TopLevel"/> makes of them.
     ///
     /// A namespace is deliberately absent. It declares nothing, and its leading
     /// trivia is where the generated file header lives.
@@ -226,16 +519,24 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// tool says "compiler-supplied record member" has been given two answers to
     /// one question.
     ///
+    /// <paramref name="strict"/> narrows four cases where the owning
+    /// component's predicate would exempt code that runs (see
+    /// <see cref="AssuranceExemptionPredicate.Strict"/>). It never widens one,
+    /// so a unit exempt under it is exempt under the owning component's too.
+    ///
     /// The source's own <c>EXEMPT=</c> escape hatch is not here. It lives on the
     /// annotation, which this scanner does not read: the model above it applies
     /// that reason after attaching the block, so there is one place that knows
     /// about annotations and one that knows about syntax.
     /// </summary>
-    private static AssuranceExemption ExemptionFor(MemberDeclarationSyntax declaration)
+    private static AssuranceExemption ExemptionFor(MemberDeclarationSyntax declaration, bool strict)
     {
         // Case 6 — inside a marker type. A property of where the member lives
-        // rather than of what it says, so it is answered first.
-        if (ContainingTypes(declaration).Any(static type =>
+        // rather than of what it says, so it is answered first. Strictly, where
+        // a member lives says nothing about what its body does, and a nested
+        // type of that name would carry any code at all past review.
+        if (!strict &&
+            ContainingTypes(declaration).Any(static type =>
                 string.Equals(type.Identifier.ValueText, "AssemblyMarker", StringComparison.Ordinal)))
         {
             return AssuranceExemption.InsideAssemblyMarker;
@@ -251,36 +552,45 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         // Case 7 — a field that is not a fixed value. It declares storage, and
         // the members that write it are reviewed. FieldDeclarationSyntax and not
         // the base type: an event field declares a broadcast point rather than
-        // storage, and stays relevant.
-        if (declaration is FieldDeclarationSyntax field && !IsFixedValue(field))
+        // storage, and stays relevant. Strictly, an initializer that runs code
+        // is code no member reviews, so only an inert one is storage.
+        if (declaration is FieldDeclarationSyntax field && !IsFixedValue(field) &&
+            (!strict || field.Declaration.Variables.All(static variable => IsInert(variable.Initializer?.Value))))
+        {
             return AssuranceExemption.FieldDeclaringStorage;
+        }
 
         // Case 4 — a member of a record or an enum that the compiler writes. A
         // type or a delegate declared inside a record is not one of those, and
         // without the first line a whole nested type header would be exempt.
         if (declaration is not BaseTypeDeclarationSyntax and not DelegateDeclarationSyntax &&
             ContainingTypes(declaration).FirstOrDefault() is RecordDeclarationSyntax or EnumDeclarationSyntax &&
-            !SuppliesAnImplementation(declaration))
+            !SuppliesAnImplementation(declaration, strict))
         {
             return AssuranceExemption.CompilerSuppliedRecordOrEnumMember;
         }
 
         // Case 1 — an auto-property, or accessors that only return or assign the
-        // corresponding member.
-        if (declaration is BasePropertyDeclarationSyntax property && IsTrivialProperty(property))
+        // corresponding member. Strictly, an auto-property's initializer is
+        // held to the same rule as a field's.
+        if (declaration is BasePropertyDeclarationSyntax property && IsTrivialProperty(property) &&
+            (!strict || property is not PropertyDeclarationSyntax { Initializer: { } initializer } || IsInert(initializer.Value)))
+        {
             return AssuranceExemption.TrivialPropertyOrAccessor;
+        }
 
         // Case 2 — a constructor that only assigns its parameters.
         if (declaration is ConstructorDeclarationSyntax constructor && AssignsParametersOnly(constructor))
             return AssuranceExemption.ParameterAssigningConstructor;
 
         // Case 3 — an expression body that is the corresponding member, a
-        // forwarding call, a constant, or a throw.
+        // forwarding call, a constant, or a throw. Strictly, a throw whose
+        // arguments compute something is a computation.
         if (ArrowBody(declaration) is { } arrow &&
             (IsCorrespondingMemberAccess(arrow, SimpleNameOf(declaration)) ||
              IsDelegationToOwnMember(arrow, declaration) ||
              IsConstant(arrow) ||
-             IsThrowNew(arrow)))
+             (IsThrowNew(arrow) && (!strict || ThrowsInertly(arrow)))))
         {
             return AssuranceExemption.TrivialExpressionBodiedMember;
         }
@@ -307,6 +617,58 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         return (isConstant || isStaticReadOnly) &&
             field.Declaration.Variables.Any(static variable => variable.Initializer is not null);
     }
+
+    /// <summary>
+    /// An expression that runs no code of its own: absent, a literal, a name or
+    /// a dotted chain of names, <c>default</c>, <c>nameof</c>, <c>typeof</c>, a
+    /// parameterless <c>new()</c> with no initializer, an array or collection
+    /// of inert elements, an interpolated string of inert holes, and unary,
+    /// binary, conditional and cast expressions over those.
+    ///
+    /// A name can read a property whose getter runs code, and an operator can
+    /// be user-defined; both of those are units of their own and are reviewed
+    /// there. What is not inert is code that belongs to no other unit: a call,
+    /// a lambda, an assignment, an object built from arguments.
+    /// </summary>
+    private static bool IsInert(ExpressionSyntax? expression) => expression switch
+    {
+        null => true,
+        ParenthesizedExpressionSyntax parenthesized => IsInert(parenthesized.Expression),
+        LiteralExpressionSyntax => true,
+        IdentifierNameSyntax or GenericNameSyntax or QualifiedNameSyntax or PredefinedTypeSyntax => true,
+        MemberAccessExpressionSyntax member =>
+            IsSingleMemberAccess(member) || (IsInert(member.Expression) && member.Name is IdentifierNameSyntax),
+        DefaultExpressionSyntax or TypeOfExpressionSyntax or SizeOfExpressionSyntax => true,
+        InvocationExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.ValueText: "nameof" } } => true,
+        PrefixUnaryExpressionSyntax unary => !unary.IsKind(SyntaxKind.PreIncrementExpression) &&
+            !unary.IsKind(SyntaxKind.PreDecrementExpression) && IsInert(unary.Operand),
+        PostfixUnaryExpressionSyntax suppressed when suppressed.IsKind(SyntaxKind.SuppressNullableWarningExpression) =>
+            IsInert(suppressed.Operand),
+        BinaryExpressionSyntax binary => IsInert(binary.Left) && IsInert(binary.Right),
+        ConditionalExpressionSyntax conditional =>
+            IsInert(conditional.Condition) && IsInert(conditional.WhenTrue) && IsInert(conditional.WhenFalse),
+        CastExpressionSyntax cast => IsInert(cast.Expression),
+        BaseObjectCreationExpressionSyntax creation =>
+            creation.ArgumentList is null or { Arguments.Count: 0 } && creation.Initializer is null,
+        ArrayCreationExpressionSyntax array =>
+            array.Type.RankSpecifiers.SelectMany(static rank => rank.Sizes).All(IsInert) &&
+            (array.Initializer is null || array.Initializer.Expressions.All(IsInert)),
+        ImplicitArrayCreationExpressionSyntax implicitArray => implicitArray.Initializer.Expressions.All(IsInert),
+        InitializerExpressionSyntax initializer when initializer.IsKind(SyntaxKind.ArrayInitializerExpression) =>
+            initializer.Expressions.All(IsInert),
+        CollectionExpressionSyntax collection => collection.Elements.All(static element =>
+            element is ExpressionElementSyntax { Expression: var value } && IsInert(value)),
+        InterpolatedStringExpressionSyntax interpolated => interpolated.Contents.All(static content =>
+            content is not InterpolationSyntax hole || IsInert(hole.Expression)),
+        OmittedArraySizeExpressionSyntax => true,
+        _ => false,
+    };
+
+    /// <summary>A <c>throw new X(...)</c> whose arguments and initializer are inert.</summary>
+    private static bool ThrowsInertly(ExpressionSyntax expression) =>
+        Unwrap(expression) is ThrowExpressionSyntax { Expression: BaseObjectCreationExpressionSyntax creation } &&
+        (creation.ArgumentList is null || creation.ArgumentList.Arguments.All(static argument => IsInert(argument.Expression))) &&
+        creation.Initializer is null;
 
     private static bool IsTrivialProperty(BasePropertyDeclarationSyntax property)
     {
@@ -621,8 +983,12 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
             _ => null,
         };
 
-    /// <summary>True when the source, rather than the compiler, says what this member does.</summary>
-    private static bool SuppliesAnImplementation(MemberDeclarationSyntax declaration)
+    /// <summary>
+    /// True when the source, rather than the compiler, says what this member
+    /// does. Strictly, a property initializer that runs code is also the
+    /// source's, as a field's initializer always is.
+    /// </summary>
+    private static bool SuppliesAnImplementation(MemberDeclarationSyntax declaration, bool strict)
     {
         if (ArrowBody(declaration) is not null)
             return true;
@@ -638,6 +1004,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
             return true;
 
         if (declaration is BaseMethodDeclarationSyntax { Body: not null })
+            return true;
+
+        if (strict && declaration is PropertyDeclarationSyntax { Initializer: { } initializer } && !IsInert(initializer.Value))
             return true;
 
         return declaration is BasePropertyDeclarationSyntax { AccessorList: { } accessors } &&
@@ -660,12 +1029,16 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// The qualifier joins only the parts that exist. A top-level type has no
     /// containing type, and joining an empty one in produces a name with a hole
     /// in it that nothing can be matched against by eye.
+    ///
+    /// <paramref name="detailed"/> adds what the plain name leaves out and
+    /// only a repeated name needs: the containing types' type parameters, and
+    /// an indexer's parameter types.
     /// </summary>
-    private static string NameOf(MemberDeclarationSyntax declaration)
+    private static string NameOf(MemberDeclarationSyntax declaration, bool detailed)
     {
         string owner = string.Join(
             ".",
-            ContainingTypes(declaration).Reverse().Select(static type => type.Identifier.ValueText));
+            ContainingTypes(declaration).Reverse().Select(type => detailed ? TypeNameOf(type) : type.Identifier.ValueText));
 
         string? space = declaration.Ancestors()
             .OfType<BaseNamespaceDeclarationSyntax>()
@@ -676,8 +1049,47 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
             ".",
             new[] { space, owner }.Where(static part => !string.IsNullOrEmpty(part)));
 
-        return $"{qualified}.{MemberNameOf(declaration)}{ParametersOf(declaration)}";
+        return OneLine($"{qualified}.{MemberNameOf(declaration, detailed)}{ParametersOf(declaration)}");
     }
+
+    /// <summary>
+    /// A name on one line: every run of whitespace that holds a line break
+    /// becomes one space. A parameter type written across lines (a long tuple,
+    /// say) is rendered from its source text, line break and indentation
+    /// included, which would put the checkout's line ending into the name and
+    /// make a CRLF tree and an LF tree name the unit differently. The owning
+    /// component has no name that spans lines, so its names are unchanged.
+    /// </summary>
+    private static string OneLine(string name)
+    {
+        if (name.AsSpan().IndexOfAny('\r', '\n') < 0)
+            return name;
+
+        var line = new StringBuilder(name.Length);
+        int index = 0;
+        while (index < name.Length)
+        {
+            if (!char.IsWhiteSpace(name[index]))
+            {
+                line.Append(name[index++]);
+                continue;
+            }
+
+            int end = index;
+            bool breaks = false;
+            while (end < name.Length && char.IsWhiteSpace(name[end]))
+                breaks |= name[end++] is '\r' or '\n';
+
+            line.Append(breaks ? " " : name[index..end]);
+            index = end;
+        }
+
+        return line.ToString();
+    }
+
+    private static string TypeNameOf(BaseTypeDeclarationSyntax type) => type is TypeDeclarationSyntax generic
+        ? generic.Identifier.ValueText + Generics(generic.TypeParameterList)
+        : type.Identifier.ValueText;
 
     /// <summary>
     /// The member part of the name, without the qualifier.
@@ -687,7 +1099,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// by the specifier would otherwise be indistinguishable in a report and
     /// unaddressable in a manifest.
     /// </summary>
-    private static string MemberNameOf(MemberDeclarationSyntax declaration) => declaration switch
+    private static string MemberNameOf(MemberDeclarationSyntax declaration, bool detailed) => declaration switch
     {
         MethodDeclarationSyntax method =>
             Explicit(method.ExplicitInterfaceSpecifier) +
@@ -698,7 +1110,8 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         ConversionOperatorDeclarationSyntax conversion => "operator " + conversion.Type,
         PropertyDeclarationSyntax property =>
             Explicit(property.ExplicitInterfaceSpecifier) + property.Identifier.ValueText,
-        IndexerDeclarationSyntax indexer => Explicit(indexer.ExplicitInterfaceSpecifier) + "this[]",
+        IndexerDeclarationSyntax indexer => Explicit(indexer.ExplicitInterfaceSpecifier) +
+            (detailed ? "this[" + ParameterTypes(indexer.ParameterList.Parameters) + "]" : "this[]"),
         EventDeclarationSyntax @event =>
             Explicit(@event.ExplicitInterfaceSpecifier) + @event.Identifier.ValueText,
         BaseFieldDeclarationSyntax field => string.Join(
@@ -721,12 +1134,15 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// </summary>
     private static string ParametersOf(MemberDeclarationSyntax declaration) =>
         declaration is BaseMethodDeclarationSyntax method
-            ? "(" + string.Join(
-                ", ",
-                method.ParameterList.Parameters.Select(static parameter => string.Concat(
-                    parameter.Modifiers.Select(static modifier => modifier.ValueText + " ")) +
-                    (parameter.Type?.ToString() ?? "?"))) + ")"
+            ? "(" + ParameterTypes(method.ParameterList.Parameters) + ")"
             : string.Empty;
+
+    private static string ParameterTypes(SeparatedSyntaxList<ParameterSyntax> parameters) =>
+        string.Join(
+            ", ",
+            parameters.Select(static parameter => string.Concat(
+                parameter.Modifiers.Select(static modifier => modifier.ValueText + " ")) +
+                (parameter.Type?.ToString() ?? "?")));
 
     private static string Generics(TypeParameterListSyntax? parameters) => parameters is null
         ? string.Empty
@@ -753,3 +1169,9 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         EnumMemberOfADeclaredVocabulary,
     }
 }
+
+/// <summary>
+/// One unit and the syntax it was read from: its declaration, or for the
+/// top-level unit the first statement, whose leading trivia holds its block.
+/// </summary>
+internal sealed record ScannedDeclaration(MemberDeclarationSyntax Declaration, AssuranceScannedUnit Unit, bool IsTopLevel);

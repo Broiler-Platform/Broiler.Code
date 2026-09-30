@@ -1,7 +1,6 @@
-using Broiler.Code.Language.CSharp.Roslyn;
 using Broiler.Code.Review.Assurance;
 
-namespace Broiler.Code.Language.CSharp.Tests;
+namespace Broiler.Code.Language.CSharp.Assurance.Tests;
 
 /// <summary>
 /// The assurance model with a language service composed, which is the level at

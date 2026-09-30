@@ -4,7 +4,7 @@ using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Broiler.Code.Core.Review;
 using Broiler.Code.Core.Shell;
-using Broiler.Code.Language.CSharp.Roslyn;
+using Broiler.Code.Language.CSharp.Assurance;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Storage;
 using Broiler.Graphics;

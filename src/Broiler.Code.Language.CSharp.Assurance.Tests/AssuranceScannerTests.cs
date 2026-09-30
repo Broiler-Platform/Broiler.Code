@@ -1,7 +1,6 @@
-using Broiler.Code.Language.CSharp.Roslyn;
 using Broiler.Code.Review.Assurance;
 
-namespace Broiler.Code.Language.CSharp.Tests;
+namespace Broiler.Code.Language.CSharp.Assurance.Tests;
 
 /// <summary>
 /// The assurance scanner against values the component that owns the format has
@@ -84,6 +83,27 @@ public sealed class AssuranceScannerTests
             Fingerprint(
                 units,
                 "Broiler.VM.VmArtifactDescriptor.operator ==(VmArtifactDescriptor, VmArtifactDescriptor)"));
+    }
+
+    /// <summary>
+    /// The whole file's fingerprint, against the value the owning component's
+    /// manifest records for this file.
+    ///
+    /// The file fingerprint is what records a change no unit holds, such as a
+    /// using directive or an assembly attribute, so agreeing about the units
+    /// alone is not agreeing about the file. The fixture's documentation
+    /// comments are shorter than the committed file's, and the value is the
+    /// same regardless: comments are trivia, and trivia is outside it.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void The_File_Fingerprint_Is_The_One_The_Manifest_Records()
+    {
+        Assert.Equal(
+            "B6E47B",
+            CSharpAssuranceScanner.FingerprintOfFile(AssuranceFixture.Descriptor, "VmArtifactDescriptor.cs"));
+        Assert.Equal(
+            "B6E47B",
+            new CSharpAssuranceFileScanner().ScanFile(AssuranceFixture.Descriptor, "VmArtifactDescriptor.cs").FileFingerprint);
     }
 
     /// <summary>

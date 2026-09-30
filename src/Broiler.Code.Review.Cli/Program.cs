@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Broiler.Code.Review;
 using Broiler.Code.Review.Cli;
+using Broiler.Code.Review.Cli.Assurance;
 
 // The command-line half of the Human Review workspace.
 //
@@ -19,6 +21,22 @@ if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
 {
     PrintUsage();
     return 0;
+}
+
+// The assurance commands read a component's annotation blocks and never its
+// file review records, so they are dispatched before those are evaluated.
+//
+// Their output is UTF-8 whatever the console's code page. Console.Out encodes
+// in that code page (850 on a German Windows), which turns a JSON report on
+// standard output into bytes that are not UTF-8, and a name outside the code
+// page into '?'. Writing to the raw streams leaves the console's own setting,
+// which the parent shell shares, alone.
+if (args[0] == "assurance")
+{
+    var utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+    using var output = new StreamWriter(Console.OpenStandardOutput(), utf8) { AutoFlush = true };
+    using var error = new StreamWriter(Console.OpenStandardError(), utf8) { AutoFlush = true };
+    return AssuranceCommand.Run(args[1..], output, error);
 }
 
 string command = args[0];
@@ -188,6 +206,9 @@ static void PrintUsage() => Console.Out.WriteLine(
       broiler-review coverage [options]   Report how much of the source a human has reviewed.
       broiler-review check    [options]   Report reviews invalidated by a change.
       broiler-review list     [options]   Print every file and its review state.
+      broiler-review assurance <command>  Per-declaration assurance annotations of one component
+                                          (list, insert, generate, check, status).
+                                          "broiler-review assurance --help" for more.
 
     Options:
       --root <dir>          Repository root. Defaults to the working directory.

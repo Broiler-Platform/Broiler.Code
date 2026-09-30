@@ -213,6 +213,10 @@ public sealed class Thing
     [InlineData("name=value")]
     [InlineData("PENDING")]
     [InlineData("STALE")]
+    [InlineData("Pending")]
+    [InlineData("NOT REVIEWED")]
+    [InlineData("TODO")]
+    [InlineData("EB​")]
     public void A_Name_The_Format_Cannot_Carry_Is_Refused(string reviewer)
     {
         AssuranceDocument document = AssuranceDocument.Read(Source);
