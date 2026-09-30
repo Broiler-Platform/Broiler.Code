@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RootNamespace>Broiler.Code.Language.CSharp.Assurance</RootNamespace>
+    <AssemblyName>Broiler.Code.Language.CSharp.Assurance</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!--
+    The assurance scanner, on its own, so that something with no display can use it.
+
+    It used to live in Broiler.Code.Language.CSharp.Roslyn beside the language service,
+    and that project also references Broiler.UI.CodeEditor. Its closure is ten Broiler.*
+    packages from the authenticated GitHub feed and a UI toolkit, none of which the
+    scanner uses. The review CLI runs in a workflow that supplies no feed credentials and
+    must not depend on a UI compile, so the scanner moved here, where the only package is
+    the parser from nuget.org.
+
+    The Roslyn pin must stay identical to the one in Broiler.Code.Language.CSharp.Roslyn.
+    A fingerprint is a hash over Roslyn's tokens. Two compiler builds that tokenize one
+    construct differently give two fingerprints for the same code, and every approval
+    recorded against the other one then reads as stale.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+  </ItemGroup>
+
+  <!--
+    The review model declares what a scanner must produce (IAssuranceUnitScanner,
+    IAssuranceFileScanner) and knows nothing about Roslyn. This assembly implements it.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Broiler.Code.Review\Broiler.Code.Review.csproj" />
+  </ItemGroup>
+
+</Project>

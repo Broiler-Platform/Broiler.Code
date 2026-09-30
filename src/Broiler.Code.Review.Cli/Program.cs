@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Broiler.Code.Review;
 using Broiler.Code.Review.Cli;
+using Broiler.Code.Review.Cli.Assurance;
 
 // The command-line half of the Human Review workspace.
 //
@@ -20,6 +21,11 @@ if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
     PrintUsage();
     return 0;
 }
+
+// The assurance commands read a component's annotation blocks and never its
+// file review records, so they are dispatched before those are evaluated.
+if (args[0] == "assurance")
+    return AssuranceCommand.Run(args[1..], Console.Out, Console.Error);
 
 string command = args[0];
 string root = ValueOf("--root") ?? Directory.GetCurrentDirectory();
@@ -188,6 +194,8 @@ static void PrintUsage() => Console.Out.WriteLine(
       broiler-review coverage [options]   Report how much of the source a human has reviewed.
       broiler-review check    [options]   Report reviews invalidated by a change.
       broiler-review list     [options]   Print every file and its review state.
+      broiler-review assurance <command>  Per-declaration assurance annotations of one component
+                                          (list, insert). "broiler-review assurance --help" for more.
 
     Options:
       --root <dir>          Repository root. Defaults to the working directory.

@@ -24,6 +24,17 @@
     <ProjectReference Include="..\Broiler.Code.Workspaces\Broiler.Code.Workspaces.csproj" />
   </ItemGroup>
 
+  <!--
+    The assurance scanner, for "broiler-review assurance". Deliberately this
+    assembly and never Broiler.Code.Language.CSharp.Roslyn: that one carries the
+    editor's language service and a UI package closure from the authenticated
+    feed, and the workflow that builds this tool supplies no feed credentials.
+    This one needs Roslyn from nuget.org and nothing else.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Broiler.Code.Language.CSharp.Assurance\Broiler.Code.Language.CSharp.Assurance.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Broiler.Code.Review.Tests" />
   </ItemGroup>

@@ -35,13 +35,12 @@
   <ItemGroup>
 
     <!--
-      The review model, for the assurance scanner alone. It is the only thing
-      here that a review pane consumes, and the reference points the way the
-      seam does: the model declares what a scanner must produce and knows
-      nothing about Roslyn, and this assembly is where the one implementation
-      that needs a real parser lives.
+      The assurance scanner, which reaches the review model it implements. It
+      lives in its own assembly so the review CLI can use it without this
+      project's UI package closure; the reference stays so that a head
+      composing this project still gets the scanner.
     -->
-    <ProjectReference Include="..\Broiler.Code.Review\Broiler.Code.Review.csproj" />
+    <ProjectReference Include="..\Broiler.Code.Language.CSharp.Assurance\Broiler.Code.Language.CSharp.Assurance.csproj" />
     <ProjectReference Include="..\Broiler.Code.Workspaces\Broiler.Code.Workspaces.csproj" />
   </ItemGroup>
 

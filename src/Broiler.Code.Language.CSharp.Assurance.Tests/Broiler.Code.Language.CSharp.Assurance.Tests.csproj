@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Broiler.Code.Review.Tests</RootNamespace>
+    <RootNamespace>Broiler.Code.Language.CSharp.Assurance.Tests</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -15,13 +15,15 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
   </ItemGroup>
 
+  <!--
+    The scanner-agreement tests. They used to sit in Broiler.Code.Language.CSharp.Tests,
+    which also references the editor's syntax and language-service projects, so they
+    could only run when those built. Here they need the scanner and the review model
+    and nothing else.
+  -->
   <ItemGroup>
-    <ProjectReference Include="..\Broiler.Code.Review\Broiler.Code.Review.csproj" />
-    <ProjectReference Include="..\Broiler.Code.Review.Cli\Broiler.Code.Review.Cli.csproj" />
-    <ProjectReference Include="..\Broiler.Code.Workspaces\Broiler.Code.Workspaces.csproj" />
-
-    <!-- The insert is verified by rescanning, so its tests need the real scanner. -->
     <ProjectReference Include="..\Broiler.Code.Language.CSharp.Assurance\Broiler.Code.Language.CSharp.Assurance.csproj" />
+    <ProjectReference Include="..\Broiler.Code.Review\Broiler.Code.Review.csproj" />
   </ItemGroup>
 
   <ItemGroup>

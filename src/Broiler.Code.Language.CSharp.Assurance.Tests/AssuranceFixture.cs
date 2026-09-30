@@ -1,6 +1,6 @@
 using Broiler.Code.Review.Assurance;
 
-namespace Broiler.Code.Language.CSharp.Tests;
+namespace Broiler.Code.Language.CSharp.Assurance.Tests;
 
 /// <summary>
 /// A real annotated source file, kept verbatim so that several tests can assert

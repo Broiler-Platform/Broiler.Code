@@ -84,16 +84,32 @@ public sealed class AssuranceLines
         _lines[index] = line;
     }
 
+    /// <summary>
+    /// The terminator line <paramref name="index"/> ends with: CRLF, LF, a lone
+    /// CR, or empty for the last line.
+    /// </summary>
+    public string SeparatorOf(int index) => _separators[index];
+
     /// <summary>Inserts lines, each terminated with <see cref="NewLine"/>.</summary>
-    public void Insert(int index, IReadOnlyList<string> lines)
+    public void Insert(int index, IReadOnlyList<string> lines) => Insert(index, lines, NewLine);
+
+    /// <summary>
+    /// Inserts lines, each terminated with <paramref name="separator"/>. For a
+    /// caller that has chosen the ending itself, such as the ending of the
+    /// neighbouring lines in a file whose endings are mixed.
+    /// </summary>
+    public void Insert(int index, IReadOnlyList<string> lines, string separator)
     {
         ArgumentNullException.ThrowIfNull(lines);
+        ArgumentNullException.ThrowIfNull(separator);
 
-        string newLine = NewLine;
+        if (separator is not ("\r\n" or "\n" or "\r"))
+            throw new ArgumentException("A separator is CRLF, LF or CR.", nameof(separator));
+
         for (int offset = 0; offset < lines.Count; offset++)
         {
             _lines.Insert(index + offset, lines[offset]);
-            _separators.Insert(index + offset, newLine);
+            _separators.Insert(index + offset, separator);
         }
     }
 

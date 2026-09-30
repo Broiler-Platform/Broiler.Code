@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Broiler.Code.Language.CSharp.Roslyn;
+namespace Broiler.Code.Language.CSharp.Assurance;
 
 /// <summary>
 /// Finds the code units of a C# file and fingerprints them the way the component
@@ -36,6 +36,10 @@ namespace Broiler.Code.Language.CSharp.Roslyn;
 /// Nothing here decides a review. It reports what is, and the two things a
 /// mistake in it can cost are a unit shown under the wrong heading and a file
 /// header this editor then declines to recount — never an approval.
+///
+/// The editor and the command-line review tool share this one implementation.
+/// That is why it sits in an assembly whose only package is Roslyn, apart from
+/// the language service and its UI dependencies.
 /// </summary>
 public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
 {
@@ -47,7 +51,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// carries no tokens — so a scanner using the defaults would hash shipping
     /// code as though it were absent and would agree with nobody.
     /// </summary>
-    private static readonly string[] PreprocessorSymbols =
+    private static readonly string[] DefaultSymbols =
     [
         "NET",
         "NETCOREAPP",
@@ -70,9 +74,36 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         "TRACE",
     ];
 
-    private static readonly CSharpParseOptions ParseOptions = CSharpParseOptions.Default
-        .WithLanguageVersion(LanguageVersion.Latest)
-        .WithPreprocessorSymbols(PreprocessorSymbols);
+    private static readonly CSharpParseOptions DefaultParseOptions = OptionsFor(DefaultSymbols);
+
+    private readonly CSharpParseOptions _parseOptions;
+
+    /// <summary>A scanner parsing under <see cref="DefaultPreprocessorSymbols"/>.</summary>
+    public CSharpAssuranceScanner()
+        : this(null)
+    {
+    }
+
+    /// <summary>
+    /// A scanner parsing under <paramref name="preprocessorSymbols"/>, or under
+    /// <see cref="DefaultPreprocessorSymbols"/> when that is null.
+    ///
+    /// A component that builds with other symbols has to say so, because
+    /// code under an undefined symbol is disabled text: it has no tokens, so
+    /// it is in no unit and in no fingerprint.
+    /// </summary>
+    public CSharpAssuranceScanner(IEnumerable<string>? preprocessorSymbols)
+    {
+        _parseOptions = preprocessorSymbols is null
+            ? DefaultParseOptions
+            : OptionsFor(preprocessorSymbols);
+    }
+
+    /// <summary>
+    /// The symbols the owning component parses under: every symbol a net10.0
+    /// build defines, plus DEBUG, RELEASE and TRACE.
+    /// </summary>
+    public static IReadOnlyList<string> DefaultPreprocessorSymbols => DefaultSymbols;
 
     /// <inheritdoc/>
     public IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path)
@@ -80,30 +111,73 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(path);
 
-        SyntaxTree tree = CSharpSyntaxTree.ParseText(text, ParseOptions, path: path);
-        SyntaxNode root = tree.GetRoot();
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(text, _parseOptions, path: path);
 
         var units = new List<AssuranceScannedUnit>();
-        foreach (MemberDeclarationSyntax declaration in root
-            .DescendantNodes()
-            .OfType<MemberDeclarationSyntax>()
-            .Where(IsCodeUnit))
-        {
-            FileLinePositionSpan span = tree.GetLineSpan(declaration.Span);
-            AssuranceExemption exemption = ExemptionFor(declaration);
-
-            units.Add(new AssuranceScannedUnit(
-                NameOf(declaration),
-                MemberNameOf(declaration) + ParametersOf(declaration),
-                span.StartLinePosition.Line,
-                span.EndLinePosition.Line,
-                exemption != AssuranceExemption.None,
-                exemption.ToString(),
-                Fingerprint(declaration)));
-        }
+        foreach (MemberDeclarationSyntax declaration in CodeUnits(tree.GetRoot()))
+            units.Add(Describe(tree, declaration));
 
         return units;
     }
+
+    /// <summary>Parse options for one set of preprocessor symbols.</summary>
+    internal static CSharpParseOptions OptionsFor(IEnumerable<string> preprocessorSymbols) =>
+        CSharpParseOptions.Default
+            .WithLanguageVersion(LanguageVersion.Latest)
+            .WithPreprocessorSymbols(preprocessorSymbols);
+
+    /// <summary>
+    /// Every code unit under <paramref name="root"/>, in document order. The walk
+    /// is pre-order and does not descend into trivia, so a type comes before its
+    /// members and a declaration in disabled text is not found.
+    /// </summary>
+    internal static IEnumerable<MemberDeclarationSyntax> CodeUnits(SyntaxNode root) =>
+        root.DescendantNodes().OfType<MemberDeclarationSyntax>().Where(IsCodeUnit);
+
+    /// <summary>One unit as <see cref="IAssuranceUnitScanner"/> reports it.</summary>
+    internal static AssuranceScannedUnit Describe(SyntaxTree tree, MemberDeclarationSyntax declaration)
+    {
+        FileLinePositionSpan span = tree.GetLineSpan(declaration.Span);
+        AssuranceExemption exemption = ExemptionFor(declaration);
+
+        return new AssuranceScannedUnit(
+            NameOf(declaration),
+            MemberNameOf(declaration) + ParametersOf(declaration),
+            span.StartLinePosition.Line,
+            span.EndLinePosition.Line,
+            exemption != AssuranceExemption.None,
+            exemption.ToString(),
+            Fingerprint(declaration))
+        {
+            Kind = KindOf(declaration),
+            DeclarationColumn = span.StartLinePosition.Character,
+        };
+    }
+
+    /// <summary>
+    /// The declaration kind in lower-case words. A type declaration Roslyn adds
+    /// later (C# 14's extension block is one) is named by its own keyword.
+    /// </summary>
+    private static string KindOf(MemberDeclarationSyntax declaration) => declaration switch
+    {
+        RecordDeclarationSyntax record =>
+            record.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword) ? "record struct" : "record",
+        TypeDeclarationSyntax type => type.Keyword.ValueText,
+        EnumDeclarationSyntax => "enum",
+        DelegateDeclarationSyntax => "delegate",
+        MethodDeclarationSyntax => "method",
+        ConstructorDeclarationSyntax => "constructor",
+        DestructorDeclarationSyntax => "destructor",
+        OperatorDeclarationSyntax => "operator",
+        ConversionOperatorDeclarationSyntax => "conversion",
+        PropertyDeclarationSyntax => "property",
+        IndexerDeclarationSyntax => "indexer",
+        EventDeclarationSyntax => "event",
+        EventFieldDeclarationSyntax => "event field",
+        FieldDeclarationSyntax => "field",
+        EnumMemberDeclarationSyntax => "enum member",
+        _ => "member",
+    };
 
     /// <summary>
     /// The fingerprint of one declaration: SHA-256 over its token texts joined by
@@ -155,7 +229,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(path);
 
-        return Fingerprint(CSharpSyntaxTree.ParseText(text, ParseOptions, path: path).GetRoot());
+        return Fingerprint(CSharpSyntaxTree.ParseText(text, DefaultParseOptions, path: path).GetRoot());
     }
 
     /// <summary>

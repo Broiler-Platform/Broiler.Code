@@ -121,8 +121,9 @@ a human writes — on any host, in any language the format is ever applied to.
 Finding *every* unit, deciding which are exempt, and computing a fingerprint
 needs a real C# parser. `IAssuranceUnitScanner` is that seam and
 `CSharpAssuranceScanner` is its one implementation, in
-`Broiler.Code.Language.CSharp.Roslyn` where Roslyn already lives. The desktop
-heads compose it; `Broiler.Code.Core` does not reference it, which is the
+`Broiler.Code.Language.CSharp.Assurance`, which needs Roslyn and nothing else so
+that the [command-line tool](broiler-code-assurance-cli.md) can use it too. The
+desktop heads compose it; `Broiler.Code.Core` does not reference it, which is the
 constraint Phase 0's payload probes produced and which
 `CodeEditorArchitectureTests` still asserts.
 
@@ -181,7 +182,7 @@ true:
 | Concern | Owner | Boundary |
 | --- | --- | --- |
 | Annotation grammar, the state machine, the header's arithmetic, the rewrite | `Broiler.Code.Review` | References `Broiler.Code.Workspaces` and nothing else. No UI, no parser, no platform. |
-| Units, the exemption predicate, fingerprints | `Broiler.Code.Language.CSharp.Roslyn` | The one place a C# parser is needed, behind `IAssuranceUnitScanner` |
+| Units, the exemption predicate, fingerprints | `Broiler.Code.Language.CSharp.Assurance` | The one place a C# parser is needed, behind `IAssuranceUnitScanner` and `IAssuranceFileScanner`. Roslyn from nuget.org and no UI package, so the command-line tool can use it |
 | The caret, the pane sections, the commands, the buffer edit | `Broiler.Code.Core` | The seam that knows about both a workspace and a screen |
 | Composing a scanner | `Broiler.Code.Windows`, `.Linux` | Optional, so a head that composes none still gets the annotation-text reading |
 
@@ -216,4 +217,6 @@ value is written out as a literal rather than computed.
   header is recounted here.
 - **It does not create an annotation.** A relevant declaration carrying none is
   reported as such and cannot be signed. Writing the machine's assessment line is
-  an assessment, not a review.
+  an assessment, not a review; `broiler-review assurance insert` does that, and
+  writes `PENDING` on the human line. See
+  [the assurance commands](broiler-code-assurance-cli.md).

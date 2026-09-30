@@ -1,0 +1,129 @@
+using Broiler.Code.Review.Assurance;
+
+namespace Broiler.Code.Review.Tests;
+
+/// <summary>
+/// A component's <c>assurance.config.json</c>.
+///
+/// The file decides what is covered and how headers are licensed, so what these
+/// tests mostly assert is that a mistake in it is an error rather than a quiet
+/// change of meaning.
+/// </summary>
+public sealed class AssuranceConfigTests
+{
+    [Fact(Timeout = 600000)]
+    public void A_Minimal_Config_Takes_The_Defaults()
+    {
+        AssuranceComponentConfig config = AssuranceComponentConfig.Parse(
+            """{ "schema": 1, "projects": [ "src/A/A.csproj" ] }""");
+
+        Assert.Equal(["src/A/A.csproj"], config.Projects);
+        Assert.Equal(AssuranceMode.Owned, config.Mode);
+        Assert.Equal(AssuranceForgeryVocabulary.Narrow, config.ForgeryVocabulary);
+        Assert.False(config.ForbidDirectives);
+        Assert.Null(config.PreprocessorSymbols);
+        Assert.Null(config.Spdx);
+        Assert.Empty(config.Exclude);
+        Assert.Empty(config.ClosedToEscapeHatch);
+        Assert.Equal("CODE-ASSURANCE.md", config.Artefacts.Report);
+        Assert.Equal("HUMAN_REVIEW.md", config.Artefacts.HumanReview);
+        Assert.Equal("assurance.manifest.json", config.Artefacts.Manifest);
+        Assert.Equal("docs/adr", config.AdrDirectory);
+    }
+
+    [Fact(Timeout = 600000)]
+    public void Every_Field_Is_Read()
+    {
+        AssuranceComponentConfig config = AssuranceComponentConfig.Parse(
+            """
+            {
+              // Comments and trailing commas are allowed: the file is written by hand.
+              "schema": 1,
+              "component": "Broiler.HTML",
+              "mode": "external",
+              "projects": [ "src/A/A.csproj", "src/B/B.csproj", ],
+              "exclude": [ "*.g.cs", { "glob": "src/A/Legacy/**", "reason": "vendored" } ],
+              "spdx": { "copyright": [ "2026 Broiler Platform contributors" ], "license": "Apache-2.0" },
+              "spdxOverrides": [
+                { "glob": "src/A/Renderer/**",
+                  "copyright": [ "2009 José Manuel Menéndez Poo", "2013-2025 Arthur Teplitzki", "2026 Broiler Platform contributors" ],
+                  "license": "Apache-2.0 AND BSD-3-Clause" }
+              ],
+              "artefacts": { "report": "docs/CODE-ASSURANCE.md", "humanReview": "HUMAN_REVIEW.generated.md", "manifest": "assurance.manifest.json" },
+              "preprocessorSymbols": [ "NET", "RELEASE" ],
+              "forbidDirectives": true,
+              "forgeryVocabulary": "strict",
+              "closedToEscapeHatch": [ "Broiler.Html" ],
+              "adrDirectory": "docs/decisions",
+              "regenerateCommand": "broiler-review assurance generate --root ."
+            }
+            """);
+
+        Assert.Equal("Broiler.HTML", config.Component);
+        Assert.Equal(AssuranceMode.External, config.Mode);
+        Assert.Equal(2, config.Projects.Count);
+        Assert.Equal("excluded by assurance.config.json", config.ExclusionFor("src/A/X.g.cs")!.Reason);
+        Assert.Equal("vendored", config.ExclusionFor("src/A/Legacy/Old/Y.cs")!.Reason);
+        Assert.Null(config.ExclusionFor("src/A/Y.cs"));
+        Assert.Equal(AssuranceForgeryVocabulary.Strict, config.ForgeryVocabulary);
+        Assert.True(config.ForbidDirectives);
+        Assert.Equal(["NET", "RELEASE"], config.PreprocessorSymbols);
+        Assert.Equal(["Broiler.Html"], config.ClosedToEscapeHatch);
+        Assert.Equal("docs/decisions", config.AdrDirectory);
+        Assert.Equal("docs/CODE-ASSURANCE.md", config.Artefacts.Report);
+        Assert.Equal("HUMAN_REVIEW.generated.md", config.Artefacts.HumanReview);
+        Assert.Equal("broiler-review assurance generate --root .", config.RegenerateCommand);
+
+        AssuranceSpdx derived = config.SpdxFor("src/A/Renderer/Box.cs")!;
+        Assert.Equal(3, derived.Copyright.Count);
+        Assert.Equal("Apache-2.0 AND BSD-3-Clause", derived.License);
+        Assert.Equal("Apache-2.0", config.SpdxFor("src/B/Other.cs")!.License);
+    }
+
+    [Theory(Timeout = 600000)]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "exlcude": [] }""", "$.exlcude is not a property this schema defines")]
+    [InlineData("""{ "schema": 1 }""", "$.projects must list at least one product project")]
+    [InlineData("""{ "schema": 2, "projects": [ "a/a.csproj" ] }""", "$.schema must be 1")]
+    [InlineData("""{ "projects": [ "a/a.cs" ] }""", "is not a .csproj file")]
+    [InlineData("""{ "projects": [ "../other/a.csproj" ] }""", "has an empty, '.' or '..' segment")]
+    [InlineData("""{ "projects": [ "C:/x/a.csproj" ] }""", "is rooted")]
+    [InlineData("""{ "projects": [ "a\\a.csproj" ] }""", "write paths with '/'")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "mode": "shared" }""", "$.mode must be \"owned\" or \"external\"")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "forgeryVocabulary": "wide" }""", "must be \"narrow\" or \"strict\"")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "spdx": { "license": "MIT" } }""", "$.spdx.copyright must list at least one copyright line")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "spdx": { "copyright": [ "x" ] } }""", "$.spdx.license is required")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "spdx": { "copyright": [ "// SPDX-FileCopyrightText: x" ], "license": "MIT" } }""", "is the value only")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "spdxOverrides": [ { "copyright": [ "x" ], "license": "MIT" } ] }""", "has no \"glob\"")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "exclude": [ "/abs/**" ] }""", "is rooted")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "artefacts": { "report": "X.md", "humanReview": "X.md" } }""", "names one file for two artefacts")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "preprocessorSymbols": [ "NET 10" ] }""", "is not a preprocessor symbol")]
+    [InlineData("""{ "projects": [ "a/a.csproj", "a/a.csproj" ] }""", "names a project twice")]
+    [InlineData("""[ ]""", "$ must be an object")]
+    [InlineData("""{ "projects": """, "not valid JSON")]
+    public void A_Mistake_Is_An_Error_Naming_Where_It_Is(string json, string expected)
+    {
+        AssuranceConfigException exception =
+            Assert.Throws<AssuranceConfigException>(() => AssuranceComponentConfig.Parse(json));
+
+        Assert.Contains(expected, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory(Timeout = 600000)]
+    [InlineData("*.g.cs", "src/A/Deep/X.g.cs", true)]
+    [InlineData("*.g.cs", "src/A/X.cs", false)]
+    [InlineData("**/*.g.cs", "X.g.cs", true)]
+    [InlineData("**/*.g.cs", "src/A/X.g.cs", true)]
+    [InlineData("src/A/**", "src/A/B/C.cs", true)]
+    [InlineData("src/A/**", "src/AB/C.cs", false)]
+    [InlineData("src/*/C.cs", "src/A/C.cs", true)]
+    [InlineData("src/*/C.cs", "src/A/B/C.cs", false)]
+    [InlineData("src/A/?.cs", "src/A/B.cs", true)]
+    [InlineData("src/A/**/Gen/*.cs", "src/A/Gen/X.cs", true)]
+    [InlineData("src/A/**/Gen/*.cs", "src/A/B/C/Gen/X.cs", true)]
+    [InlineData("src/a/*.cs", "src/A/X.cs", false)]
+    public void A_Glob_Matches_Root_Relative_Paths(string pattern, string path, bool expected)
+    {
+        Assert.True(AssuranceGlob.TryParse(pattern, out AssuranceGlob? glob, out _));
+        Assert.Equal(expected, glob!.IsMatch(path));
+    }
+}

@@ -86,7 +86,21 @@ public readonly record struct AssuranceScannedUnit(
     int EndLine,
     bool IsExempt,
     string Exemption,
-    string Fingerprint);
+    string Fingerprint)
+{
+    /// <summary>
+    /// What kind of declaration this is, in lower-case words: <c>class</c>,
+    /// <c>record struct</c>, <c>method</c>, <c>event field</c>, <c>enum member</c>
+    /// and so on. Empty when the scanner does not say.
+    /// </summary>
+    public string Kind { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Zero-based column of the declaration's first token (the <c>[</c> of its
+    /// first attribute when it has one) on <see cref="DeclarationLine"/>.
+    /// </summary>
+    public int DeclarationColumn { get; init; }
+}
 
 /// <summary>
 /// Finds the code units of a source file and fingerprints them.
