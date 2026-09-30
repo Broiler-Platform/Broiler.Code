@@ -83,6 +83,12 @@ public sealed class AssuranceAnnotation
     public bool HasCriterionLine => FalsifiedIfLine is not null;
 
     /// <summary>
+    /// The criterion as the owning component exposes it: null when the block has
+    /// no criterion line, empty when it has one that says nothing.
+    /// </summary>
+    public string? FalsifiedIf => FalsifiedIfLine is null ? null : Criterion;
+
+    /// <summary>
     /// The <c>Previous=reviewer@fingerprint</c> a stale human line preserves, or
     /// null. Split at the last <c>@</c>; with none, the fingerprint is empty.
     /// </summary>
@@ -399,6 +405,39 @@ public sealed class AssuranceAnnotation
     /// <summary>The human's line carrying <paramref name="body"/>.</summary>
     public string RenderHumanLine(string body) =>
         RenderLine(Indent, AssuranceVocabulary.HumanMarker, body);
+
+    /// <summary>
+    /// The machine's line as the generator writes it: every field as
+    /// <c>Key=Value</c>, joined by <c>"; "</c>, even when a value is empty.
+    ///
+    /// This differs from <see cref="RenderAiLine()"/>, which writes a bare key
+    /// for an empty value so that the editor gives back what it read. The
+    /// generator only rewrites blocks the strict parse accepted, and every
+    /// field of one of those had an <c>=</c>.
+    /// </summary>
+    public static string RenderAiLine(string indent, IEnumerable<AssuranceField> fields)
+    {
+        ArgumentNullException.ThrowIfNull(fields);
+
+        var builder = new StringBuilder();
+        foreach (AssuranceField field in fields)
+        {
+            if (builder.Length > 0)
+                builder.Append("; ");
+
+            builder.Append(field.Key).Append('=').Append(field.Value);
+        }
+
+        return RenderLine(indent, AssuranceVocabulary.AiMarker, builder.ToString());
+    }
+
+    /// <summary>The criterion line. The prose is carried through; the generator never authors one.</summary>
+    public static string RenderFalsifiedIfLine(string indent, string criterion) =>
+        RenderLine(indent, AssuranceVocabulary.FalsifiedIfMarker, criterion);
+
+    /// <summary>The human line at <paramref name="indent"/>.</summary>
+    public static string RenderHumanLine(string indent, string body) =>
+        RenderLine(indent, AssuranceVocabulary.HumanMarker, body);
 
     private static string Body(string line, string marker)
     {

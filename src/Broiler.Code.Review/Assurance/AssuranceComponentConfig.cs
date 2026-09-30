@@ -148,6 +148,15 @@ public sealed record AssuranceComponentConfig
     public string? RegenerateCommand { get; init; }
 
     /// <summary>
+    /// The manifest's <c>$comment</c> lines, verbatim, in place of the tool's
+    /// own. Null for the tool's. For a component whose manifest prose is fixed
+    /// by its own tests, so that the manifest this tool writes is the one that
+    /// component's gate accepts byte for byte. The check still holds these lines
+    /// to the review-claim rule.
+    /// </summary>
+    public IReadOnlyList<string>? ManifestComment { get; init; }
+
+    /// <summary>
     /// The SPDX lines for <paramref name="relativePath"/>: the first override
     /// whose pattern matches, else the default. Null when neither is configured.
     /// </summary>
@@ -300,6 +309,10 @@ public sealed record AssuranceComponentConfig
 
                     case "regenerateCommand":
                         config = config with { RegenerateCommand = SingleLine(value, path) };
+                        break;
+
+                    case "manifestComment":
+                        config = config with { ManifestComment = CommentLines(value, path) };
                         break;
 
                     default:
@@ -468,6 +481,31 @@ public sealed record AssuranceComponentConfig
             throw Error(path, "names one file for two artefacts");
 
         return artefacts;
+    }
+
+    /// <summary>Lines of prose, where an empty string is a blank line.</summary>
+    private static IReadOnlyList<string> CommentLines(JsonElement value, string path)
+    {
+        if (value.ValueKind != JsonValueKind.Array)
+            throw Error(path, "must be an array of strings");
+
+        var lines = new List<string>();
+        int index = 0;
+        foreach (JsonElement entry in value.EnumerateArray())
+        {
+            string at = $"{path}[{index++}]";
+            if (entry.ValueKind != JsonValueKind.String)
+                throw Error(at, "must be a string");
+
+            lines.Add(CheckSingleLine(entry.GetString()!, at));
+        }
+
+        // The generator recognizes its own manifest by this opening, and would
+        // otherwise refuse to replace a manifest it wrote itself.
+        if (lines.Count == 0 || !lines[0].StartsWith("GENERATED - DO NOT EDIT MANUALLY", StringComparison.Ordinal))
+            throw Error(path, "must open with a line starting 'GENERATED - DO NOT EDIT MANUALLY'");
+
+        return lines;
     }
 
     private static IReadOnlyList<string> Symbols(JsonElement value, string path)

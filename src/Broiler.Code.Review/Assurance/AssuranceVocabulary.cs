@@ -78,6 +78,42 @@ public static class AssuranceVocabulary
     public static readonly string[] SecurityRiskValues =
         ["None", "Low", "Medium", "High", "Critical"];
 
+    /// <summary>The exemption a unit takes from an <c>EXEMPT=</c> field in its own source.</summary>
+    public const string DeclaredInSource = "DeclaredInSource";
+
+    /// <summary>
+    /// Every exemption case, in the order the owning component declares them and
+    /// its report tables list them. <c>None</c>, which is not an exemption, is
+    /// left out.
+    /// </summary>
+    public static readonly string[] ExemptionCases =
+    [
+        "TrivialPropertyOrAccessor",
+        "ParameterAssigningConstructor",
+        "TrivialExpressionBodiedMember",
+        "CompilerSuppliedRecordOrEnumMember",
+        "DelegatingOverrideOrOperator",
+        "InsideAssemblyMarker",
+        "FieldDeclaringStorage",
+        "EnumMemberOfADeclaredVocabulary",
+        DeclaredInSource,
+    ];
+
+    /// <summary>
+    /// Every state the state machine can resolve, in the order the owning
+    /// component declares them and its report tables list them.
+    /// </summary>
+    public static readonly AssuranceUnitState[] States =
+    [
+        AssuranceUnitState.New,
+        AssuranceUnitState.AiAssessed,
+        AssuranceUnitState.HumanPending,
+        AssuranceUnitState.HumanApprovedPendingFingerprint,
+        AssuranceUnitState.Verified,
+        AssuranceUnitState.Stale,
+        AssuranceUnitState.Exempt,
+    ];
+
     /// <summary>The fields a full assessment carries. <c>Spec</c> is the one defined optional.</summary>
     public static readonly string[] RequiredFields =
         ["Origin", "IP", "Security", "Resources", FingerprintField];

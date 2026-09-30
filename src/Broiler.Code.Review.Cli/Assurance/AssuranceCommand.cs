@@ -15,12 +15,16 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// <c>list</c> reports which relevant units carry no block yet, with what a
 /// tool needs to write one. <c>insert</c> writes machine assessments above
 /// those units, and cannot write anything on the human line but
-/// <c>PENDING</c>: its input has no field for it.
+/// <c>PENDING</c>: its input has no field for it. <c>generate</c> writes the
+/// headers and the component artefacts, <c>check</c> compares the tree with
+/// what <c>generate</c> would write and applies the rules, and <c>status</c>
+/// summarizes.
 ///
-/// Exit codes: 0 done, 1 something was refused, 2 a usage or configuration
-/// error, before anything was written.
+/// Exit codes: 0 done (or, for <c>check</c>, nothing wrong), 1 something was
+/// refused or violated, 2 a usage or configuration error, before anything was
+/// written.
 /// </summary>
-internal static class AssuranceCommand
+internal static partial class AssuranceCommand
 {
     public const int Done = 0;
 
@@ -35,6 +39,16 @@ internal static class AssuranceCommand
     private static readonly string[] InsertOptions = ["--root", "--assessments", "--json"];
 
     private static readonly string[] InsertFlags = ["--dry-run"];
+
+    private static readonly string[] GenerateOptions = ["--root"];
+
+    private static readonly string[] GenerateFlags = ["--dry-run", "--adopt"];
+
+    private static readonly string[] CheckOptions = ["--root", "--config", "--json"];
+
+    private static readonly string[] CheckFlags = ["--release", "--sources-only"];
+
+    private static readonly string[] StatusOptions = ["--root", "--config"];
 
     public static int Run(IReadOnlyList<string> args, TextWriter output, TextWriter error)
     {
@@ -54,6 +68,9 @@ internal static class AssuranceCommand
             {
                 "list" => List(Parse(args, ListOptions, ListFlags), output, error),
                 "insert" => Insert(Parse(args, InsertOptions, InsertFlags), output, error),
+                "generate" => Generate(Parse(args, GenerateOptions, GenerateFlags), output, error),
+                "check" => Check(Parse(args, CheckOptions, CheckFlags), output, error),
+                "status" => Status(Parse(args, StatusOptions, []), output, error),
                 _ => throw new UsageException($"unknown assurance command '{args[0]}'"),
             };
         }
@@ -164,20 +181,7 @@ internal static class AssuranceCommand
         string assessmentsPath = options.Value("--assessments")
             ?? throw new UsageException("insert needs --assessments <file.json>");
 
-        // The configuration's presence at the component root is the opt-in to
-        // writing. Without it this command writes nothing, so pointing the tool
-        // at a component cannot change that component's sources.
-        AssuranceComponentConfig config = LoadConfig(root)
-            ?? throw new AssuranceConfigException(
-                $"{Path.Combine(root, AssuranceComponentConfig.FileName)} does not exist. A component opts in " +
-                "to written annotations by committing that file; insert writes nothing without it.");
-
-        if (config.Mode == AssuranceMode.External)
-        {
-            throw new AssuranceConfigException(
-                $"{AssuranceComponentConfig.FileName} says \"mode\": \"external\": another tool writes this " +
-                "component's annotations, and this one only reads them.");
-        }
+        AssuranceComponentConfig config = OwnedConfig(root, "insert");
 
         if (!File.Exists(assessmentsPath))
             throw new UsageException($"--assessments: '{assessmentsPath}' does not exist");
@@ -350,6 +354,9 @@ internal static class AssuranceCommand
         Usage:
           broiler-review assurance list   --root <dir> [--files <list>] [--json <out>|-] [--all-units]
           broiler-review assurance insert --root <dir> --assessments <file.json> [--dry-run] [--json <out>|-]
+          broiler-review assurance generate --root <dir> [--dry-run] [--adopt]
+          broiler-review assurance check  --root <dir> [--config <file>] [--release] [--sources-only] [--json <out>|-]
+          broiler-review assurance status --root <dir> [--config <file>]
 
         list    Relevant units that carry no annotation block, with the file, line, column, indent,
                 qualified name, kind, fingerprint and extent a tool needs to write one, and whether
@@ -361,8 +368,21 @@ internal static class AssuranceCommand
                 or { "file", "unit", "fingerprint"?, "exempt": "<reason>" } for the EXEMPT form.
                 Each block records Fingerprint=TBF and a human line of PENDING. The input has no
                 field for the human line. Needs assurance.config.json at the root.
+        generate  Rewrites every covered file's generated header and annotation blocks (fills
+                Fingerprint=TBF, moves an outrun decision to STALE) and the report, manifest and
+                human-review record. Writes only what changed, keeping each file's byte-order
+                mark and line endings. Needs assurance.config.json at the root, refuses in
+                "mode": "external", and will not replace a report or record it did not write
+                unless --adopt is given.
+        check   Computes what generate would write and reports every difference, and every
+                annotation rule the tree breaks, as ::error lines (J1-J7, J9, J10; J11 with
+                --release). --sources-only compares only the covered files and the manifest's
+                arrays, for a component whose own tooling owns the prose. --config reads the
+                configuration from elsewhere, for a component that has none.
+        status  A short summary of units, annotations and states.
 
-        Exit codes: 0 done, 1 something was refused, 2 usage or configuration error.
+        Exit codes: 0 done, 1 something was refused or check found a violation,
+        2 usage or configuration error.
 
         """;
 

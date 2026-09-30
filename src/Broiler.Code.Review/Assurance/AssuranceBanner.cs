@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
 namespace Broiler.Code.Review.Assurance;
 
@@ -27,7 +28,93 @@ public readonly record struct AssuranceSummary(
     string? MaxSecurityRisk,
     int Criteria,
     int CriteriaRequired,
-    int? MaxResources);
+    int? MaxResources)
+{
+    /// <summary>
+    /// The mean resource score over the assessed units, or null when none
+    /// states one. The component report prints it; the file header does not.
+    /// </summary>
+    public double? MeanResources { get; init; }
+
+    /// <summary>
+    /// The summary of <paramref name="units"/>, with the owning component's
+    /// arithmetic, which is not all of it obvious:
+    ///
+    /// <list type="bullet">
+    /// <item><c>Exempt</c> counts every exempt unit, <c>EXEMPT=</c> ones included.</item>
+    /// <item><c>Annotated</c>, the worst IP and security values and the resource
+    /// scores are taken over the relevant units whose block is not an
+    /// exemption.</item>
+    /// <item><c>Criteria</c> counts every unit whose block has a criterion
+    /// line, at any risk and exempt or not, and an empty line counts.</item>
+    /// <item><c>CriteriaRequired</c> counts every non-<c>EXEMPT</c> block
+    /// assessed High or Critical, including blocks on units the predicate
+    /// exempts. So <c>13/2</c> is a legal row.</item>
+    /// </list>
+    ///
+    /// A resource score is any value that parses as an integer, as there; the
+    /// 0-to-10 range is a vocabulary rule, reported separately, and does not
+    /// decide what the header states. The invariant culture is used where the
+    /// owning component uses the current one.
+    /// </summary>
+    public static AssuranceSummary Of(IEnumerable<AssuranceCorpusUnit> units)
+    {
+        ArgumentNullException.ThrowIfNull(units);
+
+        int relevant = 0, exempt = 0, annotated = 0, verified = 0, unverified = 0, criteria = 0, required = 0;
+        var assessed = new List<AssuranceAnnotation>();
+        var scores = new List<int>();
+
+        foreach (AssuranceCorpusUnit unit in units)
+        {
+            AssuranceAnnotation? annotation = unit.Annotation;
+
+            if (annotation is { HasCriterionLine: true })
+                criteria++;
+
+            if (annotation is not null && AssuranceRules.RequiresFalsificationCriterion(annotation))
+                required++;
+
+            if (unit.IsExempt)
+            {
+                exempt++;
+                continue;
+            }
+
+            relevant++;
+
+            if (unit.State == AssuranceUnitState.Verified)
+                verified++;
+
+            if (AssuranceStateMachine.BlocksRelease(unit.State))
+                unverified++;
+
+            if (annotation is not { ExemptReason: null })
+                continue;
+
+            annotated++;
+            assessed.Add(annotation);
+
+            if (int.TryParse(annotation.Field("Resources"), NumberStyles.Integer, CultureInfo.InvariantCulture, out int score))
+                scores.Add(score);
+        }
+
+        return new AssuranceSummary(
+            relevant,
+            annotated,
+            exempt,
+            verified,
+            unverified,
+            AssuranceBanner.Worst(assessed, "IP", AssuranceVocabulary.IpRiskValues),
+            AssuranceBanner.Worst(assessed, "Security", AssuranceVocabulary.SecurityRiskValues),
+            criteria,
+            required,
+            scores.Count == 0 ? null : scores.Max())
+        {
+            MeanResources = scores.Count == 0 ? null : scores.Average(),
+        };
+    }
+}
 
 /// <summary>
 /// The generated block at the top of an annotated file: the licence header, the
@@ -88,10 +175,62 @@ public static class AssuranceBanner
         ArgumentNullException.ThrowIfNull(copyright);
         ArgumentNullException.ThrowIfNull(licence);
 
+        return Render(summary, [copyright, licence]);
+    }
+
+    /// <summary>
+    /// The block as it would be written for <paramref name="summary"/>, under
+    /// the SPDX lines of <paramref name="spdx"/>: one or more copyright lines
+    /// and one licence line, for code that carries more than one holder.
+    /// </summary>
+    public static IReadOnlyList<string> Render(AssuranceSummary summary, AssuranceSpdx spdx)
+    {
+        ArgumentNullException.ThrowIfNull(spdx);
+
+        return Render(summary, SpdxLines(spdx));
+    }
+
+    /// <summary>
+    /// The SPDX lines of a header: one <c>// SPDX-FileCopyrightText:</c> line
+    /// per holder, then one <c>// SPDX-License-Identifier:</c> line.
+    /// </summary>
+    public static IReadOnlyList<string> SpdxLines(AssuranceSpdx spdx)
+    {
+        ArgumentNullException.ThrowIfNull(spdx);
+
+        var lines = new List<string>(spdx.Copyright.Count + 1);
+        foreach (string holder in spdx.Copyright)
+            lines.Add(SpdxCopyrightPrefix + " " + holder);
+
+        lines.Add(SpdxLicensePrefix + " " + spdx.License);
+        return lines;
+    }
+
+    /// <summary>The licence line's prefix.</summary>
+    public const string SpdxLicensePrefix = "// SPDX-License-Identifier:";
+
+    /// <summary>The prefix every SPDX line shares, which is how a header is recognized at all.</summary>
+    public const string SpdxPrefix = "// SPDX-";
+
+    /// <summary>The nine row labels, in the order the block writes them.</summary>
+    public static readonly IReadOnlyList<string> RowLabels =
+    [
+        "Relevant units:",
+        "Annotated:",
+        "Exempt:",
+        "Human-reviewed:",
+        "IP risk:",
+        "Security risk:",
+        "Criteria:",
+        "Resource impact:",
+        "Unverified:",
+    ];
+
+    private static IReadOnlyList<string> Render(AssuranceSummary summary, IReadOnlyList<string> spdxLines)
+    {
         return
         [
-            copyright,
-            licence,
+            .. spdxLines,
             "//",
             Banner,
             BannerRule,

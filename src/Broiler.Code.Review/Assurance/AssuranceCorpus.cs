@@ -1,0 +1,82 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+
+namespace Broiler.Code.Review.Assurance;
+
+/// <summary>One covered source file, decoded, as the generator reads it.</summary>
+/// <param name="RelativePath">Root-relative, forward slashes.</param>
+/// <param name="Assembly">The assembly the file's project builds.</param>
+/// <param name="Text">The decoded text, without a byte-order mark.</param>
+public sealed record AssuranceSource(string RelativePath, string Assembly, string Text);
+
+/// <summary>A file under a covered project that the configuration leaves out, and why.</summary>
+public sealed record AssuranceExcludedSource(string RelativePath, string Reason);
+
+/// <summary>
+/// Everything the generator reads: the covered files, the files left out, and
+/// the component-level artefacts as they are now.
+///
+/// Pure data. The command-line tool fills it from disk; a test fills it by
+/// hand. Nothing downstream of this record touches a file system, which is what
+/// lets the check compute exactly what the generator would write without
+/// writing it.
+/// </summary>
+/// <param name="Files">The covered files, ordered by path (ordinal).</param>
+/// <param name="Excluded">Files the configuration leaves out, for the report.</param>
+/// <param name="Assemblies">The covered assemblies, for generated prose.</param>
+/// <param name="Artefacts">
+/// The current text of each component-level artefact, by root-relative path.
+/// A path that is absent here does not exist on disk.
+/// </param>
+public sealed record AssuranceCorpus(
+    IReadOnlyList<AssuranceSource> Files,
+    IReadOnlyList<AssuranceExcludedSource> Excluded,
+    IReadOnlyList<string> Assemblies,
+    IReadOnlyDictionary<string, string> Artefacts);
+
+/// <summary>
+/// One code unit of the component, placed in its file: what the report,
+/// manifest and rules are computed from.
+/// </summary>
+/// <param name="File">The file's root-relative path.</param>
+/// <param name="Assembly">The file's assembly.</param>
+/// <param name="Candidate">The unit, classified from the file's text.</param>
+public sealed record AssuranceCorpusUnit(string File, string Assembly, AssuranceCandidate Candidate)
+{
+    public string Name => Candidate.Unit.Name;
+
+    public string Fingerprint => Candidate.Unit.Fingerprint;
+
+    /// <summary>The 1-based line of the declaration's first token, attributes included.</summary>
+    public int Line => Candidate.Unit.DeclarationLine + 1;
+
+    public AssuranceAnnotation? Annotation => Candidate.Annotation;
+
+    public bool IsExempt => Candidate.IsExempt;
+
+    public bool IsRelevant => !Candidate.IsExempt;
+
+    /// <summary>The exemption case, <c>DeclaredInSource</c> for <c>EXEMPT=</c>, or <c>None</c>.</summary>
+    public string Exemption => Candidate.Exemption;
+
+    public AssuranceUnitState State => Candidate.State;
+
+    /// <summary>
+    /// The unit as every message names it: <c>path(line): name</c>. The same
+    /// shape the owning component's messages use.
+    /// </summary>
+    public string Where => string.Create(CultureInfo.InvariantCulture, $"{File}({Line}): {Name}");
+}
+
+/// <summary>
+/// One thing the check found wrong, or one reason the generator refused.
+/// </summary>
+/// <param name="Rule">
+/// The rule it breaks: <c>J1</c> to <c>J11</c> as the owning component numbers
+/// them, or <c>IO</c> for a file the tool cannot read or cannot index by line.
+/// </param>
+/// <param name="File">The root-relative file it is about, or null for the component.</param>
+/// <param name="Line">The 1-based line, when there is one.</param>
+/// <param name="Message">The message, in the owning component's words where it has them.</param>
+public sealed record AssuranceViolation(string Rule, string? File, int? Line, string Message);

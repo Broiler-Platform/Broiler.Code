@@ -213,8 +213,9 @@ value is written out as a literal rather than computed.
   fingerprint is taken over is available and is not shown, so a reviewer whose
   approval lapsed is told that it did and not why.
 - **It does not touch the component-level artefacts.** `CODE-ASSURANCE.md`, the
-  manifest and the human-review summary are the generator's; only the per-file
-  header is recounted here.
+  manifest and the human-review summary are the generator's
+  (`broiler-review assurance generate`, or the owning component's own); only the
+  per-file header is recounted here.
 - **It does not create an annotation.** A relevant declaration carrying none is
   reported as such and cannot be signed. Writing the machine's assessment line is
   an assessment, not a review; `broiler-review assurance insert` does that, and

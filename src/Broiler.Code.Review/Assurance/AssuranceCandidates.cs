@@ -112,7 +112,7 @@ public static class AssuranceCandidates
                 Annotation = annotation,
                 AnnotationProblem = problem,
                 IsExempt = exempt,
-                Exemption = declaredExempt ? "DeclaredInSource" : unit.Exemption,
+                Exemption = declaredExempt ? AssuranceVocabulary.DeclaredInSource : unit.Exemption,
                 State = AssuranceStateMachine.Resolve(annotation, unit.IsExempt, unit.Fingerprint),
             };
 

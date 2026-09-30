@@ -302,6 +302,49 @@ internal static class AssuranceJson
         });
     }
 
+    /// <summary>The <c>assurance check</c> report: every violation, and a count per rule.</summary>
+    public static string CheckReport(
+        string component, bool release, bool sourcesOnly, IReadOnlyList<AssuranceViolation> violations)
+    {
+        return Write(writer =>
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("schema", Schema);
+            writer.WriteString("component", component);
+            writer.WriteBoolean("release", release);
+            writer.WriteBoolean("sourcesOnly", sourcesOnly);
+            writer.WriteNumber("violationCount", violations.Count);
+
+            writer.WriteStartObject("rules");
+            foreach (IGrouping<string, AssuranceViolation> rule in violations
+                .GroupBy(static violation => violation.Rule, StringComparer.Ordinal)
+                .OrderBy(static group => group.Key, StringComparer.Ordinal))
+            {
+                writer.WriteNumber(rule.Key, rule.Count());
+            }
+
+            writer.WriteEndObject();
+
+            writer.WriteStartArray("violations");
+            foreach (AssuranceViolation violation in violations)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("rule", violation.Rule);
+                if (violation.File is not null)
+                    writer.WriteString("file", violation.File);
+
+                if (violation.Line is { } line)
+                    writer.WriteNumber("line", line);
+
+                writer.WriteString("message", violation.Message);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        });
+    }
+
     private static void WriteUnit(Utf8JsonWriter writer, ListedFile file, AssuranceCandidate candidate)
     {
         AssuranceScannedUnit unit = candidate.Unit;

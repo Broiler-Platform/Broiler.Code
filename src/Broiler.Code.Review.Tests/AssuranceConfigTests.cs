@@ -55,7 +55,8 @@ public sealed class AssuranceConfigTests
               "forgeryVocabulary": "strict",
               "closedToEscapeHatch": [ "Broiler.Html" ],
               "adrDirectory": "docs/decisions",
-              "regenerateCommand": "broiler-review assurance generate --root ."
+              "regenerateCommand": "broiler-review assurance generate --root .",
+              "manifestComment": [ "GENERATED - DO NOT EDIT MANUALLY. Regenerate with", "", "Prose." ]
             }
             """);
 
@@ -73,6 +74,10 @@ public sealed class AssuranceConfigTests
         Assert.Equal("docs/CODE-ASSURANCE.md", config.Artefacts.Report);
         Assert.Equal("HUMAN_REVIEW.generated.md", config.Artefacts.HumanReview);
         Assert.Equal("broiler-review assurance generate --root .", config.RegenerateCommand);
+        Assert.Equal(["GENERATED - DO NOT EDIT MANUALLY. Regenerate with", string.Empty, "Prose."], config.ManifestComment);
+        Assert.Equal(
+            ("broiler-review assurance generate --root .", "broiler-review assurance check --root ."),
+            AssuranceReportContext.CommandsFor(config));
 
         AssuranceSpdx derived = config.SpdxFor("src/A/Renderer/Box.cs")!;
         Assert.Equal(3, derived.Copyright.Count);
@@ -98,6 +103,8 @@ public sealed class AssuranceConfigTests
     [InlineData("""{ "projects": [ "a/a.csproj" ], "artefacts": { "report": "X.md", "humanReview": "X.md" } }""", "names one file for two artefacts")]
     [InlineData("""{ "projects": [ "a/a.csproj" ], "preprocessorSymbols": [ "NET 10" ] }""", "is not a preprocessor symbol")]
     [InlineData("""{ "projects": [ "a/a.csproj", "a/a.csproj" ] }""", "names a project twice")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "manifestComment": [ "Hand-written." ] }""", "$.manifestComment must open with a line starting 'GENERATED - DO NOT EDIT MANUALLY'")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "manifestComment": [ "GENERATED - DO NOT EDIT MANUALLY.", 3 ] }""", "$.manifestComment[1] must be a string")]
     [InlineData("""[ ]""", "$ must be an object")]
     [InlineData("""{ "projects": """, "not valid JSON")]
     public void A_Mistake_Is_An_Error_Naming_Where_It_Is(string json, string expected)
