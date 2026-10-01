@@ -15,9 +15,10 @@ internal static class AssurancePlanning
 
     /// <summary>The scanner <paramref name="config"/> asks for, as the command builds it.</summary>
     public static IAssuranceFileScanner ScannerFor(AssuranceComponentConfig config) =>
-        config.PreprocessorSymbols is null && config.ExemptionPredicate == AssuranceExemptionPredicate.Strict
+        config.PreprocessorSymbols is null && config.ExemptionPredicate == AssuranceExemptionPredicate.Strict &&
+        config.NamedValues == AssuranceNamedValues.Reviewed
             ? Scanner
-            : new CSharpAssuranceFileScanner(config.PreprocessorSymbols, config.ExemptionPredicate);
+            : new CSharpAssuranceFileScanner(config.PreprocessorSymbols, config.ExemptionPredicate, config.NamedValues);
 
     public const string Copyright = "2026 Broiler Platform contributors";
 

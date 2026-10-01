@@ -5,7 +5,7 @@
 // ----------------------
 // Relevant units:   12
 // Annotated:        12/12
-// Exempt:           2
+// Exempt:           3
 // Human-reviewed:   0/12
 // IP risk:          Low
 // Security risk:    High
@@ -57,26 +57,30 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
 
     private readonly CSharpParseOptions _parseOptions;
     private readonly AssuranceExemptionPredicate _predicate;
+    private readonly AssuranceNamedValues _namedValues;
 
     /// <summary>
     /// A file scanner parsing under <paramref name="preprocessorSymbols"/>, or
     /// under <see cref="CSharpAssuranceScanner.DefaultPreprocessorSymbols"/> when
-    /// that is null, applying <paramref name="predicate"/>.
+    /// that is null, applying <paramref name="predicate"/> and, where
+    /// <paramref name="namedValues"/> says so, the named-value case.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=52D929
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=3FD07D
     // Broiler-Falsified-If: a scanner built with its own preprocessor symbols or the strict predicate scans under the default symbols or the owning-component predicate instead
     // Broiler-Human:        PENDING
     public CSharpAssuranceFileScanner(
         IEnumerable<string>? preprocessorSymbols = null,
-        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent)
+        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent,
+        AssuranceNamedValues namedValues = AssuranceNamedValues.Reviewed)
     {
         _parseOptions = CSharpAssuranceScanner.OptionsFor(
             preprocessorSymbols ?? CSharpAssuranceScanner.DefaultPreprocessorSymbols);
         _predicate = predicate;
+        _namedValues = namedValues;
     }
 
     /// <inheritdoc/>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=714735
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=50D96B
     // Broiler-Falsified-If: an AI marker written inside a raw string literal or #if-disabled code is reported as a unit's AnnotationLine or among AssuranceCommentLines
     // Broiler-Human:        PENDING
     public AssuranceScannedFile ScanFile(string text, string path)
@@ -89,7 +93,7 @@ public sealed class CSharpAssuranceFileScanner : IAssuranceFileScanner
         SourceText source = tree.GetText();
 
         var units = new List<AssuranceFileUnit>();
-        foreach (ScannedDeclaration found in CSharpAssuranceScanner.Units(tree, _predicate))
+        foreach (ScannedDeclaration found in CSharpAssuranceScanner.Units(tree, _predicate, _namedValues))
         {
             MemberDeclarationSyntax declaration = found.Declaration;
             AssuranceScannedUnit unit = found.Unit;

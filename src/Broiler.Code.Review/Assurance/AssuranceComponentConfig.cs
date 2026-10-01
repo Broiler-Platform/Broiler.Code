@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   32
-// Annotated:        32/32
-// Exempt:           25
-// Human-reviewed:   0/32
+// Relevant units:   34
+// Annotated:        34/34
+// Exempt:           31
+// Human-reviewed:   0/34
 // IP risk:          Low
 // Security risk:    High
 // Criteria:         22/20
 // Resource impact:  7/10 max
-// Unverified:       32
+// Unverified:       34
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -78,6 +78,48 @@ public enum AssuranceExemptionPredicate
     /// that component's own generator writes (Broiler.VM).
     /// </summary>
     OwningComponent,
+}
+
+/// <summary>Whether a named value is a unit someone assesses or one the manifest only watches.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=46771E
+// Broiler-Human:        PENDING
+public enum AssuranceNamedValues
+{
+    /// <summary>
+    /// A named value is relevant like any other declaration and carries a
+    /// block, as the owning component treats it.
+    /// </summary>
+    Reviewed = 0,
+
+    /// <summary>
+    /// A named value (a const, an enum, a static readonly Guid or handle
+    /// stated by literals) is exempt as <c>NamedValue</c>: it carries no
+    /// block, and its fingerprint stays in the manifest, so a change to it
+    /// still moves a value the check compares. For a component of values
+    /// transcribed from elsewhere, such as a platform SDK's defines, which
+    /// carry no decision to assess.
+    /// </summary>
+    Watched,
+}
+
+/// <summary>Whether the check accepts a falsification criterion on a block assessed below High.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=77EDCA
+// Broiler-Human:        PENDING
+public enum AssuranceCriteriaBelowHigh
+{
+    /// <summary>
+    /// A criterion on a block assessed <c>None</c>, <c>Low</c> or <c>Medium</c>
+    /// is accepted, as the owning component accepts it and as blocks written
+    /// before the rubric stopped writing one there carry it.
+    /// </summary>
+    Permitted = 0,
+
+    /// <summary>
+    /// A criterion is written only for <c>High</c> and <c>Critical</c>, and the
+    /// check reports one below them. For a component whose blocks
+    /// <c>prune</c> has brought to that rule, so that none comes back.
+    /// </summary>
+    Refused,
 }
 
 /// <summary>A file pattern the component leaves out of the covered set, and why.</summary>
@@ -195,6 +237,20 @@ public sealed record AssuranceComponentConfig
     /// <summary>Which exemption predicate the scanner applies.</summary>
     public AssuranceExemptionPredicate ExemptionPredicate { get; init; } = AssuranceExemptionPredicate.Strict;
 
+    /// <summary>
+    /// Whether named values are assessed or only watched. Assessed unless the
+    /// configuration says otherwise, so a component that does not set it sees
+    /// exactly the units it saw before the option existed.
+    /// </summary>
+    public AssuranceNamedValues NamedValues { get; init; } = AssuranceNamedValues.Reviewed;
+
+    /// <summary>
+    /// Whether the check accepts a criterion below High. Accepted unless the
+    /// configuration says otherwise, so a component that does not set it is
+    /// checked exactly as it was before the option existed.
+    /// </summary>
+    public AssuranceCriteriaBelowHigh CriteriaBelowHigh { get; init; } = AssuranceCriteriaBelowHigh.Permitted;
+
     /// <summary>The SPDX lines for every covered file no override matches. Null until configured.</summary>
     public AssuranceSpdx? Spdx { get; init; }
 
@@ -283,7 +339,7 @@ public sealed record AssuranceComponentConfig
     /// the file is written by hand. Throws <see cref="AssuranceConfigException"/>
     /// naming the property at fault.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=5C8EC7
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=8BA3DA
     // Broiler-Falsified-If: a top-level property this schema does not define, such as a misspelled exclude, is accepted instead of raising AssuranceConfigException
     // Broiler-Human:        PENDING
     public static AssuranceComponentConfig Parse(string json)
@@ -370,6 +426,30 @@ public sealed record AssuranceComponentConfig
                                 "strict" => AssuranceExemptionPredicate.Strict,
                                 "owning-component" => AssuranceExemptionPredicate.OwningComponent,
                                 _ => throw Error(path, "must be \"strict\" or \"owning-component\""),
+                            },
+                        };
+                        break;
+
+                    case "namedValues":
+                        config = config with
+                        {
+                            NamedValues = RequiredString(value, path) switch
+                            {
+                                "reviewed" => AssuranceNamedValues.Reviewed,
+                                "watched" => AssuranceNamedValues.Watched,
+                                _ => throw Error(path, "must be \"reviewed\" or \"watched\""),
+                            },
+                        };
+                        break;
+
+                    case "criteriaBelowHigh":
+                        config = config with
+                        {
+                            CriteriaBelowHigh = RequiredString(value, path) switch
+                            {
+                                "permitted" => AssuranceCriteriaBelowHigh.Permitted,
+                                "refused" => AssuranceCriteriaBelowHigh.Refused,
+                                _ => throw Error(path, "must be \"permitted\" or \"refused\""),
                             },
                         };
                         break;

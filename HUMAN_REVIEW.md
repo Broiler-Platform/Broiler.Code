@@ -5,7 +5,7 @@ GENERATED - DO NOT EDIT MANUALLY. Regenerate with
 `CODE-ASSURANCE.md`, `assurance.manifest.json` and every generated source header from the
 product tree.
 
-> **Status: PENDING.** Human-reviewed: 0 of 1499 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
+> **Status: PENDING.** Human-reviewed: 0 of 1541 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
 > fails while any relevant unit is without a decision bound to its current fingerprint.
 
 ## 1. How To Use This File
@@ -49,13 +49,13 @@ did, which is the narrower and the more useful of the two.
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 101 |
-| Code units | 2165 |
-| Relevant | 1499 |
-| Exempt | 666 |
-| Assessed | 1499 of 1499 (100%) |
-| Human reviewed | 0 of 1499 (0%) |
-| Unverified | 1499 |
+| Files scanned | 104 |
+| Code units | 2227 |
+| Relevant | 1541 |
+| Exempt | 686 |
+| Assessed | 1541 of 1541 (100%) |
+| Human reviewed | 0 of 1541 (0%) |
+| Unverified | 1541 |
 | Aliases naming a decision | 0 |
 
 ## 4. Review States
@@ -67,11 +67,11 @@ annotations and the current fingerprints; nothing stores them.
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1499 |
+| HUMAN_PENDING | 1541 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 666 |
+| EXEMPT | 686 |
 
 ## 5. Aliases In The Tree
 
@@ -94,13 +94,13 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Core/Hosting/EvdevInputRouter.cs` | 20 | 13 | 7 | 13 | Low | High | 13/7 |
 | `src/Broiler.Code.Core/Hosting/HostServiceReport.cs` | 16 | 13 | 3 | 13 | Low | Low | 6/0 |
 | `src/Broiler.Code.Core/Hosting/UiThreadDispatcher.cs` | 10 | 6 | 4 | 6 | Low | High | 6/6 |
-| `src/Broiler.Code.Core/Review/AssuranceController.cs` | 40 | 24 | 16 | 24 | Low | High | 21/11 |
+| `src/Broiler.Code.Core/Review/AssuranceController.cs` | 43 | 25 | 18 | 25 | Low | High | 22/12 |
 | `src/Broiler.Code.Core/Review/GitCommand.cs` | 5 | 5 | 0 | 5 | Low | High | 5/5 |
 | `src/Broiler.Code.Core/Review/GitRevisionProvider.cs` | 5 | 4 | 1 | 4 | Low | High | 4/2 |
 | `src/Broiler.Code.Core/Review/ReviewController.cs` | 44 | 25 | 19 | 25 | Low | High | 21/12 |
 | `src/Broiler.Code.Core/Review/ReviewPaneSource.cs` | 42 | 32 | 10 | 32 | Low | Medium | 25/0 |
 | `src/Broiler.Code.Core/Shell/CodeCommands.cs` | 46 | 33 | 13 | 33 | Low | Medium | 11/0 |
-| `src/Broiler.Code.Core/Shell/CodeShell.cs` | 130 | 79 | 51 | 79 | Low | High | 69/36 |
+| `src/Broiler.Code.Core/Shell/CodeShell.cs` | 131 | 79 | 52 | 79 | Low | High | 69/36 |
 | `src/Broiler.Code.Core/Shell/DocumentCoordinator.cs` | 31 | 18 | 13 | 18 | Low | High | 11/7 |
 | `src/Broiler.Code.Core/Shell/FileDialogs.cs` | 14 | 7 | 7 | 7 | Low | High | 4/4 |
 | `src/Broiler.Code.Core/Shell/ProblemsTreeSource.cs` | 16 | 11 | 5 | 11 | Low | Medium | 7/0 |
@@ -108,8 +108,9 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Core/Shell/WorkspaceBootstrap.cs` | 7 | 7 | 0 | 7 | Low | High | 7/4 |
 | `src/Broiler.Code.Core/SourceBufferDocument.cs` | 31 | 18 | 13 | 18 | Low | Medium | 6/0 |
 | `src/Broiler.Code.Core/Templates/CodeTemplateService.cs` | 16 | 13 | 3 | 13 | Low | High | 9/3 |
-| `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` | 14 | 12 | 2 | 12 | Low | High | 12/9 |
-| `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` | 68 | 57 | 11 | 57 | Low | High | 56/45 |
+| `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` | 15 | 12 | 3 | 12 | Low | High | 12/9 |
+| `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` | 75 | 62 | 13 | 62 | Low | High | 61/50 |
+| `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` | 14 | 10 | 4 | 10 | Low | High | 9/9 |
 | `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` | 13 | 10 | 3 | 10 | Low | High | 9/4 |
 | `src/Broiler.Code.Language.CSharp.Roslyn/DesignTimeEvaluator.cs` | 16 | 11 | 5 | 11 | Low | Critical | 11/7 |
 | `src/Broiler.Code.Language.CSharp.Roslyn/EvaluatedProjectGraph.cs` | 32 | 17 | 15 | 17 | Low | High | 15/2 |
@@ -123,9 +124,10 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Linux/LinuxCodeInput.cs` | 31 | 16 | 15 | 16 | Low | High | 13/7 |
 | `src/Broiler.Code.Linux/LinuxFileDialogs.cs` | 20 | 15 | 5 | 15 | Low | High | 10/10 |
 | `src/Broiler.Code.Linux/Program.cs` | 2 | 2 | 0 | 2 | Low | High | 2/2 |
-| `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` | 33 | 33 | 0 | 33 | Low | High | 17/12 |
+| `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` | 35 | 35 | 0 | 35 | Low | High | 17/12 |
 | `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` | 15 | 15 | 0 | 15 | Low | High | 13/9 |
-| `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` | 18 | 18 | 0 | 18 | Low | High | 14/4 |
+| `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` | 19 | 19 | 0 | 19 | Low | High | 14/4 |
+| `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` | 6 | 6 | 0 | 6 | Low | High | 3/3 |
 | `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` | 12 | 8 | 4 | 8 | Low | High | 8/7 |
 | `src/Broiler.Code.Review.Cli/Assurance/ComponentCorpus.cs` | 14 | 8 | 6 | 8 | Low | High | 8/6 |
 | `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` | 31 | 31 | 0 | 31 | Low | High | 21/21 |
@@ -135,8 +137,8 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` | 34 | 26 | 8 | 26 | Low | High | 23/14 |
 | `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` | 22 | 21 | 1 | 21 | Low | High | 17/8 |
 | `src/Broiler.Code.Review/Assurance/AssuranceCandidates.cs` | 24 | 14 | 10 | 14 | Low | High | 7/4 |
-| `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` | 14 | 14 | 0 | 14 | Low | High | 13/11 |
-| `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` | 57 | 32 | 25 | 32 | Low | High | 22/20 |
+| `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` | 15 | 15 | 0 | 15 | Low | High | 14/12 |
+| `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` | 65 | 34 | 31 | 34 | Low | High | 22/20 |
 | `src/Broiler.Code.Review/Assurance/AssuranceComponentReport.cs` | 5 | 5 | 0 | 5 | Low | Medium | 3/0 |
 | `src/Broiler.Code.Review/Assurance/AssuranceCorpus.cs` | 16 | 8 | 8 | 8 | None | High | 2/2 |
 | `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` | 37 | 24 | 13 | 24 | Low | High | 22/13 |
@@ -148,13 +150,14 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` | 28 | 17 | 11 | 17 | Low | High | 15/8 |
 | `src/Broiler.Code.Review/Assurance/AssuranceLines.cs` | 14 | 11 | 3 | 11 | Low | High | 10/3 |
 | `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` | 21 | 21 | 0 | 21 | Low | High | 15/10 |
-| `src/Broiler.Code.Review/Assurance/AssuranceReportContext.cs` | 11 | 10 | 1 | 10 | Low | Low | 7/0 |
+| `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` | 13 | 11 | 2 | 11 | Low | High | 6/6 |
+| `src/Broiler.Code.Review/Assurance/AssuranceReportContext.cs` | 13 | 10 | 3 | 10 | Low | Low | 7/0 |
 | `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` | 9 | 9 | 0 | 9 | Low | High | 9/9 |
-| `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` | 13 | 13 | 0 | 13 | Low | High | 13/11 |
+| `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` | 15 | 15 | 0 | 15 | Low | High | 15/13 |
 | `src/Broiler.Code.Review/Assurance/AssuranceScannedFile.cs` | 7 | 6 | 1 | 6 | None | High | 2/2 |
 | `src/Broiler.Code.Review/Assurance/AssuranceUnit.cs` | 19 | 7 | 12 | 7 | None | High | 6/2 |
 | `src/Broiler.Code.Review/Assurance/AssuranceUnitState.cs` | 14 | 6 | 8 | 6 | Low | High | 6/4 |
-| `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` | 26 | 26 | 0 | 26 | Low | High | 26/17 |
+| `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` | 27 | 27 | 0 | 27 | Low | High | 26/17 |
 | `src/Broiler.Code.Review/FileReview.cs` | 18 | 10 | 8 | 10 | Low | High | 10/2 |
 | `src/Broiler.Code.Review/IRevisionProvider.cs` | 5 | 4 | 1 | 4 | None | Medium | 4/0 |
 | `src/Broiler.Code.Review/NoteAnchoring.cs` | 6 | 6 | 0 | 6 | Low | High | 6/4 |
@@ -404,8 +407,10 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a buffer that moved to a new version between reading the snapshot and submitting the edit accepts the replacement instead of rejecting it as stale
 - `Broiler.Code.Core.Review.AssuranceController.Narrow(string, string)` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, Spec=none cited, `722C27`, PENDING
   - Falsified if: applying the returned span to the current text yields a string other than the updated text, for example when the change sits inside a run of repeated characters
-- `Broiler.Code.Core.Review.AssuranceController.Rebuild()` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, Spec=none cited, `8C5011`, PENDING
+- `Broiler.Code.Core.Review.AssuranceController.Rebuild()` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, Spec=none cited, `1DA4B2`, PENDING
   - Falsified if: the document model is kept after the open buffer's version or the item's path changed, so the next decision is computed from text the buffer no longer holds
+- `Broiler.Code.Core.Review.AssuranceController.ScannerFor(WorkspaceItemId)` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, Spec=none cited, `4C462F`, PENDING
+  - Falsified if: a document granted from another folder is scanned with the scanner made for the workspace's own storage, so its relative path is read against the wrong root
 - `Broiler.Code.Core.Review.GitCommand` in `src/Broiler.Code.Core/Review/GitCommand.cs` - Security=High, Spec=none cited, `2D0DFB`, PENDING
   - Falsified if: a file named git in the editor process's current directory is started in place of the git found on PATH
 - `Broiler.Code.Core.Review.GitCommand.Timeout` in `src/Broiler.Code.Core/Review/GitCommand.cs` - Security=High, Spec=none cited, `3B2C97`, PENDING
@@ -452,7 +457,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: the entry labelled as needing review runs ApproveUnit, or the other entry runs WithdrawUnit
 - `Broiler.Code.Core.Shell.CodeShell.AttachWorkspace(CodeWorkspace, Workspaces.Recovery.RecoveryJournal?)` in `src/Broiler.Code.Core/Shell/CodeShell.cs` - Security=High, Spec=none cited, `F362A1`, PENDING
   - Falsified if: after a tab click the review controller still targets the tab just left, so the next recorded decision is written against that file
-- `Broiler.Code.Core.Shell.CodeShell.AttachReview(CodeWorkspace)` in `src/Broiler.Code.Core/Shell/CodeShell.cs` - Security=High, Spec=none cited, `508C89`, PENDING
+- `Broiler.Code.Core.Shell.CodeShell.AttachReview(CodeWorkspace)` in `src/Broiler.Code.Core/Shell/CodeShell.cs` - Security=High, Spec=none cited, `A6634C`, PENDING
   - Falsified if: a file in the newly attached workspace is badged with the review state recorded for the same relative path in the workspace attached before it
 - `Broiler.Code.Core.Shell.CodeShell.LoadReviewAsync(ReviewController, CancellationToken)` in `src/Broiler.Code.Core/Shell/CodeShell.cs` - Security=High, Spec=none cited, `3998B9`, PENDING
   - Falsified if: with no dispatcher set, the records are read on a pool thread and published into the review maps while the UI thread is reading them
@@ -556,9 +561,9 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: an AI marker line in one declaration's leading trivia is reported as the AnnotationLine of a different declaration
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.Markers` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, Spec=none cited, `D17683`, PENDING
   - Falsified if: a stray criterion-marker or human-line-marker comment that opens its own line is missing from AssuranceCommentLines, so the orphan rule never reports it
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.CSharpAssuranceFileScanner(IEnumerable<string>?, AssuranceExemptionPredicate)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, Spec=none cited, `52D929`, PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.CSharpAssuranceFileScanner(IEnumerable<string>?, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, Spec=none cited, `3FD07D`, PENDING
   - Falsified if: a scanner built with its own preprocessor symbols or the strict predicate scans under the default symbols or the owning-component predicate instead
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.ScanFile(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, Spec=none cited, `714735`, PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.ScanFile(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, Spec=none cited, `50D96B`, PENDING
   - Falsified if: an AI marker written inside a raw string literal or #if-disabled code is reported as a unit's AnnotationLine or among AssuranceCommentLines
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.IsCommentLike(SyntaxTrivia)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, Spec=none cited, `C9EB4E`, PENDING
   - Falsified if: a forged summary line written in a block comment, a documentation comment or #if-disabled text is absent from CommentLines and so escapes the forged-summary rule
@@ -578,19 +583,19 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: the parameterless scanner or FingerprintOfFile parses under preprocessor symbols other than DefaultSymbols
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.CSharpAssuranceScanner()` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `B10EBD`, PENDING
   - Falsified if: the parameterless scanner applies the strict predicate instead of the owning component's
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.CSharpAssuranceScanner(IEnumerable<string>?, AssuranceExemptionPredicate)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `FA2E25`, PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.CSharpAssuranceScanner(IEnumerable<string>?, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `99A0BA`, PENDING
   - Falsified if: an empty symbol list is treated like null and parses under the default symbols instead of under none
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.DefaultPreprocessorSymbols` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `81A57E`, PENDING
   - Falsified if: the list it returns differs from the symbols the default parse options were built from
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Scan(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `6E1B5A`, PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Scan(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `6F5C93`, PENDING
   - Falsified if: a file of about 20,000 nested parentheses ends the process with a stack overflow while it is parsed instead of returning units or throwing
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.OptionsFor(IEnumerable<string>)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `C3F494`, PENDING
   - Falsified if: the options it returns parse under a language version other than Latest, so a file using current syntax loses declarations to error recovery
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.CodeUnits(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `FAC37C`, PENDING
   - Falsified if: a member of a nested type, or a declaration inside a file-scoped namespace, is not yielded and so belongs to no unit
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Units(SyntaxTree, AssuranceExemptionPredicate)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `25C70B`, PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Units(SyntaxTree, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `0A09EC`, PENDING
   - Falsified if: two units of one file are returned under the same name
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Describe(SyntaxTree, MemberDeclarationSyntax, AssuranceExemptionPredicate)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `5A3822`, PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Describe(SyntaxTree, MemberDeclarationSyntax, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `EA9465`, PENDING
   - Falsified if: a declaration with attributes reports its start line at its first modifier or keyword instead of at its first attribute, so its block would land between the attribute and the declaration
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.TopLevel(SyntaxTree, IReadOnlyList<GlobalStatementSyntax>)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `93C0F6`, PENDING
   - Falsified if: editing a local function declared among a file's top-level statements leaves the top-level unit's fingerprint unchanged
@@ -614,8 +619,18 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: changing a type's attributes, base list or type-parameter constraints leaves the type's fingerprint unchanged
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsCodeUnit(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `33CB75`, PENDING
   - Falsified if: a declaration kind that carries executable code (a method, constructor, operator, conversion, indexer or event with accessors) is answered false and so belongs to no unit
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ExemptionFor(MemberDeclarationSyntax, bool)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `23CB77`, PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ExemptionFor(MemberDeclarationSyntax, bool, bool)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `15A7B2`, PENDING
   - Falsified if: an expression-bodied method that calls another member of its type with a literal argument, such as Run(true), is reported exempt
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsNamedValue(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `C5F526`, PENDING
+  - Falsified if: a static readonly field of a type other than Guid, IntPtr, UIntPtr, nint or nuint, such as a Regex built from one string literal, is answered a named value and so needs no block
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsStatedByLiterals(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `065A01`, PENDING
+  - Falsified if: an initializer that calls something, such as Guid.NewGuid() or Guid.Parse of a literal, or passes an array to a constructor, is answered stated by literals
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsLiteral(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `8CB2D6`, PENDING
+  - Falsified if: a name or an arithmetic expression over literals, such as (IntPtr)(1 + 2), is answered a literal
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.SystemTypeName(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `F5BE9D`, PENDING
+  - Falsified if: a type of the same name under another namespace, such as Vendor.Interop.Guid, is returned as Guid
+- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.DottedName(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `0CF67D`, PENDING
+  - Falsified if: a generic name or an invocation inside the chain, such as Factory().Guid, yields a dotted name instead of null
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsFixedValue(FieldDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `EA2CF4`, PENDING
   - Falsified if: a const or static readonly field with an initializer is answered not fixed and reported exempt as storage
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsInert(ExpressionSyntax?)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `224F23`, PENDING
@@ -660,6 +675,24 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: an expression other than a parenthesized one, such as a cast or a checked expression, is unwrapped to its operand
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ContainingTypes(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, Spec=none cited, `4ECA50`, PENDING
   - Falsified if: a declaration's containing types are yielded outermost first, so the record-member case judges a member by its outermost type
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `557605`, PENDING
+  - Falsified if: an assurance.config.json outside the granted root, reached through a '..' segment, a link below the root or a sibling directory whose name begins with the root's, decides how a file is scanned
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.MaxConfigurationBytes` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `6152DB`, PENDING
+  - Falsified if: a configuration file of several megabytes is read and parsed again on every rescan of a file under it
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.CSharpComponentAssuranceScanner(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `6F6F0F`, PENDING
+  - Falsified if: the root prefix is built without a trailing separator, so a sibling directory such as work2 beside the root work counts as inside it
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.Scan(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `6236D4`, PENDING
+  - Falsified if: a file under a configuration that watches named values is scanned with the default scanner, so its named values are listed as relevant units with no block
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.ConfigurationFor(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `C93A51`, PENDING
+  - Falsified if: a relative path whose '..' segments leave the root, or whose directory below the root is a link, yields a configuration file outside the root
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.ScannerFor(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `ECF614`, PENDING
+  - Falsified if: a configuration file that is a link, or one larger than MaxConfigurationBytes, is read and parsed
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsRoot(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `D160B2`, PENDING
+  - Falsified if: a directory above the root is answered as the root, so the walk reads the configuration there
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsUnderRoot(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `FE85CC`, PENDING
+  - Falsified if: a path in a sibling directory whose name begins with the root's, such as work2 beside the root work, is answered as under the root
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsLink(FileSystemInfo)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `AD21F3`, PENDING
+  - Falsified if: a directory junction or a symbolic link is answered false, so the walk follows it out of the root
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, Spec=none cited, `75FA82`, PENDING
   - Falsified if: an analysis whose project graph is unavailable, or whose document is outside the evaluated compile set, returns no project diagnostic saying why
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService.Analyze(ICodeTextSnapshot, string, string, string?, IReadOnlyDictionary<string, string>?, CancellationToken)` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, Spec=none cited, `750037`, PENDING
@@ -720,7 +753,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: window.RunAsync is entered on a thread other than the one that constructed the window, so the dispatcher's Drain throws on the first frame
 - `Broiler.Code.Linux.CodeShellFactory` in `src/Broiler.Code.Linux/CodeShellFactory.cs` - Security=High, Spec=none cited, `DE99B6`, PENDING
   - Falsified if: a workspace path that does not name an existing directory is granted as the workspace root
-- `Broiler.Code.Linux.CodeShellFactory.OpenWorkspaceAsync(CodeShell, string?, CancellationToken)` in `src/Broiler.Code.Linux/CodeShellFactory.cs` - Security=High, Spec=none cited, `7F344C`, PENDING
+- `Broiler.Code.Linux.CodeShellFactory.OpenWorkspaceAsync(CodeShell, string?, CancellationToken)` in `src/Broiler.Code.Linux/CodeShellFactory.cs` - Security=High, Spec=none cited, `3D41E0`, PENDING
   - Falsified if: a path argument naming a file or a missing directory is granted as the workspace root instead of the scratch root
 - `Broiler.Code.Linux.CodeShellFactory.ScratchRoot()` in `src/Broiler.Code.Linux/CodeShellFactory.cs` - Security=High, Spec=none cited, `893B77`, PENDING
   - Falsified if: a relative XDG_DATA_HOME is used as given, so the scratch workspace is created under the process's current directory
@@ -782,9 +815,9 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: Refused is zero, so a check that found a violation exits as a success and the gate passes
 - `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.UsageError` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, Spec=none cited, `8285EA`, PENDING
   - Falsified if: UsageError is zero, so a check given an unknown option exits as a success having applied no rule
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Run(IReadOnlyList<string>, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, Spec=none cited, `C41609`, PENDING
+- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Run(IReadOnlyList<string>, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, Spec=none cited, `02034E`, PENDING
   - Falsified if: an unknown subcommand, or an option the subcommand does not accept, exits 0
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.ScannerFor(AssuranceComponentConfig?)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, Spec=none cited, `15C578`, PENDING
+- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.ScannerFor(AssuranceComponentConfig?)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, Spec=none cited, `8CC1F8`, PENDING
   - Falsified if: with no configuration the scanner is built with a predicate other than the strict one, so a unit the strict predicate counts as relevant is listed as exempt
 - `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.List(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, Spec=none cited, `2ADA2B`, PENDING
   - Falsified if: a run in which a covered file could not be read, or a --strict run whose --files list names an uncovered path, exits 0
@@ -824,6 +857,12 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a document whose top-level object carries a property other than schema, assessments and $comment is read instead of refused
 - `Broiler.Code.Review.Cli.Assurance.AssuranceJson.ReadEntry(JsonElement, int)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, Spec=none cited, `E4100D`, PENDING
   - Falsified if: an entry carrying a property the schema does not define, such as one named for the human line, comes back with no problem
+- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand` in `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` - Security=High, Spec=none cited, `CCE5C4`, PENDING
+  - Falsified if: after prune, a block whose human line names a person or reads STALE has lost a line
+- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Prune(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` - Security=High, Spec=none cited, `E283D3`, PENDING
+  - Falsified if: a covered file is written in a run given --dry-run, or in a component whose configuration is missing or says mode external
+- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.ReadBack(ComponentSourceFile, AssuranceSourceText, string, CSharpAssuranceFileScanner)` in `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` - Security=High, Spec=none cited, `4D2D2F`, PENDING
+  - Falsified if: a written file whose units or file fingerprint scan differently from the file as read is left on disk instead of getting its original bytes back
 - `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, Spec=none cited, `CA4609`, PENDING
   - Falsified if: a file whose bytes are not valid UTF-8 is accepted, so a later write replaces those bytes with U+FFFD
 - `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText.Utf8Bom` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, Spec=none cited, `FFCB5B`, PENDING
@@ -968,12 +1007,14 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a unit whose leading trivia holds a stray human line with no machine line above it is reported insertable
 - `Broiler.Code.Review.Assurance.AssuranceChecks` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `896DF1`, PENDING
   - Falsified if: a covered file whose annotation blocks or generated header differ from what generate would write passes Run with no violation
-- `Broiler.Code.Review.Assurance.AssuranceChecks.Run(AssurancePlan, AssuranceComponentConfig, AssuranceCheckOptions)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `0F2232`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceChecks.Run(AssurancePlan, AssuranceComponentConfig, AssuranceCheckOptions)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `BFB66A`, PENDING
   - Falsified if: a relevant unit that carries no block in an indexable covered file produces no J1 violation
 - `Broiler.Code.Review.Assurance.AssuranceChecks.MissingCriteria(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `293283`, PENDING
   - Falsified if: a unit assessed Critical with no criterion line is absent from the returned messages
 - `Broiler.Code.Review.Assurance.AssuranceChecks.MissingCriteriaOf(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `24C868`, PENDING
   - Falsified if: a block that is not an exemption and assesses security as High with no criterion line is not yielded
+- `Broiler.Code.Review.Assurance.AssuranceChecks.CriteriaBelowHighOf(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `4BF82B`, PENDING
+  - Falsified if: a block assessed Medium that carries a criterion line is not yielded, so a component that refuses one passes the check
 - `Broiler.Code.Review.Assurance.AssuranceChecks.Orphans(AssurancePlannedFile)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `306FF8`, PENDING
   - Falsified if: a criterion comment that stands under no attached AI line produces no J2 violation
 - `Broiler.Code.Review.Assurance.AssuranceChecks.SpecViolations(IEnumerable<AssuranceCorpusUnit>, IReadOnlySet<string>, string)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, Spec=none cited, `4AAEE2`, PENDING
@@ -996,7 +1037,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: the opt-in file name matches a file components carry for another reason, so insert and generate write to a component that never opted in
 - `Broiler.Code.Review.Assurance.AssuranceComponentConfig.CurrentSchema` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, Spec=none cited, `0498C8`, PENDING
   - Falsified if: Parse accepts a schema number other than the one whose properties it defines
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.Parse(string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, Spec=none cited, `5C8EC7`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.Parse(string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, Spec=none cited, `8BA3DA`, PENDING
   - Falsified if: a top-level property this schema does not define, such as a misspelled exclude, is accepted instead of raising AssuranceConfigException
 - `Broiler.Code.Review.Assurance.AssuranceComponentConfig.ProjectList(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, Spec=none cited, `54B79C`, PENDING
   - Falsified if: a project path with a '..' segment, a leading slash or a drive letter is returned instead of refused
@@ -1070,7 +1111,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: Plan gives a file a desired text whose human line names an alias the line as read did not carry
 - `Broiler.Code.Review.Assurance.AssuranceGenerator.GeneratedNotice` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, Spec=none cited, `D36857`, PENDING
   - Falsified if: the notice is not how the report, record and manifest renderers open their text, so a regenerated artefact reads as hand-written to IsGenerated
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.Plan(AssuranceCorpus, IAssuranceFileScanner, AssuranceComponentConfig)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, Spec=none cited, `EBE9B5`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceGenerator.Plan(AssuranceCorpus, IAssuranceFileScanner, AssuranceComponentConfig)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, Spec=none cited, `1558C3`, PENDING
   - Falsified if: a plan in which a file was refused carries for that file a desired text other than the text as read
 - `Broiler.Code.Review.Assurance.AssuranceGenerator.IsGenerated(string)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, Spec=none cited, `25C109`, PENDING
   - Falsified if: a text whose only notice line is its eleventh line is reported as generated
@@ -1142,7 +1183,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a human line indented with tabs is not returned
 - `Broiler.Code.Review.Assurance.AssuranceInsertion` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `160B8B`, PENDING
   - Falsified if: text returned by Apply holds a newly inserted human line that reads anything other than PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Validate(AssuranceAssessment)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `59D454`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceInsertion.Validate(AssuranceAssessment)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `93EBB6`, PENDING
   - Falsified if: an entry assessed High or Critical whose falsification criterion is only whitespace is returned with no problem
 - `Broiler.Code.Review.Assurance.AssuranceInsertion.Render(AssuranceAssessment, string)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `B9DC7B`, PENDING
   - Falsified if: a rendered block's last line is anything other than the human marker followed by PENDING, whatever the entry holds
@@ -1182,6 +1223,18 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a manifest whose files member is missing or is not an array is read as an empty list of file entries instead of being reported
 - `Broiler.Code.Review.Assurance.AssuranceManifest.Text(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, Spec=none cited, `C812A6`, PENDING
   - Falsified if: a property holding a JSON number, null, array or object is read as anything other than the empty string
+- `Broiler.Code.Review.Assurance.AssurancePruning` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, Spec=none cited, `A23C54`, PENDING
+  - Falsified if: the text Apply returns differs from the text as read in a line other than an assurance comment of a block whose human line reads exactly PENDING
+- `Broiler.Code.Review.Assurance.AssurancePruning.Apply(string, string, IAssuranceFileScanner)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, Spec=none cited, `D0807E`, PENDING
+  - Falsified if: a block whose human line reads anything other than exactly PENDING, such as PENDING followed by a fingerprint part, loses a line in the text Apply returns
+- `Broiler.Code.Review.Assurance.AssurancePruning.CodeDifference(AssuranceScannedFile, AssuranceScannedFile)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, Spec=none cited, `B9CB54`, PENDING
+  - Falsified if: two scans whose units match in name and fingerprint but differ in exemption are answered with null
+- `Broiler.Code.Review.Assurance.AssurancePruning.RemovalFor(AssuranceCandidate, AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, Spec=none cited, `4FB20A`, PENDING
+  - Falsified if: a block assessed High or Critical, or a block whose own exemption reason is what exempts its unit, is given lines to remove
+- `Broiler.Code.Review.Assurance.AssurancePruning.Verify(string, string, string, IAssuranceFileScanner, AssuranceScannedFile, IReadOnlyList<AssuranceCandidate>, IReadOnlyDictionary<int, (int First, int Count, AssurancePruneKind Kind)>, IReadOnlyList<(int Line, string Text, string Separator)>)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, Spec=none cited, `94EC85`, PENDING
+  - Falsified if: a pruned text that differs from the original outside the removed lines, or whose remaining block lost its criterion or changed a field, is answered with null
+- `Broiler.Code.Review.Assurance.AssurancePruning.SameAssessment(AssuranceAnnotation, AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, Spec=none cited, `EE93FA`, PENDING
+  - Falsified if: two blocks whose human lines differ, or whose machine fields differ in order, are answered the same assessment
 - `Broiler.Code.Review.Assurance.AssuranceReviewClaims` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, Spec=none cited, `E4AB3C`, PENDING
   - Falsified if: a generated line stating a claim term with a count other than the annotations' count, and no negation before it in its clause, yields no J9 violation
 - `Broiler.Code.Review.Assurance.AssuranceReviewClaims.Negations` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, Spec=none cited, `B64764`, PENDING
@@ -1206,6 +1259,8 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a term of the owning component's J9 list is missing here, so a generated line using it passes this tool's check
 - `Broiler.Code.Review.Assurance.AssuranceRules.SecurityRequiringACriterion` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `DE9342`, PENDING
   - Falsified if: the list lacks High or Critical, so a block at that level passes without a criterion line
+- `Broiler.Code.Review.Assurance.AssuranceRules.SecurityWritingNoCriterion` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `8B2E2B`, PENDING
+  - Falsified if: the list holds High or Critical, so prune takes the criterion off a block at the top of the vocabulary and insert refuses one there
 - `Broiler.Code.Review.Assurance.AssuranceRules.CriterionProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `1B72D8`, PENDING
   - Falsified if: a criterion stating one of the format's field names followed by an equals sign and a value yields no problem
 - `Broiler.Code.Review.Assurance.AssuranceRules.ExemptionReasonProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `320DC4`, PENDING
@@ -1218,6 +1273,8 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a non-exempt block missing one of the five required fields yields no problem
 - `Broiler.Code.Review.Assurance.AssuranceRules.RequiresFalsificationCriterion(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `1B1FA3`, PENDING
   - Falsified if: a non-exempt block whose security value is High or Critical returns false
+- `Broiler.Code.Review.Assurance.AssuranceRules.CarriesCriterionBelowHigh(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `C3A4FA`, PENDING
+  - Falsified if: a block that states an exemption, or one assessed High, is answered true, so prune takes its criterion line
 - `Broiler.Code.Review.Assurance.AssuranceRules.FieldOnACriterion()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `D5C99A`, PENDING
   - Falsified if: a format field name followed by an equals sign and a value, written in lower case or with spaces around the sign, is not matched
 - `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaim()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `897B3A`, PENDING
@@ -1376,7 +1433,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: text set while no clipboard is attached is kept in this process and later returned by TryGetText
 - `Broiler.Code.Windows.CodeShellFactory` in `src/Broiler.Code.Windows/CodeShellFactory.cs` - Security=High, Spec=none cited, `F954EC`, PENDING
   - Falsified if: a command-line path that names no existing directory is granted as the workspace root instead of the scratch directory
-- `Broiler.Code.Windows.CodeShellFactory.OpenWorkspaceAsync(CodeShell, string?)` in `src/Broiler.Code.Windows/CodeShellFactory.cs` - Security=High, Spec=none cited, `609205`, PENDING
+- `Broiler.Code.Windows.CodeShellFactory.OpenWorkspaceAsync(CodeShell, string?)` in `src/Broiler.Code.Windows/CodeShellFactory.cs` - Security=High, Spec=none cited, `8A2A76`, PENDING
   - Falsified if: a command-line path that names no existing directory is granted as the workspace root instead of the scratch directory
 - `Broiler.Code.Windows.CodeShellFactory.ScratchRoot()` in `src/Broiler.Code.Windows/CodeShellFactory.cs` - Security=High, Spec=none cited, `A271B1`, PENDING
   - Falsified if: the scratch root is created somewhere other than LocalApplicationData\Broiler\Code\scratch, such as the temp directory a cleaner can empty
@@ -1590,5 +1647,5 @@ An assessment is a comment, so changing one moves no fingerprint anywhere, and n
 mechanical checks that it is right; the check holds its values to their vocabularies and no
 further.
 
-1499 of the 1499 assessed units declare `Origin=AI`. Reading a declaration is the only thing
+1541 of the 1541 assessed units declare `Origin=AI`. Reading a declaration is the only thing
 that makes it read.

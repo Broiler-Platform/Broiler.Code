@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   13
-// Annotated:        13/13
+// Relevant units:   15
+// Annotated:        15/15
 // Exempt:           0
-// Human-reviewed:   0/13
+// Human-reviewed:   0/15
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         13/11
+// Criteria:         15/13
 // Resource impact:  5/10 max
-// Unverified:       13
+// Unverified:       15
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -68,6 +68,16 @@ public static partial class AssuranceRules
     // Broiler-Falsified-If: the list lacks High or Critical, so a block at that level passes without a criterion line
     // Broiler-Human:        PENDING
     public static readonly IReadOnlyList<string> SecurityRequiringACriterion = ["High", "Critical"];
+
+    /// <summary>
+    /// The security values below High, whose blocks the rubric writes without a
+    /// criterion: below High, the observation that would prove a unit wrong is
+    /// rarely more than the unit restated.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=8B2E2B
+    // Broiler-Falsified-If: the list holds High or Critical, so prune takes the criterion off a block at the top of the vocabulary and insert refuses one there
+    // Broiler-Human:        PENDING
+    public static readonly IReadOnlyList<string> SecurityWritingNoCriterion = ["None", "Low", "Medium"];
 
     /// <summary>
     /// Every problem with a falsification criterion, or nothing when it is
@@ -263,6 +273,23 @@ public static partial class AssuranceRules
         return annotation.ExemptReason is null &&
             annotation.Field("Security") is { } security &&
             SecurityRequiringACriterion.Contains(security, StringComparer.Ordinal);
+    }
+
+    /// <summary>
+    /// True when a block that is not an exemption is assessed below High and
+    /// carries a criterion line all the same.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=C3A4FA
+    // Broiler-Falsified-If: a block that states an exemption, or one assessed High, is answered true, so prune takes its criterion line
+    // Broiler-Human:        PENDING
+    public static bool CarriesCriterionBelowHigh(AssuranceAnnotation annotation)
+    {
+        ArgumentNullException.ThrowIfNull(annotation);
+
+        return annotation.ExemptReason is null &&
+            annotation.HasCriterionLine &&
+            annotation.Field("Security") is { } security &&
+            SecurityWritingNoCriterion.Contains(security, StringComparer.Ordinal);
     }
 
     /// <summary>

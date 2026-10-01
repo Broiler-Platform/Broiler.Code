@@ -15,11 +15,17 @@ namespace Broiler.Code.Language.CSharp.Assurance.Tests;
 public sealed class AssuranceScannerComponentTests
 {
     private static IReadOnlyList<AssuranceScannedUnit> Units(
-        string text, AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent) =>
-        new CSharpAssuranceScanner(null, predicate).Scan(text, "x.cs");
+        string text,
+        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent,
+        AssuranceNamedValues namedValues = AssuranceNamedValues.Reviewed) =>
+        new CSharpAssuranceScanner(null, predicate, namedValues).Scan(text, "x.cs");
 
-    private static AssuranceScannedUnit Unit(string text, string name, AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent) =>
-        Units(text, predicate).Single(unit => unit.Name == name);
+    private static AssuranceScannedUnit Unit(
+        string text,
+        string name,
+        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent,
+        AssuranceNamedValues namedValues = AssuranceNamedValues.Reviewed) =>
+        Units(text, predicate, namedValues).Single(unit => unit.Name == name);
 
     /// <summary>
     /// A CRLF working tree of an LF blob gives every unit, and the file, the
@@ -234,6 +240,126 @@ public sealed class AssuranceScannerComponentTests
             Assert.True(strict.IsExempt, $"{name} is exempt strictly");
             Assert.Equal(owning.Exemption, strict.Exemption);
         }
+    }
+
+    private const string NamedValues =
+        "namespace N;\n" +
+        "public static class Native\n" +
+        "{\n" +
+        "    public const int EGL_NONE = 0x3038;\n" +
+        "    private const string Library = \"libEGL\", Other = Library + \".so\";\n" +
+        "    public static readonly System.Guid IID_IUnknown = new System.Guid(\"00000000-0000-0000-C000-000000000046\");\n" +
+        "    internal static readonly Guid CLSID = new(0x4590f811, 0x1d3a, 0x11d0, 0x89, 0x1f, 0x00, 0xaa, 0x00, 0x4b, 0x2e, 0x24);\n" +
+        "    private static readonly Guid Nothing = Guid.Empty, Also = default;\n" +
+        "    public static readonly IntPtr NullHandle = IntPtr.Zero;\n" +
+        "    public static readonly IntPtr Invalid = new IntPtr(-1), Topmost = (IntPtr)(-1);\n" +
+        "    public static readonly global::System.UIntPtr Top = (global::System.UIntPtr)0xFFFFFFFF;\n" +
+        "    public static readonly nint Minus = -1;\n" +
+        "    public static readonly nuint Zero = nuint.Zero;\n" +
+        "    public enum Mode : uint { Off = 0, On = 0x80000000 }\n" +
+        "\n" +
+        "    private static readonly System.Text.RegularExpressions.Regex Pattern = new(\"a+\");\n" +
+        "    private static readonly int[] Table = [1, 2, 3];\n" +
+        "    private static readonly Guid Fresh = Guid.NewGuid();\n" +
+        "    private static readonly Guid Parsed = Guid.Parse(\"00000000-0000-0000-C000-000000000046\");\n" +
+        "    private static readonly Guid Built = new Guid(1, 2, 3, new byte[] { 4, 5, 6, 7, 8, 9, 10, 11 });\n" +
+        "    private static readonly IntPtr Handle = Open(\"x\");\n" +
+        "    private static readonly IntPtr Copy = NullHandle;\n" +
+        "    private static readonly IntPtr Sum = (IntPtr)(1 + 2);\n" +
+        "    private static readonly IntPtr Wrapped = new IntPtr(1) { };\n" +
+        "    private static readonly Guid Late;\n" +
+        "    private readonly Guid _instance = new Guid(\"00000000-0000-0000-C000-000000000046\");\n" +
+        "    private static readonly long Literal = 7;\n" +
+        "    private static System.IntPtr Open(string name) => System.IntPtr.Zero;\n" +
+        "}\n";
+
+    /// <summary>
+    /// A named value is exempt as <c>NamedValue</c> where the component watches
+    /// named values, under either predicate, and is answered exactly as before
+    /// where it does not: every const, every enum declaration, and a static
+    /// readonly Guid or handle in each literal form.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("N.Native.EGL_NONE")]
+    [InlineData("N.Native.Library, Other")]
+    [InlineData("N.Native.IID_IUnknown")]
+    [InlineData("N.Native.CLSID")]
+    [InlineData("N.Native.Nothing, Also")]
+    [InlineData("N.Native.NullHandle")]
+    [InlineData("N.Native.Invalid, Topmost")]
+    [InlineData("N.Native.Top")]
+    [InlineData("N.Native.Minus")]
+    [InlineData("N.Native.Zero")]
+    [InlineData("N.Native.Mode")]
+    public void A_Named_Value_Is_Watched_Where_The_Component_Says_So(string name)
+    {
+        foreach (AssuranceExemptionPredicate predicate in new[] { AssuranceExemptionPredicate.Strict, AssuranceExemptionPredicate.OwningComponent })
+        {
+            AssuranceScannedUnit reviewed = Unit(NamedValues, name, predicate);
+            Assert.False(reviewed.IsExempt, $"{name} is relevant where named values are reviewed");
+            Assert.Equal("None", reviewed.Exemption);
+
+            AssuranceScannedUnit watched = Unit(NamedValues, name, predicate, AssuranceNamedValues.Watched);
+            Assert.True(watched.IsExempt, $"{name} is exempt where named values are watched");
+            Assert.Equal(AssuranceVocabulary.NamedValue, watched.Exemption);
+            Assert.Equal(reviewed.Fingerprint, watched.Fingerprint);
+        }
+    }
+
+    /// <summary>
+    /// Nothing else is a named value: a Regex, an array, a call, a Guid built
+    /// from an array, a value read from another member or computed, an object
+    /// initializer, storage with no initializer, an instance field and a type
+    /// outside the list each get the answer they had, and the enum's members
+    /// keep their own case.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("N.Native.Pattern")]
+    [InlineData("N.Native.Table")]
+    [InlineData("N.Native.Fresh")]
+    [InlineData("N.Native.Parsed")]
+    [InlineData("N.Native.Built")]
+    [InlineData("N.Native.Handle")]
+    [InlineData("N.Native.Copy")]
+    [InlineData("N.Native.Sum")]
+    [InlineData("N.Native.Wrapped")]
+    [InlineData("N.Native.Late")]
+    [InlineData("N.Native._instance")]
+    [InlineData("N.Native.Literal")]
+    [InlineData("N.Native.Open(string)")]
+    [InlineData("N.Native.Mode.On")]
+    [InlineData("N.Native")]
+    public void Nothing_Else_Is_A_Named_Value(string name)
+    {
+        foreach (AssuranceExemptionPredicate predicate in new[] { AssuranceExemptionPredicate.Strict, AssuranceExemptionPredicate.OwningComponent })
+        {
+            AssuranceScannedUnit reviewed = Unit(NamedValues, name, predicate);
+            AssuranceScannedUnit watched = Unit(NamedValues, name, predicate, AssuranceNamedValues.Watched);
+
+            Assert.NotEqual(AssuranceVocabulary.NamedValue, watched.Exemption);
+            Assert.Equal(reviewed, watched);
+        }
+    }
+
+    /// <summary>
+    /// The named-value case is tried last: a const in a type named
+    /// <c>AssemblyMarker</c> keeps the owning component's reason, and the
+    /// strict predicate, which gives that case up, reaches this one.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_Unit_Another_Case_Covers_Keeps_Its_Reason()
+    {
+        const string Text =
+            "namespace N;\n" +
+            "public static class AssemblyMarker\n" +
+            "{\n" +
+            "    public const int Version = 3;\n" +
+            "}\n";
+
+        Assert.Equal("InsideAssemblyMarker", Unit(Text, "N.AssemblyMarker.Version", namedValues: AssuranceNamedValues.Watched).Exemption);
+        Assert.Equal(
+            AssuranceVocabulary.NamedValue,
+            Unit(Text, "N.AssemblyMarker.Version", AssuranceExemptionPredicate.Strict, AssuranceNamedValues.Watched).Exemption);
     }
 
     /// <summary>

@@ -503,6 +503,58 @@ public sealed class AssuranceCheckTests
             "Origin=AI; IP=Low; Security=Critical; Resources=1; Fingerprint=TBF", criterion: "a negative length is accepted"))));
     }
 
+    /// <summary>
+    /// A criterion below High is accepted by default, which is what keeps
+    /// Broiler.VM's record and every record written before the rubric changed
+    /// valid; a component that refuses one has it reported, with the command
+    /// that takes it out, and its report says criteria are written nowhere else.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void J10_A_Criterion_Below_High_Is_Reported_Only_Where_The_Configuration_Refuses_It()
+    {
+        string low = Folds(criterion: "a negative length is accepted");
+        Assert.Empty(CheckGenerated(Config(), null, ("x.cs", low)));
+
+        AssuranceComponentConfig refusing = Config() with
+        {
+            CriteriaBelowHigh = AssuranceCriteriaBelowHigh.Refused,
+            RegenerateCommand = "dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -- assurance generate --root Probe",
+        };
+
+        AssuranceViolation carried = Assert.Single(CheckGenerated(refusing, null, ("x.cs", low)));
+        Assert.Equal("J10", carried.Rule);
+        Assert.Equal(
+            "x.cs(27): Probe.Folds.Fold(int[]) is assessed Security=Low and carries a '// Broiler-Falsified-If:' line, " +
+            "which this component writes only for High and Critical",
+            carried.Message);
+        Assert.Equal(
+            "dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -- assurance prune --root Probe " +
+            "removes it where the human line reads PENDING",
+            carried.Remedy);
+
+        // High still owes one, and an assessment below High without one is clean.
+        Assert.Empty(CheckGenerated(refusing, null, ("x.cs", Folds(
+            "Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=TBF", criterion: "a negative length is accepted"))));
+        Assert.Empty(CheckGenerated(refusing, null, ("x.cs", Folds())));
+
+        string permitted = Desired(Plan(Config(), ("x.cs", low)), "CODE-ASSURANCE.md");
+        Assert.Contains(
+            "It is required where `Security` is `High` or `Critical`, permitted\nelsewhere, and `broiler-review assurance check` " +
+            "names every unit that owes one and carries none.\n",
+            permitted,
+            StringComparison.Ordinal);
+
+        string refused = Desired(Plan(refusing, ("x.cs", low)), "CODE-ASSURANCE.md");
+        Assert.DoesNotContain("permitted", refused, StringComparison.Ordinal);
+        Assert.Contains(
+            "It is required where `Security` is `High` or `Critical` and written\nnowhere else: " +
+            "`dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -- assurance check --root Probe` names every unit " +
+            "that owes one and carries none, and\nevery unit below `High` that carries one.\n",
+            refused,
+            StringComparison.Ordinal);
+        Assert.Contains("without a criterion, or below it with one. |\n", refused, StringComparison.Ordinal);
+    }
+
     /// <summary>The method's assessment with the fingerprint a generation writes onto it.</summary>
     private static string Generated(string fields = "Origin=AI; IP=Low; Security=Low; Resources=1") =>
         $"{fields}; Fingerprint={Fingerprint(Folds(), ".Fold(int[])")}";

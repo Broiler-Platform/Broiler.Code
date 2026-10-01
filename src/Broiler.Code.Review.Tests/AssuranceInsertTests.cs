@@ -279,6 +279,30 @@ public sealed class AssuranceInsertTests
         Assert.Equal(Source, result.Text);
     }
 
+    /// <summary>
+    /// Below High the rubric writes no criterion, so an entry carrying one is
+    /// refused rather than written: the line would only restate the unit.
+    /// </summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("None")]
+    [InlineData("Low")]
+    [InlineData("Medium")]
+    public void A_Criterion_Below_High_Is_Refused(string security)
+    {
+        AssuranceInsertFileResult result = Apply(
+            Source, Assess(Source, "N.C.Inner.Twice(int)", security: security, criterion: "Twice(3) is not 6"));
+
+        Assert.False(result.Entries[0].Applied);
+        Assert.Equal(
+            $"is assessed Security={security} and carries a '// Broiler-Falsified-If:' line, which is written only " +
+            "for High and Critical; leave falsifiedIf out",
+            result.Entries[0].Message);
+        Assert.Equal(Source, result.Text);
+
+        // The same assessment without the line is written.
+        Assert.True(Apply(Source, Assess(Source, "N.C.Inner.Twice(int)", security: security)).Entries[0].Applied);
+    }
+
     [Theory(Timeout = 600000)]
     [InlineData("it returns Security=None", "states the field Security=None, and a falsification criterion is prose, not data")]
     [InlineData("nothing here was approved by anyone", "claims a review by saying 'approved'")]

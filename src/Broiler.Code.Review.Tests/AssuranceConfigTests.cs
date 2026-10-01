@@ -31,6 +31,32 @@ public sealed class AssuranceConfigTests
         Assert.Equal("docs/adr", config.AdrDirectory);
         Assert.True(config.ExcludeBuildOutputAtAnyDepth);
         Assert.Equal(AssuranceExemptionPredicate.Strict, config.ExemptionPredicate);
+        Assert.Equal(AssuranceNamedValues.Reviewed, config.NamedValues);
+        Assert.Equal(AssuranceCriteriaBelowHigh.Permitted, config.CriteriaBelowHigh);
+    }
+
+    /// <summary>Named values are assessed unless a component says it watches them.</summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("reviewed", AssuranceNamedValues.Reviewed)]
+    [InlineData("watched", AssuranceNamedValues.Watched)]
+    public void Named_Values_Are_Chosen_Explicitly(string value, AssuranceNamedValues expected)
+    {
+        AssuranceComponentConfig config = AssuranceComponentConfig.Parse(
+            $$"""{ "projects": [ "a/a.csproj" ], "namedValues": "{{value}}" }""");
+
+        Assert.Equal(expected, config.NamedValues);
+    }
+
+    /// <summary>A criterion below High is accepted unless a component says it refuses one.</summary>
+    [Theory(Timeout = 600000)]
+    [InlineData("permitted", AssuranceCriteriaBelowHigh.Permitted)]
+    [InlineData("refused", AssuranceCriteriaBelowHigh.Refused)]
+    public void Criteria_Below_High_Are_Refused_Explicitly(string value, AssuranceCriteriaBelowHigh expected)
+    {
+        AssuranceComponentConfig config = AssuranceComponentConfig.Parse(
+            $$"""{ "projects": [ "a/a.csproj" ], "criteriaBelowHigh": "{{value}}" }""");
+
+        Assert.Equal(expected, config.CriteriaBelowHigh);
     }
 
     /// <summary>The owning component's rules, each by its own property.</summary>
@@ -123,6 +149,10 @@ public sealed class AssuranceConfigTests
     [InlineData("""{ "projects": [ "a/a.csproj" ], "component": "Probe\necho owned" }""", "$.component must be one line")]
     [InlineData("""{ "projects": [ "a/a.csproj" ], "exemptionPredicate": "vm" }""", "must be \"strict\" or \"owning-component\"")]
     [InlineData("""{ "projects": [ "a/a.csproj" ], "excludeBuildOutputAtAnyDepth": "yes" }""", "must be true or false")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "namedValues": "exempt" }""", "$.namedValues must be \"reviewed\" or \"watched\"")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "namedValues": "Watched" }""", "$.namedValues must be \"reviewed\" or \"watched\"")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "namedValues": true }""", "$.namedValues must be a string")]
+    [InlineData("""{ "projects": [ "a/a.csproj" ], "criteriaBelowHigh": "forbidden" }""", "$.criteriaBelowHigh must be \"permitted\" or \"refused\"")]
     [InlineData("""[ ]""", "$ must be an object")]
     [InlineData("""{ "projects": """, "not valid JSON")]
     public void A_Mistake_Is_An_Error_Naming_Where_It_Is(string json, string expected)
