@@ -87,7 +87,7 @@ public static class AssurancePruning
     /// <param name="text">The file's text, decoded, without a byte-order mark.</param>
     /// <param name="path">The file's root-relative path, for the parser and for messages.</param>
     /// <param name="scanner">The scanner the component's configuration asks for.</param>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=41458F
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=D0807E
     // Broiler-Falsified-If: a block whose human line reads anything other than exactly PENDING, such as PENDING followed by a fingerprint part, loses a line in the text Apply returns
     // Broiler-Human:        PENDING
     public static AssurancePruneFileResult Apply(string text, string path, IAssuranceFileScanner scanner)
@@ -166,7 +166,7 @@ public static class AssurancePruning
         string? failure = Verify(text, result, path, scanner, scan, candidates, removals, removed);
         return failure is null
             ? new AssurancePruneFileResult(result, entries, null)
-            : Refused(text, entries, $"the file did not scan the same after removing ({failure})");
+            : Refused(text, entries, $"did not scan the same after removing ({failure})");
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ public static class AssurancePruning
     /// block above a unit the predicate exempts, whatever the block says, or
     /// the criterion line of an assessment below High.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=728195
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=4FB20A
     // Broiler-Falsified-If: a block assessed High or Critical, or a block whose own exemption reason is what exempts its unit, is given lines to remove
     // Broiler-Human:        PENDING
     private static (int First, int Count, AssurancePruneKind Kind, string Reason)? RemovalFor(
@@ -222,11 +222,12 @@ public static class AssurancePruning
                 $"exempt: {candidate.Unit.Exemption}");
         }
 
-        if (annotation.ExemptReason is null &&
-            annotation.FalsifiedIfLine is { } criterion &&
-            annotation.Field("Security") is "None" or "Low" or "Medium")
+        // The rule the check applies where a component refuses these, so that
+        // what prune leaves is what that check accepts.
+        if (AssuranceRules.CarriesCriterionBelowHigh(annotation))
         {
-            return (criterion, 1, AssurancePruneKind.Criterion, $"Security={annotation.Field("Security")}");
+            return (annotation.FalsifiedIfLine!.Value, 1, AssurancePruneKind.Criterion,
+                $"Security={annotation.Field("Security")}");
         }
 
         return null;

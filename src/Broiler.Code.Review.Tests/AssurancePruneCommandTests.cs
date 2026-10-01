@@ -313,6 +313,45 @@ public sealed class AssurancePruneCommandTests
         Assert.False(refused.Changed);
     }
 
+    /// <summary>
+    /// A file that would not scan the same after removing keeps every line, and
+    /// the reason reads once, after "the file": a block a person wrote on,
+    /// stacked under a PENDING one, is what would be left attached.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public void A_File_That_Would_Not_Scan_The_Same_Is_Left_And_Its_Reason_Reads_Once()
+    {
+        using TemporaryComponent component = Component();
+        const string Stacked =
+            "namespace Probe;\n" +
+            "\n" +
+            "public static class C\n" +
+            "{\n" +
+            "    // Broiler-AI:           Origin=AI; IP=None; Security=Critical; Resources=0; Fingerprint=TBF\n" +
+            "    // Broiler-Falsified-If: X is not 1\n" +
+            "    // Broiler-Human:        PENDING\n" +
+            "    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=TBF\n" +
+            "    // Broiler-Human:        Tester\n" +
+            "    public const int X = 1;\n" +
+            "}\n";
+        component.Write("src/Probe/C.cs", Stacked);
+
+        (int exit, string output, string error) = component.Run("prune", "--root", component.Root, "--json", "-");
+
+        Assert.Equal(AssuranceCommand.Refused, exit);
+        Assert.Equal(Stacked, component.Read("src/Probe/C.cs"));
+
+        const string Reason =
+            "did not scan the same after removing (Probe.C.X still carries an assurance line after its block was removed)";
+        using JsonDocument report = JsonDocument.Parse(output);
+        JsonElement file = Assert.Single(report.RootElement.GetProperty("files").EnumerateArray());
+        Assert.Equal($"the file {Reason}; nothing was removed from it", file.GetProperty("problem").GetString());
+        Assert.Equal(
+            $"not removed: the file {Reason}",
+            Assert.Single(file.GetProperty("entries").EnumerateArray()).GetProperty("reason").GetString());
+        Assert.DoesNotContain("the file the file", error, StringComparison.Ordinal);
+    }
+
     /// <summary>A watched named value is exempt, so insert refuses an assessment of it as it refuses any exempt unit's.</summary>
     [Fact(Timeout = 600000)]
     public void Insert_Refuses_To_Assess_A_Watched_Named_Value()

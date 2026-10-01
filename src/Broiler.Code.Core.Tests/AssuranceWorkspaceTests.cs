@@ -799,6 +799,63 @@ public sealed class AssuranceWorkspaceTests : IDisposable
     }
 
     /// <summary>
+    /// Which units are exempt is the component's to say, so a head that can
+    /// read its configuration makes a scanner per storage root, and the pane
+    /// scans with it in place of the one default: asked for the root the file
+    /// was opened from, once however many files are opened there. A named
+    /// value that component watches is shown as exempt, in words.
+    /// </summary>
+    [Fact(Timeout = 600000)]
+    public async Task A_Scanner_Made_For_The_Files_Root_Takes_The_Place_Of_The_Default()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        var asked = new List<IWorkspaceStorage>();
+        shell.AssuranceScanner = new StubScanner(
+        [
+            new("Sample.Thing", "Thing", 5, 15, false, "None", "AAAAAA"),
+        ]);
+        shell.AssuranceScannerFactory = storage =>
+        {
+            asked.Add(storage);
+            return new StubScanner(
+            [
+                new("Sample.Thing", "Thing", 5, 15, true, "NamedValue", "AAAAAA"),
+            ]);
+        };
+
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        Assert.True(shell.Assurance!.HasUnitScanner);
+        Assert.Contains(("Thing", "exempt: named value the component watches"), PaneRows(controls, "group:units.exempt"));
+
+        await OpenAsync(shell, workspace, "src/Other.cs");
+        Assert.Same(workspace.Storage, Assert.Single(asked));
+
+        shell.Dispose();
+    }
+
+    /// <summary>A root the factory has no scanner for keeps the default one.</summary>
+    [Fact(Timeout = 600000)]
+    public async Task A_Root_The_Factory_Declines_Keeps_The_Default_Scanner()
+    {
+        (CodeShell shell, CodeShellControls controls) = CreateShell();
+        shell.AssuranceScanner = new StubScanner(
+        [
+            new("Sample.Thing", "Thing", 5, 15, false, "None", "AAAAAA"),
+        ]);
+        shell.AssuranceScannerFactory = static _ => null;
+
+        CodeWorkspace workspace = CreateWorkspace();
+        shell.AttachWorkspace(workspace);
+        await OpenThingAsync(shell, workspace);
+
+        Assert.Contains(("Thing", "needs human review"), PaneRows(controls, "group:units"));
+        shell.Dispose();
+    }
+
+    /// <summary>
     /// When the source states its own reason, that is what the pane shows: it is
     /// a sentence somebody wrote about this declaration, and no rendering here
     /// improves on it.

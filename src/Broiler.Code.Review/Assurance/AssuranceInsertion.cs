@@ -125,7 +125,7 @@ public static class AssuranceInsertion
     /// Every problem with an entry that can be found without the file. Empty
     /// means the entry is well formed.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=59D454
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=93EBB6
     // Broiler-Falsified-If: an entry assessed High or Critical whose falsification criterion is only whitespace is returned with no problem
     // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Validate(AssuranceAssessment entry)
@@ -203,6 +203,17 @@ public static class AssuranceInsertion
             problems.Add(
                 $"is assessed Security={security} and carries no '{AssuranceVocabulary.FalsifiedIfMarker}' " +
                 "line, so nothing at the declaration says what would make it wrong");
+        }
+
+        // The rubric writes a criterion only for High and Critical, whatever a
+        // component's check still accepts from blocks written before it did.
+        if (entry.Security is { } below &&
+            AssuranceRules.SecurityWritingNoCriterion.Contains(below, StringComparer.Ordinal) &&
+            entry.FalsifiedIf is not null)
+        {
+            problems.Add(
+                $"is assessed Security={below} and carries a '{AssuranceVocabulary.FalsifiedIfMarker}' line, " +
+                "which is written only for High and Critical; leave falsifiedIf out");
         }
 
         return problems;

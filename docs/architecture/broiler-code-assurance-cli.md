@@ -64,6 +64,7 @@ and trailing commas are allowed.
 | `excludeBuildOutputAtAnyDepth` | bool | `true` | Also leave out `bin` and `obj` directories below a project's root (their files are listed as not covered). `false` is the owning component's and the SDK's rule: only the project's own `bin` and `obj`. |
 | `exemptionPredicate` | `"strict"` \| `"owning-component"` | `"strict"` | Which exemption predicate decides that a unit needs no review (see "What a unit is"). |
 | `namedValues` | `"reviewed"` \| `"watched"` | `"reviewed"` | `watched`: a named value (a `const` field, an enum declaration, a `static readonly` `Guid` or handle stated by literals) is exempt as `NamedValue` and carries no block; its fingerprint stays in the manifest. For a component of values transcribed from elsewhere, such as an SDK's defines (see "What a unit is"). Applies under either predicate. |
+| `criteriaBelowHigh` | `"permitted"` \| `"refused"` | `"permitted"` | `refused`: `check` reports a `// Broiler-Falsified-If:` line on a block assessed `None`, `Low` or `Medium` (J10), because the rubric writes one only for `High` and `Critical`. Set it once `prune` has removed the criteria an earlier rubric wrote below `High`. `insert` refuses such a criterion whatever this says. |
 | `spdx` | `{copyright: string[], license: string}` | none; **required** by `generate`, `check` and `status` | SPDX lines of the generated header: one or more `SPDX-FileCopyrightText` values (without the prefix) and one licence expression, e.g. `Apache-2.0 AND BSD-3-Clause`. |
 | `spdxOverrides` | `{glob, copyright[], license}`[] | `[]` | SPDX lines for particular files, such as third-party-derived code. The first matching glob wins. |
 | `artefacts` | `{report, humanReview, manifest}` | `CODE-ASSURANCE.md`, `HUMAN_REVIEW.md`, `assurance.manifest.json` | Where the component-level artefacts go, so that a hand-written `HUMAN_REVIEW.md` can stay where it is. A path inside a `.git` directory is refused here; one through a link or into a nested checkout is refused when the tool runs. |
@@ -222,7 +223,9 @@ integral JSON number (`2` or `2.0`).
 
 An entry is refused when: a value is outside its vocabulary or `resources` is
 not an integer 0 to 10; `security` is `High` or `Critical` and there is no
-`falsifiedIf`; the criterion is not one line of prose, states one of this
+`falsifiedIf`, or it is `None`, `Low` or `Medium` and there is one (the rubric
+writes a criterion only at the top of the vocabulary); the criterion is not one
+line of prose, states one of this
 format's fields (`Security=Low`, `Fingerprint=...`; any other `Key=Value`, such
 as `SameSite=None`, is prose) or claims a review; the `exempt` reason or the
 `spec` claims a review; the unit is unknown, exempt or already annotated; the
@@ -348,13 +351,13 @@ with the owning component's messages:
 | J6 | A preprocessor directive, only with `forbidDirectives`. |
 | J7 | The manifest against the tree: missing, extra, stale and duplicate unit and file entries, and anything at its top beside `$comment`, `files` and `units`. |
 | J9 | Generated text stating a review word the annotations do not support, by count or by a negation in the same clause. A check on the tool's own output, and with `--sources-only` on the manifest as it is on disk. |
-| J10 | A unit assessed High or Critical with no criterion line. |
+| J10 | A unit assessed High or Critical with no criterion line; with `"criteriaBelowHigh": "refused"`, a unit assessed None, Low or Medium with one. |
 | J11 | With `--release`: every relevant unit left in a state that blocks a release. |
 | IO | A covered file or artefact that could not be read. |
 
 Where a violation has a remedy, a `Run:` line follows the message: J1 names the
 `list` and `insert` commands, J3 and J7 the `generate` command (J5's message
-carries it already). A J7 violation about a unit or file of the tree is anchored
+carries it already), and J10 on a criterion below High the `prune` command. A J7 violation about a unit or file of the tree is anchored
 at that unit's line or that file, so a pull request shows it beside the change;
 only an entry the tree lacks and the manifest's own shape are anchored at the
 manifest. An artefact that does not exist is reported as the owning component
@@ -433,6 +436,8 @@ files[{file, problem?, entries[{unit, line, kind, removed, reason}]}]}`; with
 in place or could not read, verify or write a file. Run `generate` afterwards:
 the file headers, the report and the human-review record still count the
 blocks and criteria that are gone, while no entry of the manifest has moved.
+Then set `"criteriaBelowHigh": "refused"`, so that `check` reports a criterion
+below High if one is written again by hand.
 
 ## Against Broiler.VM
 
@@ -469,6 +474,10 @@ collapsing every block's padding: one run gives back VM's bytes.
 - A component may watch its named values (`"namedValues": "watched"`), a ninth
   exemption case VM does not have. It is off unless a configuration sets it,
   and VM's sets nothing.
+- `insert` refuses a criterion on a block assessed below High, which VM's format
+  accepts, and a component may have `check` report one
+  (`"criteriaBelowHigh": "refused"`). That is off unless a configuration sets
+  it, so VM's own criteria below High stay valid.
 - `bin` and `obj` are left out at any depth by default, and whatever the walk
   does not enter (build output below a project's root, nested checkouts, links)
   is listed as not covered; VM leaves out only a project's own `bin` and `obj`,

@@ -111,7 +111,7 @@ internal static class CodeShellFactory
     /// <see cref="WorkspaceBootstrap"/>'s, in Core; this only decides which
     /// directory is granted.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=7F344C
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=3D41E0
     // Broiler-Falsified-If: a path argument naming a file or a missing directory is granted as the workspace root instead of the scratch root
     // Broiler-Human:        PENDING
     public static async ValueTask<CodeWorkspace> OpenWorkspaceAsync(
@@ -130,8 +130,13 @@ internal static class CodeShellFactory
         // place before a workspace opens. Without a scanner the assurance pane
         // reads the annotation blocks alone and declines to recount a file's
         // generated header; with one it knows the file's units, which of them are
-        // exempt, and what each one's fingerprint is now.
+        // exempt, and what each one's fingerprint is now. Which ones are exempt
+        // is the component's to say, in the assurance.config.json above a file,
+        // so a granted root gets a scanner that reads it there.
         shell.AssuranceScanner = new CSharpAssuranceScanner();
+        shell.AssuranceScannerFactory = static granted => granted.GrantedRoots.Count == 0
+            ? null
+            : new CSharpComponentAssuranceScanner(granted.GrantedRoots[0]);
 
         shell.RevisionProvider = new GitRevisionProvider(root);
         shell.Reviewer = await GitIdentity

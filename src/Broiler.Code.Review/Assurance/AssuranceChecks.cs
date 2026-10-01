@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   14
-// Annotated:        14/14
+// Relevant units:   15
+// Annotated:        15/15
 // Exempt:           0
-// Human-reviewed:   0/14
+// Human-reviewed:   0/15
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         13/11
+// Criteria:         14/12
 // Resource impact:  6/10 max
-// Unverified:       14
+// Unverified:       15
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -54,7 +54,7 @@ public sealed record AssuranceCheckOptions(bool Release = false, bool SourcesOnl
 /// <item><term>J6</term><description>A preprocessor directive, when the configuration forbids them.</description></item>
 /// <item><term>J7</term><description>The manifest disagrees with the tree.</description></item>
 /// <item><term>J9</term><description>Generated text claims a review the annotations do not hold. A check on this tool's own output.</description></item>
-/// <item><term>J10</term><description>A unit assessed High or Critical carries no criterion.</description></item>
+/// <item><term>J10</term><description>A unit assessed High or Critical carries no criterion; where the configuration refuses one below High, a unit assessed below High carries one.</description></item>
 /// <item><term>J11</term><description>With <see cref="AssuranceCheckOptions.Release"/>: a relevant unit in a state that blocks a release.</description></item>
 /// </list>
 ///
@@ -70,7 +70,7 @@ public sealed record AssuranceCheckOptions(bool Release = false, bool SourcesOnl
 public static class AssuranceChecks
 {
     /// <summary>Every violation in <paramref name="plan"/>, rule by rule.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=0F2232
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=BFB66A
     // Broiler-Falsified-If: a relevant unit that carries no block in an indexable covered file produces no J1 violation
     // Broiler-Human:        PENDING
     public static IReadOnlyList<AssuranceViolation> Run(
@@ -153,6 +153,19 @@ public static class AssuranceChecks
 
             foreach ((AssuranceCorpusUnit unit, string message) in MissingCriteriaOf(units))
                 violations.Add(At("J10", unit, message));
+
+            if (config.CriteriaBelowHigh == AssuranceCriteriaBelowHigh.Refused)
+            {
+                foreach (AssuranceCorpusUnit unit in CriteriaBelowHighOf(units))
+                {
+                    violations.Add(At("J10", unit,
+                        $"{unit.Where} is assessed Security={unit.Annotation!.Field("Security")} and carries a " +
+                        $"'{AssuranceVocabulary.FalsifiedIfMarker}' line, which this component writes only for High and Critical") with
+                    {
+                        Remedy = $"{AssuranceReportContext.Sibling(generate, "prune")} removes it where the human line reads PENDING",
+                    });
+                }
+            }
         }
 
         violations.AddRange(InventedApprovals(plan));
@@ -205,6 +218,13 @@ public static class AssuranceChecks
                 $"'{AssuranceVocabulary.FalsifiedIfMarker}' line, so nothing at the declaration says what would make it wrong");
         }
     }
+
+    /// <summary>Every unit whose block is assessed below High and carries a criterion line.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=4BF82B
+    // Broiler-Falsified-If: a block assessed Medium that carries a criterion line is not yielded, so a component that refuses one passes the check
+    // Broiler-Human:        PENDING
+    private static IEnumerable<AssuranceCorpusUnit> CriteriaBelowHighOf(IEnumerable<AssuranceCorpusUnit> units) =>
+        units.Where(static unit => unit.Annotation is { } annotation && AssuranceRules.CarriesCriterionBelowHigh(annotation));
 
     /// <summary>
     /// Every assurance comment that is not part of an attached block: a

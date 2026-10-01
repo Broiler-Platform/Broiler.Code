@@ -118,7 +118,7 @@ internal static class CodeShellFactory
     /// buffer the user can type into, and asks where to put it only when they
     /// save.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=609205
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=8A2A76
     // Broiler-Falsified-If: a command-line path that names no existing directory is granted as the workspace root instead of the scratch directory
     // Broiler-Human:        PENDING
     public static async ValueTask<CodeWorkspace> OpenWorkspaceAsync(CodeShell shell, string? path)
@@ -136,8 +136,13 @@ internal static class CodeShellFactory
         // place before a workspace opens. Without a scanner the assurance pane
         // reads the annotation blocks alone and declines to recount a file's
         // generated header; with one it knows the file's units, which of them are
-        // exempt, and what each one's fingerprint is now.
+        // exempt, and what each one's fingerprint is now. Which ones are exempt
+        // is the component's to say, in the assurance.config.json above a file,
+        // so a granted root gets a scanner that reads it there.
         shell.AssuranceScanner = new CSharpAssuranceScanner();
+        shell.AssuranceScannerFactory = static granted => granted.GrantedRoots.Count == 0
+            ? null
+            : new CSharpComponentAssuranceScanner(granted.GrantedRoots[0]);
 
         shell.RevisionProvider = new GitRevisionProvider(root);
         shell.Reviewer = await GitIdentity.ResolveReviewerAsync(root).ConfigureAwait(false);

@@ -157,9 +157,12 @@ rather than guess.
 The criterion is required for `High` and `Critical` and is not written for
 `None`, `Low` or `Medium`. Below `High`, the observation that would prove a unit
 wrong is rarely more than its own name restated (`EGL_NONE is not 0x3038`), and a
-line that restates is noise beside the ones that do not. It is **one line of
-prose** that names one observation that would prove the unit wrong. It is a test
-that someone could run or look for, not a description of risk.
+line that restates is noise beside the ones that do not. `insert` refuses one
+below `High`, and a component whose `assurance.config.json` sets
+`"criteriaBelowHigh": "refused"` has `check` report any it still carries.
+It is **one line of prose** that names one observation that would prove the unit
+wrong. It is a test that someone could run or look for, not a description of
+risk.
 
 - Good: `a length prefix larger than the remaining input is read past the end of the buffer`
 - Good: `a cookie set by a subdomain is returned to its parent domain without a Domain attribute`
@@ -201,7 +204,9 @@ its named values like any other declaration, as Broiler.VM does.
 When a component switches to watching its named values, `broiler-review
 assurance prune` removes the blocks above them (and every criterion below
 `High`), leaving any block whose human line names a reviewer or reads `STALE`
-for a person to decide; `generate` then rewrites the headers and the report.
+for a person to decide; `generate` then rewrites the headers and the report,
+and `"criteriaBelowHigh": "refused"` keeps the criteria below `High` from
+coming back.
 
 ## Exempt units
 

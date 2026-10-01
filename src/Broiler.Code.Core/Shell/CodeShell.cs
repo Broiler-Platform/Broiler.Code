@@ -5,7 +5,7 @@
 // ----------------------
 // Relevant units:   79
 // Annotated:        79/79
-// Exempt:           51
+// Exempt:           52
 // Human-reviewed:   0/79
 // IP risk:          Low
 // Security risk:    High
@@ -397,6 +397,16 @@ public sealed class CodeShell : IDisposable
     public IAssuranceUnitScanner? AssuranceScanner { get; set; }
 
     /// <summary>
+    /// Makes the scanner for the files of one storage root, so that each file
+    /// is scanned as the component it belongs to configures its units (its
+    /// exemption predicate, its named values) rather than by one default for
+    /// every folder the shell is shown. Set before a workspace attaches, like
+    /// <see cref="AssuranceScanner"/>, which stays the answer for a root this
+    /// returns null for.
+    /// </summary>
+    public Func<IWorkspaceStorage, IAssuranceUnitScanner?>? AssuranceScannerFactory { get; set; }
+
+    /// <summary>
     /// Binds a workspace. The explorer, the tabs, and the commands all follow
     /// from this; before it, the shell is present and inert rather than absent.
     /// </summary>
@@ -457,7 +467,7 @@ public sealed class CodeShell : IDisposable
     /// hung. Until it completes the explorer simply shows no badges, which is the
     /// same thing it shows for a file nobody has reviewed.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=508C89
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=A6634C
     // Broiler-Falsified-If: a file in the newly attached workspace is badged with the review state recorded for the same relative path in the workspace attached before it
     // Broiler-Human:        PENDING
     private void AttachReview(CodeWorkspace workspace)
@@ -466,7 +476,7 @@ public sealed class CodeShell : IDisposable
             return;
 
         _review = new ReviewController(workspace, RevisionProvider, Reviewer, Dispatcher);
-        _assurance = new AssuranceController(workspace, AssuranceScanner) { Reviewer = Reviewer };
+        _assurance = new AssuranceController(workspace, AssuranceScanner, AssuranceScannerFactory) { Reviewer = Reviewer };
         _reviewSource = new ReviewPaneSource(_review, _assurance);
         _controls.Review.DataSource = _reviewSource;
 

@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   33
-// Annotated:        33/33
-// Exempt:           28
-// Human-reviewed:   0/33
+// Relevant units:   34
+// Annotated:        34/34
+// Exempt:           31
+// Human-reviewed:   0/34
 // IP risk:          Low
 // Security risk:    High
 // Criteria:         22/20
 // Resource impact:  7/10 max
-// Unverified:       33
+// Unverified:       34
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -100,6 +100,26 @@ public enum AssuranceNamedValues
     /// carry no decision to assess.
     /// </summary>
     Watched,
+}
+
+/// <summary>Whether the check accepts a falsification criterion on a block assessed below High.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=77EDCA
+// Broiler-Human:        PENDING
+public enum AssuranceCriteriaBelowHigh
+{
+    /// <summary>
+    /// A criterion on a block assessed <c>None</c>, <c>Low</c> or <c>Medium</c>
+    /// is accepted, as the owning component accepts it and as blocks written
+    /// before the rubric stopped writing one there carry it.
+    /// </summary>
+    Permitted = 0,
+
+    /// <summary>
+    /// A criterion is written only for <c>High</c> and <c>Critical</c>, and the
+    /// check reports one below them. For a component whose blocks
+    /// <c>prune</c> has brought to that rule, so that none comes back.
+    /// </summary>
+    Refused,
 }
 
 /// <summary>A file pattern the component leaves out of the covered set, and why.</summary>
@@ -224,6 +244,13 @@ public sealed record AssuranceComponentConfig
     /// </summary>
     public AssuranceNamedValues NamedValues { get; init; } = AssuranceNamedValues.Reviewed;
 
+    /// <summary>
+    /// Whether the check accepts a criterion below High. Accepted unless the
+    /// configuration says otherwise, so a component that does not set it is
+    /// checked exactly as it was before the option existed.
+    /// </summary>
+    public AssuranceCriteriaBelowHigh CriteriaBelowHigh { get; init; } = AssuranceCriteriaBelowHigh.Permitted;
+
     /// <summary>The SPDX lines for every covered file no override matches. Null until configured.</summary>
     public AssuranceSpdx? Spdx { get; init; }
 
@@ -312,7 +339,7 @@ public sealed record AssuranceComponentConfig
     /// the file is written by hand. Throws <see cref="AssuranceConfigException"/>
     /// naming the property at fault.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=D2C75C
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=8BA3DA
     // Broiler-Falsified-If: a top-level property this schema does not define, such as a misspelled exclude, is accepted instead of raising AssuranceConfigException
     // Broiler-Human:        PENDING
     public static AssuranceComponentConfig Parse(string json)
@@ -411,6 +438,18 @@ public sealed record AssuranceComponentConfig
                                 "reviewed" => AssuranceNamedValues.Reviewed,
                                 "watched" => AssuranceNamedValues.Watched,
                                 _ => throw Error(path, "must be \"reviewed\" or \"watched\""),
+                            },
+                        };
+                        break;
+
+                    case "criteriaBelowHigh":
+                        config = config with
+                        {
+                            CriteriaBelowHigh = RequiredString(value, path) switch
+                            {
+                                "permitted" => AssuranceCriteriaBelowHigh.Permitted,
+                                "refused" => AssuranceCriteriaBelowHigh.Refused,
+                                _ => throw Error(path, "must be \"permitted\" or \"refused\""),
                             },
                         };
                         break;

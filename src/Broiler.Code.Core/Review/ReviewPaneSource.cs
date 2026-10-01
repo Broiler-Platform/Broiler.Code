@@ -444,7 +444,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// reading <c>exempt: SomeNewCase</c> is true and searchable, where "exempt"
     /// alone would have quietly dropped the answer.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=590B02
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=756211
     // Broiler-Falsified-If: a unit whose source states its own exemption reason is shown with the scanner's case text instead
     // Broiler-Human:        PENDING
     private static string? ExemptionReason(AssuranceUnit unit)
@@ -462,6 +462,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
             "InsideAssemblyMarker" => "inside the assembly marker",
             "FieldDeclaringStorage" => "field declaring storage",
             "EnumMemberOfADeclaredVocabulary" => "enum member of a declared vocabulary",
+            "NamedValue" => "named value the component watches",
             "DeclaredInSource" => "declared exempt in the source",
             null or "" or "None" => null,
             var other => other,

@@ -13,15 +13,15 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 103 |
+| Files scanned | 104 |
 | Files not covered | 0 |
-| Files carrying an annotation | 103 |
-| Code units | 2201 |
-| Relevant | 1526 |
-| Exempt by predicate | 675 |
-| Annotated | 1526 of 1526 (100%) |
-| Human reviewed | 0 of 1526 (0%) |
-| Unverified | 1526 |
+| Files carrying an annotation | 104 |
+| Code units | 2227 |
+| Relevant | 1541 |
+| Exempt by predicate | 686 |
+| Annotated | 1541 of 1541 (100%) |
+| Human reviewed | 0 of 1541 (0%) |
+| Unverified | 1541 |
 
 ## Review states
 
@@ -29,18 +29,18 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1526 |
+| HUMAN_PENDING | 1541 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 675 |
+| EXEMPT | 686 |
 
 ## IP risk
 
 | Value | Units |
 |---|---:|
-| None | 593 |
-| Low | 933 |
+| None | 597 |
+| Low | 944 |
 | Medium | 0 |
 | High | 0 |
 | Unknown | 0 |
@@ -51,9 +51,9 @@ and the figures below are the measurement of how far from that claim the per-uni
 | Value | Units |
 |---|---:|
 | None | 59 |
-| Low | 402 |
+| Low | 404 |
 | Medium | 365 |
-| High | 664 |
+| High | 677 |
 | Critical | 36 |
 | *not annotated* | 0 |
 
@@ -63,7 +63,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | Maximum | 9 / 10 |
 | Average over annotated units | 2.2 / 10 |
-| Units scored | 1526 |
+| Units scored | 1541 |
 
 ## High-security review areas
 
@@ -169,6 +169,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Core.Review.AssuranceController.Apply(string)` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Review.AssuranceController.Narrow(string, string)` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Review.AssuranceController.Rebuild()` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.AssuranceController.ScannerFor(WorkspaceItemId)` in `src/Broiler.Code.Core/Review/AssuranceController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Review.GitCommand` in `src/Broiler.Code.Core/Review/GitCommand.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Review.GitCommand.Timeout` in `src/Broiler.Code.Core/Review/GitCommand.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Review.GitCommand.RunAsync(string, string, CancellationToken)` in `src/Broiler.Code.Core/Review/GitCommand.cs` - Security=High, human line PENDING
@@ -301,6 +302,15 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.SuppliesAnImplementation(MemberDeclarationSyntax, bool)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Unwrap(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ContainingTypes(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.MaxConfigurationBytes` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.CSharpComponentAssuranceScanner(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.Scan(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.ConfigurationFor(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.ScannerFor(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsRoot(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsUnderRoot(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
+- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsLink(FileSystemInfo)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService.Analyze(ICodeTextSnapshot, string, string, string?, IReadOnlyDictionary<string, string>?, CancellationToken)` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService.ResolveReferences(EvaluatedProjectGraph, CancellationToken)` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, human line PENDING
@@ -461,6 +471,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Review.Assurance.AssuranceChecks.Run(AssurancePlan, AssuranceComponentConfig, AssuranceCheckOptions)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceChecks.MissingCriteria(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceChecks.MissingCriteriaOf(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
+- `Broiler.Code.Review.Assurance.AssuranceChecks.CriteriaBelowHighOf(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceChecks.Orphans(AssurancePlannedFile)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceChecks.SpecViolations(IEnumerable<AssuranceCorpusUnit>, IReadOnlySet<string>, string)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceChecks.FingerprintViolations(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
@@ -583,12 +594,14 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Review.Assurance.AssuranceRules` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaimTerms` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.SecurityRequiringACriterion` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
+- `Broiler.Code.Review.Assurance.AssuranceRules.SecurityWritingNoCriterion` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.CriterionProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.ExemptionReasonProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.SpecProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaimsIn(string)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.VocabularyProblems(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.RequiresFalsificationCriterion(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
+- `Broiler.Code.Review.Assurance.AssuranceRules.CarriesCriterionBelowHigh(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.FieldOnACriterion()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaim()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.IAssuranceFileScanner` in `src/Broiler.Code.Review/Assurance/AssuranceScannedFile.cs` - Security=High, human line PENDING
@@ -772,8 +785,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Units carrying a criterion | 1239 |
-| Units required to carry one | 700 |
+| Units carrying a criterion | 1252 |
+| Units required to carry one | 713 |
 | Required and missing | 0 |
 
 A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make
@@ -793,14 +806,14 @@ that the rule is reviewable in one place rather than in several hundred.
 
 | Case | Units |
 |---|---:|
-| TrivialPropertyOrAccessor | 129 |
+| TrivialPropertyOrAccessor | 130 |
 | ParameterAssigningConstructor | 9 |
 | TrivialExpressionBodiedMember | 11 |
-| CompilerSuppliedRecordOrEnumMember | 141 |
+| CompilerSuppliedRecordOrEnumMember | 143 |
 | DelegatingOverrideOrOperator | 2 |
 | InsideAssemblyMarker | 0 |
-| FieldDeclaringStorage | 248 |
-| EnumMemberOfADeclaredVocabulary | 135 |
+| FieldDeclaringStorage | 254 |
+| EnumMemberOfADeclaredVocabulary | 137 |
 | DeclaredInSource | 0 |
 
 ## Per-unit exemptions
@@ -824,14 +837,14 @@ through a `<Compile Include>` it states, is left out of the record.
 ## Change detection
 
 `assurance.manifest.json` lists **every** code unit in the 9 covered assemblies -
-2201 of them, exempt and relevant alike - with the fingerprint of its declaration.
+2227 of them, exempt and relevant alike - with the fingerprint of its declaration.
 This manifest is a change-detection record, not a review. A unit listed there is watched, not reviewed:
 the entry records what the declaration's tokens hashed to when the generator last ran, and
 nothing else. What the manifest adds is that a unit the exemption predicate treats as
 trivial is no longer invisible: a semantic change to one moves a value in a generated file
 the check compares byte for byte. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code` holds the manifest to the tree.
 
-Beside the units it lists **every covered file** - 103 of them - with a
+Beside the units it lists **every covered file** - 104 of them - with a
 fingerprint over the complete token stream of its compilation unit. A unit entry exists only
 for a declaration kind the scanner enumerates, and an enumeration is a whitelist: an
 `[assembly: ...]` attribute is a member of nothing and can be in no unit at all.

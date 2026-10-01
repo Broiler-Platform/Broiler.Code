@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   24
-// Annotated:        24/24
-// Exempt:           16
-// Human-reviewed:   0/24
+// Relevant units:   25
+// Annotated:        25/25
+// Exempt:           18
+// Human-reviewed:   0/25
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         21/11
+// Criteria:         22/12
 // Resource impact:  6/10 max
-// Unverified:       24
+// Unverified:       25
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using Broiler.Code.Review.Assurance;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
+using Broiler.Code.Workspaces.Storage;
 using Broiler.Code.Workspaces.Text;
 
 namespace Broiler.Code.Core.Review;
@@ -79,6 +80,8 @@ public sealed class AssuranceController : IDisposable
 {
     private readonly CodeWorkspace _workspace;
     private readonly IAssuranceUnitScanner? _scanner;
+    private readonly Func<IWorkspaceStorage, IAssuranceUnitScanner?>? _scannerFor;
+    private readonly Dictionary<IWorkspaceStorage, IAssuranceUnitScanner?> _scanners = new(ReferenceEqualityComparer.Instance);
 
     private WorkspaceItemId _current = WorkspaceItemId.None;
     private AssuranceDocument? _document;
@@ -94,13 +97,23 @@ public sealed class AssuranceController : IDisposable
     /// is enough to show what is recorded and to record a decision, and not
     /// enough to recount the file's generated header.
     /// </param>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=EAF115
+    /// <param name="scannerFor">
+    /// Makes the scanner for the files of one storage root, when the host can
+    /// tell how the component there configures its units; asked once per root
+    /// a file is opened from. Its answer replaces <paramref name="scanner"/> for
+    /// that root's files, and null leaves <paramref name="scanner"/> in place.
+    /// </param>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=869278
     // Broiler-Falsified-If: a null workspace is accepted and the first document switch throws NullReferenceException instead of the constructor throwing ArgumentNullException
     // Broiler-Human:        PENDING
-    public AssuranceController(CodeWorkspace workspace, IAssuranceUnitScanner? scanner = null)
+    public AssuranceController(
+        CodeWorkspace workspace,
+        IAssuranceUnitScanner? scanner = null,
+        Func<IWorkspaceStorage, IAssuranceUnitScanner?>? scannerFor = null)
     {
         _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
         _scanner = scanner;
+        _scannerFor = scannerFor;
     }
 
     /// <summary>Raised when the unit under the caret, or what it records, changed.</summary>
@@ -115,9 +128,9 @@ public sealed class AssuranceController : IDisposable
     public string Reviewer { get; set; } = string.Empty;
 
     /// <summary>True when a language service supplied the units.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=C31AED
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A2AD24
     // Broiler-Human:        PENDING
-    public bool HasUnitScanner => _scanner is not null;
+    public bool HasUnitScanner => _scanner is not null || _scannerFor is not null;
 
     /// <summary>The current file's assurance model, or null when nothing is open.</summary>
     public AssuranceDocument? Document => _document;
@@ -430,7 +443,7 @@ public sealed class AssuranceController : IDisposable
     private bool VersionMoved() =>
         _workspace.FindOpenDocument(_current) is { } open && open.Buffer.Current.Version != _documentVersion;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=8C5011
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=1DA4B2
     // Broiler-Falsified-If: the document model is kept after the open buffer's version or the item's path changed, so the next decision is computed from text the buffer no longer holds
     // Broiler-Human:        PENDING
     private void Rebuild()
@@ -470,11 +483,31 @@ public sealed class AssuranceController : IDisposable
         IAssuranceUnitScanner? scanner =
             item.RelativePath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
             text.Contains(AssuranceVocabulary.AiMarker, StringComparison.Ordinal)
-                ? _scanner
+                ? ScannerFor(_current)
                 : null;
 
         _document = AssuranceDocument.Read(text, scanner, item.RelativePath);
         _documentPath = item.RelativePath;
         _documentVersion = snapshot.Version;
+    }
+
+    /// <summary>
+    /// The scanner for a document: the one made for the storage root it was
+    /// opened from, so that its relative path is read against that root and a
+    /// file granted from another folder is scanned as its own component says.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=4C462F
+    // Broiler-Falsified-If: a document granted from another folder is scanned with the scanner made for the workspace's own storage, so its relative path is read against the wrong root
+    // Broiler-Human:        PENDING
+    private IAssuranceUnitScanner? ScannerFor(WorkspaceItemId id)
+    {
+        if (_scannerFor is null)
+            return _scanner;
+
+        IWorkspaceStorage storage = _workspace.StorageFor(id);
+        if (!_scanners.TryGetValue(storage, out IAssuranceUnitScanner? scanner))
+            _scanners[storage] = scanner = _scannerFor(storage) ?? _scanner;
+
+        return scanner;
     }
 }

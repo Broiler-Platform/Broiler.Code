@@ -5,7 +5,7 @@
 // ----------------------
 // Relevant units:   10
 // Annotated:        10/10
-// Exempt:           2
+// Exempt:           3
 // Human-reviewed:   0/10
 // IP risk:          Low
 // Security risk:    Low
@@ -56,6 +56,12 @@ public sealed record AssuranceReportContext(
     /// so the report has a <c>NamedValue</c> row and says what it counts.
     /// </summary>
     public bool NamedValuesWatched { get; init; }
+
+    /// <summary>
+    /// Whether the component's check reports a criterion below High, so the
+    /// report says criteria are written nowhere else rather than permitted.
+    /// </summary>
+    public bool CriteriaBelowHighRefused { get; init; }
 
     /// <summary>The generate command the tool names when the configuration names none.</summary>
     // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=6951B9

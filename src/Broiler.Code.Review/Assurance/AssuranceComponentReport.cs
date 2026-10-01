@@ -44,7 +44,7 @@ namespace Broiler.Code.Review.Assurance;
 public static class AssuranceComponentReport
 {
     /// <summary>The report for <paramref name="units"/>, the post-generation units of every covered file.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=B87A1F
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=0EE6F4
     // Broiler-Falsified-If: the report's count of decided units exceeds the number of relevant units whose human line binds a decision to their current fingerprint
     // Broiler-Human:        PENDING
     public static string Render(AssuranceReportContext context, IReadOnlyList<AssuranceCorpusUnit> units)
@@ -128,8 +128,16 @@ public static class AssuranceComponentReport
         report.Append($"| Required and missing | {AssuranceFormat.Count(AssuranceChecks.MissingCriteria(units).Count)} |\n\n");
         report.Append("A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make\n");
         report.Append("the unit wrong. `Security=High` says a unit is risky, which is a set and not a test; the\n");
-        report.Append("criterion is the test. It is required where `Security` is `High` or `Critical`, permitted\n");
-        report.Append($"elsewhere, and `{context.CheckCommand}` names every unit that owes one and carries none.\n\n");
+        report.Append("criterion is the test. It is required where `Security` is `High` or `Critical`");
+
+        // Said as the check enforces it: a component that has not refused one
+        // below High still carries the criteria an earlier rubric wrote there.
+        report.Append(context.CriteriaBelowHighRefused
+            ? " and written\n" +
+              $"nowhere else: `{context.CheckCommand}` names every unit that owes one and carries none, and\n" +
+              "every unit below `High` that carries one.\n\n"
+            : ", permitted\n" +
+              $"elsewhere, and `{context.CheckCommand}` names every unit that owes one and carries none.\n\n");
         report.Append("The line is a comment, so it is outside every fingerprint by construction: rewording a\n");
         report.Append("criterion moves no recorded value here, in a file header or in\n");
         report.Append($"`{paths.Manifest}`, and invalidates nothing. That is the intended reading - a\n");
@@ -228,7 +236,8 @@ public static class AssuranceComponentReport
         report.Append(
             $"| Check | `{context.CheckCommand}` | Reports every generated artefact that is not byte-identical to what the generator " +
             "would produce, every relevant unit with no annotation, every annotation this system cannot read, every " +
-            "fingerprint out of date and every unit at the top of the security vocabulary without a criterion. |\n");
+            "fingerprint out of date and every unit at the top of the security vocabulary without a criterion" +
+            (context.CriteriaBelowHighRefused ? ", or below it with one" : string.Empty) + ". |\n");
         report.Append(
             $"| Release | `{context.CheckCommand} --release` | The check, and additionally every relevant unit left in a " +
             "state that blocks a release. |\n\n");
