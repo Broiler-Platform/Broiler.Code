@@ -175,6 +175,43 @@ that scan raw source text, comments included, for banned words: engine names in
 the HtmlBridge neutrality ratchet, `Broiler.Graphics` in Media, and conformance
 claims in DOM. The component's tests after annotation are the arbiter.
 
+## Native bindings: the criterion is the prototype
+
+A P/Invoke or `LibraryImport` declaration, a delegate for a native function
+pointer and a member of a COM interface each claim one thing: that this managed
+signature matches a native prototype. Nothing at run time checks that claim.
+The marshaller and the source generator never see the native side. They marshal
+exactly what the declaration says, so a mismatch is not an error anywhere but
+silent memory corruption. Broiler.Native's `PropVariant` was 16 bytes against the
+native 24 on x64, and every `GetValue` and `PropVariantClear` wrote past it while
+the runtime reported nothing. The claim is decided against the header, by
+reading it or by a test that asserts a size or an offset.
+
+So a binding's criterion names the prototype it must match. It does not tell a
+story about what a mismatch would cause, because that story is the same for
+every binding and gives a reader nothing to check.
+
+- **A plain binding** has only scalar, pointer and handle parameters: no
+  strings, arrays, structs, callbacks or ownership. Its criterion is the
+  prototype, e.g. `differs from void glBindTexture(GLenum target, GLuint
+  texture) in GLES3/gl3.h`. A COM member adds its slot: `is not slot 5 of
+  IPropertyStore, HRESULT GetValue(REFPROPERTYKEY key, PROPVARIANT *pv) in
+  propsys.h`.
+- **A binding with a hazard of its own** names that hazard, still against the
+  prototype. The hazards are a string's character set, a buffer and its count,
+  a struct passed by pointer (its size and offsets, which a test can assert),
+  the ownership of a handle or a reference, `SetLastError`, and the width of
+  `BOOL`.
+- **Only quote a prototype from a source you have read:** a Windows SDK header,
+  a Khronos or X.Org header, or the Android NDK. If you cannot reach the
+  source, name the header and the function without quoting them, e.g.
+  `differs from the eglGetDisplay prototype in EGL/egl.h`. An invented
+  prototype is worse than none.
+
+A struct layout keeps a criterion of its own (size and field offsets), and an
+interface keeps one naming its vtable order. Security stays as the rubric
+rates it: a binding is native interop.
+
 ## Named values are watched, not assessed
 
 A component whose `assurance.config.json` sets `"namedValues": "watched"` does
