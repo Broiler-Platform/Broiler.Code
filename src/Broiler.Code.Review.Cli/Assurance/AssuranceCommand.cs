@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   33
-// Annotated:        33/33
+// Relevant units:   35
+// Annotated:        35/35
 // Exempt:           0
-// Human-reviewed:   0/33
+// Human-reviewed:   0/35
 // IP risk:          Low
 // Security risk:    High
 // Criteria:         17/12
 // Resource impact:  6/10 max
-// Unverified:       33
+// Unverified:       35
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -34,8 +34,9 @@ namespace Broiler.Code.Review.Cli.Assurance;
 /// those units, and cannot write anything on the human line but
 /// <c>PENDING</c>: its input has no field for it. <c>generate</c> writes the
 /// headers and the component artefacts, <c>check</c> compares the tree with
-/// what <c>generate</c> would write and applies the rules, and <c>status</c>
-/// summarizes.
+/// what <c>generate</c> would write and applies the rules, <c>status</c>
+/// summarizes, and <c>prune</c> removes the annotation lines the rubric no
+/// longer asks for.
 ///
 /// Exit codes: 0 done (or, for <c>check</c>, nothing wrong), 1 something was
 /// refused or violated (or, after a command's own writes, its JSON report
@@ -98,7 +99,15 @@ internal static partial class AssuranceCommand
     // Broiler-Human:        PENDING
     private static readonly string[] StatusOptions = ["--root", "--config"];
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=C41609
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=BA8517
+    // Broiler-Human:        PENDING
+    private static readonly string[] PruneOptions = ["--root", "--json"];
+
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=786581
+    // Broiler-Human:        PENDING
+    private static readonly string[] PruneFlags = ["--dry-run"];
+
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=02034E
     // Broiler-Falsified-If: an unknown subcommand, or an option the subcommand does not accept, exits 0
     // Broiler-Human:        PENDING
     public static int Run(IReadOnlyList<string> args, TextWriter output, TextWriter error)
@@ -128,6 +137,7 @@ internal static partial class AssuranceCommand
                 "generate" => Generate(Parse(args, GenerateOptions, GenerateFlags), output, error),
                 "check" => Check(Parse(args, CheckOptions, CheckFlags), output, error),
                 "status" => Status(Parse(args, StatusOptions, []), output, error),
+                "prune" => Prune(Parse(args, PruneOptions, PruneFlags), output, error),
                 _ => throw new UsageException($"unknown assurance command '{args[0]}'"),
             };
         }
@@ -144,14 +154,14 @@ internal static partial class AssuranceCommand
         }
     }
 
-    /// <summary>The file scanner a configuration asks for: its symbols and its exemption predicate.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=15C578
+    /// <summary>The file scanner a configuration asks for: its symbols, its exemption predicate and its named values.</summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=8CC1F8
     // Broiler-Falsified-If: with no configuration the scanner is built with a predicate other than the strict one, so a unit the strict predicate counts as relevant is listed as exempt
     // Broiler-Human:        PENDING
     internal static CSharpAssuranceFileScanner ScannerFor(AssuranceComponentConfig? config) =>
         config is null
             ? new CSharpAssuranceFileScanner(null, AssuranceExemptionPredicate.Strict)
-            : new CSharpAssuranceFileScanner(config.PreprocessorSymbols, config.ExemptionPredicate);
+            : new CSharpAssuranceFileScanner(config.PreprocessorSymbols, config.ExemptionPredicate, config.NamedValues);
 
     // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=2ADA2B
     // Broiler-Falsified-If: a run in which a covered file could not be read, or a --strict run whose --files list names an uncovered path, exits 0
@@ -531,7 +541,7 @@ internal static partial class AssuranceCommand
     // Broiler-Human:        PENDING
     private static string Invariant(FormattableString text) => text.ToString(CultureInfo.InvariantCulture);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=1D6A63
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=C5BB3F
     // Broiler-Human:        PENDING
     private const string Usage =
         """
@@ -542,6 +552,7 @@ internal static partial class AssuranceCommand
           broiler-review assurance check  --root <dir> [--config <file>] [--release] [--sources-only] [--json <out>|-]
                                           [--annotation-prefix <path>] [--annotation-limit <n>]
           broiler-review assurance status --root <dir> [--config <file>]
+          broiler-review assurance prune  --root <dir> [--dry-run] [--json <out>|-]
 
         list    Relevant units that carry no annotation block, with the file, line, column, indent,
                 qualified name, kind, fingerprint and extent a tool needs to write one, and whether
@@ -571,10 +582,18 @@ internal static partial class AssuranceCommand
                 when the workflow runs from a parent); --annotation-limit caps the ::error lines
                 per rule and counts the rest.
         status  A short summary of units, annotations and states.
+        prune   Removes the annotation lines the rubric no longer asks for: the whole block above
+                a unit the exemption predicate exempts (a named value, once "namedValues" is
+                "watched"), and the Broiler-Falsified-If line of a block assessed Security=None,
+                Low or Medium. Only where the human line reads exactly PENDING: a block naming a
+                reviewer or reading STALE is left in place and reported. Whole lines only; each
+                written file is scanned again and must keep every fingerprint. Run generate
+                afterwards. Needs assurance.config.json at the root and refuses in external mode.
 
         Exit codes: 0 done, 1 something was refused, check found a violation, list could
-        not read a covered file (or, with --strict, was named a path that is not one), or
-        a JSON report could not be written after the command's own writes; 2 usage or
+        not read a covered file (or, with --strict, was named a path that is not one),
+        prune left a block in place or could not read, verify or write a file, or a JSON
+        report could not be written after the command's own writes; 2 usage or
         configuration error, before anything was written.
 
         """;

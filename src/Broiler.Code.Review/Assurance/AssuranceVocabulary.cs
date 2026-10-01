@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   26
-// Annotated:        26/26
+// Relevant units:   27
+// Annotated:        27/27
 // Exempt:           0
-// Human-reviewed:   0/26
+// Human-reviewed:   0/27
 // IP risk:          Low
 // Security risk:    High
 // Criteria:         26/17
 // Resource impact:  1/10 max
-// Unverified:       26
+// Unverified:       27
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -155,11 +155,21 @@ public static class AssuranceVocabulary
     public const string DeclaredInSource = "DeclaredInSource";
 
     /// <summary>
-    /// Every exemption case, in the order the owning component declares them and
-    /// its report tables list them. <c>None</c>, which is not an exemption, is
-    /// left out.
+    /// The exemption a named value takes in a component that watches named
+    /// values: this tool's case, not the owning component's, and the only one
+    /// a configuration switches on.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F02951
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7E70E7
+    // Broiler-Human:        PENDING
+    public const string NamedValue = "NamedValue";
+
+    /// <summary>
+    /// Every exemption case, in the order the owning component declares them and
+    /// its report tables list them, with this tool's <see cref="NamedValue"/>
+    /// after them and before <see cref="DeclaredInSource"/>. <c>None</c>, which
+    /// is not an exemption, is left out.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=EA965A
     // Broiler-Falsified-If: an exemption case the scanner can report is missing, so the report's exemption table omits the units under it
     // Broiler-Human:        PENDING
     public static readonly string[] ExemptionCases =
@@ -172,6 +182,7 @@ public static class AssuranceVocabulary
         "InsideAssemblyMarker",
         "FieldDeclaringStorage",
         "EnumMemberOfADeclaredVocabulary",
+        NamedValue,
         DeclaredInSource,
     ];
 

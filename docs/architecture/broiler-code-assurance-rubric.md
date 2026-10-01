@@ -78,9 +78,9 @@ what goes wrong if the code is wrong.
 | `High` | It **parses or decodes untrusted input**: HTML, CSS, JS source, fonts, images, PDF or other documents, archives, network protocols, cookies, URLs or regular expressions. The same applies if it **enforces a boundary** (origin, permission, sandbox, CSP, credential or cookie scope), touches the **file system, processes or native interop** (P/Invoke, COM), or runs **concurrency** that guards shared state. |
 | `Critical` | It is **memory-unsafe** (`unsafe`, pointers, `Marshal`, `stackalloc` or native buffers sized from input), **generates or executes code** (JIT, executable memory), is the **core of an interpreter, verifier or validator** that runs untrusted script or bytecode, or is the **bridge that exposes host objects or capabilities to page script**. |
 
-`High` and `Critical` require a `// Broiler-Falsified-If:` line. Do not
-downgrade a unit to avoid writing one. If a unit meets any `High` condition,
-it is `High`.
+`High` and `Critical` require a `// Broiler-Falsified-If:` line, and `None`,
+`Low` and `Medium` carry none. Do not downgrade a unit to avoid writing one. If
+a unit meets any `High` condition, it is `High`.
 
 ## Resources: how much work or memory a hostile or very large input can make it spend
 
@@ -114,10 +114,14 @@ the following. These rules settle them.
 - **A forwarder takes the `Security` of what it forwards to.** A one-line
   method that hands attacker-influenced data to a parser, or a boundary check to
   another method, is exactly as risky as the call it makes.
-- **A constant or table takes the `Security` of the decision it configures.**
-  Examples are a size limit a parser enforces, a character set a validator
-  accepts, and the list of forbidden headers. Something that is only displayed
-  or logged is `None` or `Low`.
+- **A computed table takes the `Security` of the decision it configures.**
+  Examples are a character set a validator accepts and the list of forbidden
+  headers, built as an array or a set. Something that is only displayed or
+  logged is `None` or `Low`. A named value (a `const`, an enum, a `static
+  readonly` `Guid` or handle stated by literals) is assessed the same way only
+  in a component that reviews its named values; in one that watches them it
+  is not assessed at all (see below), whatever decision it configures, because
+  the decision is assessed where the code that enforces it is.
 - **An interface or abstract member is assessed by its contract.** Rate it by
   what every implementation must get right. A transport interface that carries
   untrusted responses is `High`, even though it has no body, and its criterion
@@ -150,10 +154,12 @@ rather than guess.
 
 ## The falsification criterion
 
-The criterion is required for `High` and `Critical` and allowed everywhere else.
-It is **one line of prose** that names one observation that would prove the unit
-wrong. It is a test that someone could run or look for, not a description of
-risk.
+The criterion is required for `High` and `Critical` and is not written for
+`None`, `Low` or `Medium`. Below `High`, the observation that would prove a unit
+wrong is rarely more than its own name restated (`EGL_NONE is not 0x3038`), and a
+line that restates is noise beside the ones that do not. It is **one line of
+prose** that names one observation that would prove the unit wrong. It is a test
+that someone could run or look for, not a description of risk.
 
 - Good: `a length prefix larger than the remaining input is read past the end of the buffer`
 - Good: `a cookie set by a subdomain is returned to its parent domain without a Domain attribute`
@@ -166,10 +172,41 @@ that scan raw source text, comments included, for banned words: engine names in
 the HtmlBridge neutrality ratchet, `Broiler.Graphics` in Media, and conformance
 claims in DOM. The component's tests after annotation are the arbiter.
 
+## Named values are watched, not assessed
+
+A component whose `assurance.config.json` sets `"namedValues": "watched"` does
+not assess its named values: every `const` field, every enum declaration, and
+every `static readonly` `Guid`, `IntPtr`, `UIntPtr`, `nint` or `nuint` whose
+initializer is literals alone (`new Guid("...")`, `IntPtr.Zero`, `(IntPtr)(-1)`).
+The scanner exempts them as `NamedValue`, and they carry no block.
+
+A value transcribed from somewhere else carries no decision. `public const int
+EGL_NONE = 0x3038;` copied from the EGL headers is right if it matches the
+headers and wrong if it does not, and the block above it could say nothing
+else: an IP risk of a fact, a security value borrowed from whatever calls it,
+and a criterion that restates the line. Several hundred such blocks bury the
+few in the same component that say something. What the scheme still needs from
+a named value is to notice when it changes, and that it keeps: each one is a
+unit with a fingerprint in `assurance.manifest.json`, exactly as a storage field
+and an enum member are, so an edited value moves a fingerprint the check
+compares and appears in the diff of the generated record.
+
+Nothing else is a named value. A `static readonly` array, set, `Regex` or
+dictionary, a value built by a call, and any other type are assessed as before;
+so are P/Invoke and `LibraryImport` declarations, COM interfaces and their
+members, delegates for native procedures and struct layouts, where widths and
+layouts have been found wrong. A component that does not set the option assesses
+its named values like any other declaration, as Broiler.VM does.
+
+When a component switches to watching its named values, `broiler-review
+assurance prune` removes the blocks above them (and every criterion below
+`High`), leaving any block whose human line names a reviewer or reads `STALE`
+for a person to decide; `generate` then rewrites the headers and the report.
+
 ## Exempt units
 
 The scanner's predicate decides which declarations need a block at all:
 trivial accessors, parameter-assigning constructors, one-line forwarders,
-storage fields, enum members and similar. An assessor never annotates an exempt
-unit. `EXEMPT=<reason>` exists for what the predicate cannot see, and a
-rollout does not use it.
+storage fields, enum members, named values where a component watches them, and
+similar. An assessor never annotates an exempt unit. `EXEMPT=<reason>` exists
+for what the predicate cannot see, and a rollout does not use it.

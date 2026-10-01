@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   32
-// Annotated:        32/32
-// Exempt:           25
-// Human-reviewed:   0/32
+// Relevant units:   33
+// Annotated:        33/33
+// Exempt:           28
+// Human-reviewed:   0/33
 // IP risk:          Low
 // Security risk:    High
 // Criteria:         22/20
 // Resource impact:  7/10 max
-// Unverified:       32
+// Unverified:       33
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -78,6 +78,28 @@ public enum AssuranceExemptionPredicate
     /// that component's own generator writes (Broiler.VM).
     /// </summary>
     OwningComponent,
+}
+
+/// <summary>Whether a named value is a unit someone assesses or one the manifest only watches.</summary>
+// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=46771E
+// Broiler-Human:        PENDING
+public enum AssuranceNamedValues
+{
+    /// <summary>
+    /// A named value is relevant like any other declaration and carries a
+    /// block, as the owning component treats it.
+    /// </summary>
+    Reviewed = 0,
+
+    /// <summary>
+    /// A named value (a const, an enum, a static readonly Guid or handle
+    /// stated by literals) is exempt as <c>NamedValue</c>: it carries no
+    /// block, and its fingerprint stays in the manifest, so a change to it
+    /// still moves a value the check compares. For a component of values
+    /// transcribed from elsewhere, such as a platform SDK's defines, which
+    /// carry no decision to assess.
+    /// </summary>
+    Watched,
 }
 
 /// <summary>A file pattern the component leaves out of the covered set, and why.</summary>
@@ -195,6 +217,13 @@ public sealed record AssuranceComponentConfig
     /// <summary>Which exemption predicate the scanner applies.</summary>
     public AssuranceExemptionPredicate ExemptionPredicate { get; init; } = AssuranceExemptionPredicate.Strict;
 
+    /// <summary>
+    /// Whether named values are assessed or only watched. Assessed unless the
+    /// configuration says otherwise, so a component that does not set it sees
+    /// exactly the units it saw before the option existed.
+    /// </summary>
+    public AssuranceNamedValues NamedValues { get; init; } = AssuranceNamedValues.Reviewed;
+
     /// <summary>The SPDX lines for every covered file no override matches. Null until configured.</summary>
     public AssuranceSpdx? Spdx { get; init; }
 
@@ -283,7 +312,7 @@ public sealed record AssuranceComponentConfig
     /// the file is written by hand. Throws <see cref="AssuranceConfigException"/>
     /// naming the property at fault.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=5C8EC7
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=D2C75C
     // Broiler-Falsified-If: a top-level property this schema does not define, such as a misspelled exclude, is accepted instead of raising AssuranceConfigException
     // Broiler-Human:        PENDING
     public static AssuranceComponentConfig Parse(string json)
@@ -370,6 +399,18 @@ public sealed record AssuranceComponentConfig
                                 "strict" => AssuranceExemptionPredicate.Strict,
                                 "owning-component" => AssuranceExemptionPredicate.OwningComponent,
                                 _ => throw Error(path, "must be \"strict\" or \"owning-component\""),
+                            },
+                        };
+                        break;
+
+                    case "namedValues":
+                        config = config with
+                        {
+                            NamedValues = RequiredString(value, path) switch
+                            {
+                                "reviewed" => AssuranceNamedValues.Reviewed,
+                                "watched" => AssuranceNamedValues.Watched,
+                                _ => throw Error(path, "must be \"reviewed\" or \"watched\""),
                             },
                         };
                         break;

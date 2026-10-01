@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   57
-// Annotated:        57/57
-// Exempt:           11
-// Human-reviewed:   0/57
+// Relevant units:   62
+// Annotated:        62/62
+// Exempt:           13
+// Human-reviewed:   0/62
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         56/45
+// Criteria:         61/50
 // Resource impact:  6/10 max
-// Unverified:       57
+// Unverified:       62
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -119,6 +119,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
 
     private readonly CSharpParseOptions _parseOptions;
     private readonly AssuranceExemptionPredicate _predicate;
+    private readonly AssuranceNamedValues _namedValues;
 
     /// <summary>A scanner parsing under <see cref="DefaultPreprocessorSymbols"/>, with the owning component's predicate.</summary>
     // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=B10EBD
@@ -142,17 +143,23 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// Which exemption predicate to apply. The owning component's by default,
     /// because the editor shows that component's files as its tools see them.
     /// </param>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=FA2E25
+    /// <param name="namedValues">
+    /// Whether named values are exempt as <c>NamedValue</c>. Assessed by
+    /// default, which is the owning component's answer.
+    /// </param>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=99A0BA
     // Broiler-Falsified-If: an empty symbol list is treated like null and parses under the default symbols instead of under none
     // Broiler-Human:        PENDING
     public CSharpAssuranceScanner(
         IEnumerable<string>? preprocessorSymbols,
-        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent)
+        AssuranceExemptionPredicate predicate = AssuranceExemptionPredicate.OwningComponent,
+        AssuranceNamedValues namedValues = AssuranceNamedValues.Reviewed)
     {
         _parseOptions = preprocessorSymbols is null
             ? DefaultParseOptions
             : OptionsFor(preprocessorSymbols);
         _predicate = predicate;
+        _namedValues = namedValues;
     }
 
     /// <summary>
@@ -165,7 +172,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     public static IReadOnlyList<string> DefaultPreprocessorSymbols => DefaultSymbols;
 
     /// <inheritdoc/>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=6E1B5A
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=6F5C93
     // Broiler-Falsified-If: a file of about 20,000 nested parentheses ends the process with a stack overflow while it is parsed instead of returning units or throwing
     // Broiler-Human:        PENDING
     public IReadOnlyList<AssuranceScannedUnit> Scan(string text, string path)
@@ -174,7 +181,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         ArgumentNullException.ThrowIfNull(path);
 
         SyntaxTree tree = CSharpSyntaxTree.ParseText(text, _parseOptions, path: path);
-        return [.. Units(tree, _predicate).Select(static found => found.Unit)];
+        return [.. Units(tree, _predicate, _namedValues).Select(static found => found.Unit)];
     }
 
     /// <summary>Parse options for one set of preprocessor symbols.</summary>
@@ -205,10 +212,11 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// Both scanners enumerate through here, so the editor and the command-line
     /// tool cannot name, bound or fingerprint a unit differently.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=25C70B
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=0A09EC
     // Broiler-Falsified-If: two units of one file are returned under the same name
     // Broiler-Human:        PENDING
-    internal static IReadOnlyList<ScannedDeclaration> Units(SyntaxTree tree, AssuranceExemptionPredicate predicate)
+    internal static IReadOnlyList<ScannedDeclaration> Units(
+        SyntaxTree tree, AssuranceExemptionPredicate predicate, AssuranceNamedValues namedValues)
     {
         SyntaxNode root = tree.GetRoot();
         var found = new List<ScannedDeclaration>();
@@ -220,20 +228,26 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         }
 
         foreach (MemberDeclarationSyntax declaration in CodeUnits(root))
-            found.Add(new ScannedDeclaration(declaration, Describe(tree, declaration, predicate), IsTopLevel: false));
+            found.Add(new ScannedDeclaration(declaration, Describe(tree, declaration, predicate, namedValues), IsTopLevel: false));
 
         return Disambiguated(found);
     }
 
     /// <summary>One unit as <see cref="IAssuranceUnitScanner"/> reports it, under its plain name.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=5A3822
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=EA9465
     // Broiler-Falsified-If: a declaration with attributes reports its start line at its first modifier or keyword instead of at its first attribute, so its block would land between the attribute and the declaration
     // Broiler-Human:        PENDING
     private static AssuranceScannedUnit Describe(
-        SyntaxTree tree, MemberDeclarationSyntax declaration, AssuranceExemptionPredicate predicate)
+        SyntaxTree tree,
+        MemberDeclarationSyntax declaration,
+        AssuranceExemptionPredicate predicate,
+        AssuranceNamedValues namedValues)
     {
         FileLinePositionSpan span = tree.GetLineSpan(declaration.Span);
-        AssuranceExemption exemption = ExemptionFor(declaration, predicate == AssuranceExemptionPredicate.Strict);
+        AssuranceExemption exemption = ExemptionFor(
+            declaration,
+            predicate == AssuranceExemptionPredicate.Strict,
+            namedValues == AssuranceNamedValues.Watched);
 
         return new AssuranceScannedUnit(
             NameOf(declaration, detailed: false),
@@ -600,7 +614,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
 
     /// <summary>
     /// The eight exemption cases, tried in the order the owning component writes
-    /// them.
+    /// them, and then this tool's named-value case.
     ///
     /// The order carries no policy — the cases are close to disjoint — but it is
     /// fixed, so the reason reported for a unit is the same one that component
@@ -613,15 +627,19 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
     /// <see cref="AssuranceExemptionPredicate.Strict"/>). It never widens one,
     /// so a unit exempt under it is exempt under the owning component's too.
     ///
+    /// <paramref name="watchNamedValues"/> adds the named-value case, and only
+    /// that: it is tried after the other eight, so a unit one of them covers
+    /// keeps its reason, and without it every answer is what it was.
+    ///
     /// The source's own <c>EXEMPT=</c> escape hatch is not here. It lives on the
     /// annotation, which this scanner does not read: the model above it applies
     /// that reason after attaching the block, so there is one place that knows
     /// about annotations and one that knows about syntax.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=23CB77
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=15A7B2
     // Broiler-Falsified-If: an expression-bodied method that calls another member of its type with a literal argument, such as Run(true), is reported exempt
     // Broiler-Human:        PENDING
-    private static AssuranceExemption ExemptionFor(MemberDeclarationSyntax declaration, bool strict)
+    private static AssuranceExemption ExemptionFor(MemberDeclarationSyntax declaration, bool strict, bool watchNamedValues)
     {
         // Case 6 — inside a marker type. A property of where the member lives
         // rather than of what it says, so it is answered first. Strictly, where
@@ -693,7 +711,151 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         if (IsOverrideOrOperator(declaration) && OnlyDelegates(declaration))
             return AssuranceExemption.DelegatingOverrideOrOperator;
 
+        // The named-value case, this tool's own, where the component watches
+        // named values: a value with a name and nothing else carries no
+        // decision to assess, and its fingerprint still moves in the manifest.
+        if (watchNamedValues && IsNamedValue(declaration))
+            return AssuranceExemption.NamedValue;
+
         return AssuranceExemption.None;
+    }
+
+    /// <summary>
+    /// A declaration that is a value with a name and nothing else: a const
+    /// field, whose initializer the compiler holds to a constant; an enum
+    /// declaration, whose members are already exempt one by one; or a static
+    /// readonly <c>Guid</c>, <c>IntPtr</c>, <c>UIntPtr</c>, <c>nint</c> or
+    /// <c>nuint</c> whose every declarator is stated by literals alone.
+    ///
+    /// Syntax, not semantics: the type is matched by its name, bare or under
+    /// <c>System</c>. A type of the same name declared elsewhere is still built
+    /// from literals here, and its constructor is a unit of its own.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C5F526
+    // Broiler-Falsified-If: a static readonly field of a type other than Guid, IntPtr, UIntPtr, nint or nuint, such as a Regex built from one string literal, is answered a named value and so needs no block
+    // Broiler-Human:        PENDING
+    private static bool IsNamedValue(MemberDeclarationSyntax declaration) => declaration switch
+    {
+        EnumDeclarationSyntax => true,
+        FieldDeclarationSyntax field when field.Modifiers.Any(SyntaxKind.ConstKeyword) => true,
+        FieldDeclarationSyntax field =>
+            field.Modifiers.Any(SyntaxKind.StaticKeyword) &&
+            field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword) &&
+            SystemTypeName(field.Declaration.Type) is "Guid" or "IntPtr" or "UIntPtr" or "nint" or "nuint" &&
+            field.Declaration.Variables.All(static variable =>
+                variable.Initializer is { } initializer && IsStatedByLiterals(initializer.Value)),
+        _ => false,
+    };
+
+    /// <summary>
+    /// An initializer stated by literals alone: a literal, a cast or a unary
+    /// minus of one, <c>Guid.Empty</c>, the <c>Zero</c> of a handle type, or a
+    /// <c>new(...)</c> or <c>new T(...)</c> with no object initializer whose
+    /// arguments are each a literal, or a cast or a unary minus of one. Nothing
+    /// that calls, reads another member, builds an array or computes.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=065A01
+    // Broiler-Falsified-If: an initializer that calls something, such as Guid.NewGuid() or Guid.Parse of a literal, or passes an array to a constructor, is answered stated by literals
+    // Broiler-Human:        PENDING
+    private static bool IsStatedByLiterals(ExpressionSyntax value) => Unwrap(value) switch
+    {
+        MemberAccessExpressionSyntax { Name: IdentifierNameSyntax { Identifier.ValueText: "Empty" } } member =>
+            member.IsKind(SyntaxKind.SimpleMemberAccessExpression) && SystemTypeName(member.Expression) is "Guid",
+        MemberAccessExpressionSyntax { Name: IdentifierNameSyntax { Identifier.ValueText: "Zero" } } member =>
+            member.IsKind(SyntaxKind.SimpleMemberAccessExpression) &&
+            SystemTypeName(member.Expression) is "IntPtr" or "UIntPtr" or "nint" or "nuint",
+        BaseObjectCreationExpressionSyntax creation =>
+            creation.Initializer is null &&
+            (creation.ArgumentList is null ||
+             creation.ArgumentList.Arguments.All(static argument => IsLiteral(argument.Expression))),
+        var other => IsLiteral(other),
+    };
+
+    /// <summary>
+    /// A literal, through any number of parentheses, casts and unary minuses.
+    /// A loop rather than a recursion, so a long chain of them is answered
+    /// rather than ending the process.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=8CB2D6
+    // Broiler-Falsified-If: a name or an arithmetic expression over literals, such as (IntPtr)(1 + 2), is answered a literal
+    // Broiler-Human:        PENDING
+    private static bool IsLiteral(ExpressionSyntax expression)
+    {
+        ExpressionSyntax current = expression;
+        while (true)
+        {
+            switch (current)
+            {
+                case ParenthesizedExpressionSyntax parenthesized:
+                    current = parenthesized.Expression;
+                    break;
+                case CastExpressionSyntax cast:
+                    current = cast.Expression;
+                    break;
+                case PrefixUnaryExpressionSyntax unary when unary.IsKind(SyntaxKind.UnaryMinusExpression):
+                    current = unary.Operand;
+                    break;
+                default:
+                    return current is LiteralExpressionSyntax;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The name a type or a type used as an expression is written with, less a
+    /// leading <c>System.</c> or <c>global::System.</c>: <c>Guid</c> for
+    /// <c>Guid</c>, <c>System.Guid</c> and <c>global::System.Guid</c>. Null for
+    /// anything that is not a dotted name.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=F5BE9D
+    // Broiler-Falsified-If: a type of the same name under another namespace, such as Vendor.Interop.Guid, is returned as Guid
+    // Broiler-Human:        PENDING
+    private static string? SystemTypeName(ExpressionSyntax type) => DottedName(type) switch
+    {
+        { } name when name.StartsWith("global::System.", StringComparison.Ordinal) => name["global::System.".Length..],
+        { } name when name.StartsWith("System.", StringComparison.Ordinal) => name["System.".Length..],
+        var name => name,
+    };
+
+    /// <summary>
+    /// <c>A.B.C</c> for a qualified name or a member access chain of simple
+    /// names, with a leading <c>global::</c> kept; null for anything else. Walks
+    /// the chain in a loop, so a long one is answered rather than ending the
+    /// process.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=0CF67D
+    // Broiler-Falsified-If: a generic name or an invocation inside the chain, such as Factory().Guid, yields a dotted name instead of null
+    // Broiler-Human:        PENDING
+    private static string? DottedName(ExpressionSyntax expression)
+    {
+        var segments = new List<string>();
+        ExpressionSyntax current = expression;
+        while (true)
+        {
+            switch (current)
+            {
+                case QualifiedNameSyntax { Right: IdentifierNameSyntax right } qualified:
+                    segments.Add(right.Identifier.ValueText);
+                    current = qualified.Left;
+                    continue;
+                case MemberAccessExpressionSyntax { Name: IdentifierNameSyntax name } member
+                    when member.IsKind(SyntaxKind.SimpleMemberAccessExpression):
+                    segments.Add(name.Identifier.ValueText);
+                    current = member.Expression;
+                    continue;
+                case IdentifierNameSyntax identifier:
+                    segments.Add(identifier.Identifier.ValueText);
+                    break;
+                case AliasQualifiedNameSyntax { Alias.Identifier.ValueText: "global" } alias:
+                    segments.Add("global::" + alias.Name.Identifier.ValueText);
+                    break;
+                default:
+                    return null;
+            }
+
+            segments.Reverse();
+            return string.Join(".", segments);
+        }
     }
 
     /// <summary>
@@ -1334,11 +1496,12 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         specifier is null ? string.Empty : specifier.Name.ToString() + ".";
 
     /// <summary>
-    /// Which of the eight cases, if any, covers a declaration. The names are the
-    /// owning component's, so a reader can hold the two against each other one
-    /// line at a time.
+    /// Which of the cases, if any, covers a declaration. The first eight names
+    /// are the owning component's, so a reader can hold the two against each
+    /// other one line at a time; <c>NamedValue</c> is this tool's, last, and
+    /// answered only where a component watches named values.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CBFE6C
+    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=59DF31
     // Broiler-Falsified-If: a member name differs from the owning component's exemption reason identifier, so the reason shown for an exempt unit matches neither tool
     // Broiler-Human:        PENDING
     private enum AssuranceExemption
@@ -1352,6 +1515,7 @@ public sealed class CSharpAssuranceScanner : IAssuranceUnitScanner
         InsideAssemblyMarker,
         FieldDeclaringStorage,
         EnumMemberOfADeclaredVocabulary,
+        NamedValue,
     }
 }
 

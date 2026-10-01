@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   18
-// Annotated:        18/18
+// Relevant units:   19
+// Annotated:        19/19
 // Exempt:           0
-// Human-reviewed:   0/18
+// Human-reviewed:   0/19
 // IP risk:          Low
 // Security risk:    High
 // Criteria:         14/4
 // Resource impact:  4/10 max
-// Unverified:       18
+// Unverified:       19
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -368,6 +368,56 @@ internal static class AssuranceJson
                     writer.WriteNumber("line", line);
 
                 writer.WriteString("message", result.Message);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        });
+    }
+
+    /// <summary>
+    /// The <c>assurance prune</c> report: per file that had anything to
+    /// remove, every block lines were removed from or left in place, and why.
+    /// </summary>
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=AC687C
+    // Broiler-Human:        PENDING
+    public static string PruneReport(string component, IReadOnlyList<PrunedFile> files, bool dryRun)
+    {
+        return Write(writer =>
+        {
+            AssurancePruneEntry[] entries = [.. files.SelectMany(static file => file.Entries)];
+
+            writer.WriteStartObject();
+            writer.WriteNumber("schema", Schema);
+            writer.WriteString("component", component);
+            writer.WriteBoolean("dryRun", dryRun);
+            writer.WriteNumber("blocksRemoved", entries.Count(static entry => entry.Removed && entry.Kind == AssurancePruneKind.Block));
+            writer.WriteNumber("criteriaRemoved", entries.Count(static entry => entry.Removed && entry.Kind == AssurancePruneKind.Criterion));
+            writer.WriteNumber("left", entries.Count(static entry => !entry.Removed));
+            writer.WriteNumber("problems", files.Count(static file => file.Problem is not null));
+
+            writer.WriteStartArray("files");
+            foreach (PrunedFile file in files)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("file", file.File);
+                if (file.Problem is not null)
+                    writer.WriteString("problem", file.Problem);
+
+                writer.WriteStartArray("entries");
+                foreach (AssurancePruneEntry entry in file.Entries)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("unit", entry.Unit);
+                    writer.WriteNumber("line", entry.Line);
+                    writer.WriteString("kind", AssuranceCommand.PruneKindName(entry.Kind));
+                    writer.WriteBoolean("removed", entry.Removed);
+                    writer.WriteString("reason", entry.Reason);
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
                 writer.WriteEndObject();
             }
 

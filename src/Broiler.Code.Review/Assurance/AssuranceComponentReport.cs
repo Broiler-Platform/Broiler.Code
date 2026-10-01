@@ -44,7 +44,7 @@ namespace Broiler.Code.Review.Assurance;
 public static class AssuranceComponentReport
 {
     /// <summary>The report for <paramref name="units"/>, the post-generation units of every covered file.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=7E4C31
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=B87A1F
     // Broiler-Falsified-If: the report's count of decided units exceeds the number of relevant units whose human line binds a decision to their current fingerprint
     // Broiler-Human:        PENDING
     public static string Render(AssuranceReportContext context, IReadOnlyList<AssuranceCorpusUnit> units)
@@ -141,8 +141,22 @@ public static class AssuranceComponentReport
         report.Append("| Case | Units |\n|---|---:|\n");
         foreach (string exemption in AssuranceVocabulary.ExemptionCases)
         {
+            // A component that assesses its named values has no such row, so
+            // its report reads as it did before the case existed.
+            if (exemption == AssuranceVocabulary.NamedValue && !context.NamedValuesWatched)
+                continue;
+
             report.Append(
                 $"| {exemption} | {AssuranceFormat.Count(units.Count(unit => string.Equals(unit.Exemption, exemption, StringComparison.Ordinal)))} |\n");
+        }
+
+        if (context.NamedValuesWatched)
+        {
+            report.Append($"\n`{AssuranceVocabulary.NamedValue}` is this component's choice (`\"namedValues\": \"watched\"`): a `const`\n");
+            report.Append("field, an enum declaration and a `static readonly` `Guid`, `IntPtr`, `UIntPtr`, `nint` or `nuint`\n");
+            report.Append("stated by literals alone is a value with a name and carries no decision to assess, so it\n");
+            report.Append($"carries no annotation. It is still a unit with an entry in `{paths.Manifest}`, so a\n");
+            report.Append("change to its value moves a fingerprint the check compares.\n");
         }
 
         AssuranceCorpusUnit[] declared = [.. units.Where(static unit => unit.Annotation?.ExemptReason is not null)];

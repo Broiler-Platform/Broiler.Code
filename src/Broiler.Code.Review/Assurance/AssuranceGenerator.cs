@@ -149,7 +149,7 @@ public static class AssuranceGenerator
     public const string GeneratedNotice = "GENERATED - DO NOT EDIT MANUALLY";
 
     /// <summary>Computes the plan. Reads nothing but its arguments and writes nothing.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=EBE9B5
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=D47F0F
     // Broiler-Falsified-If: a plan in which a file was refused carries for that file a desired text other than the text as read
     // Broiler-Human:        PENDING
     public static AssurancePlan Plan(AssuranceCorpus corpus, IAssuranceFileScanner scanner, AssuranceComponentConfig config)
@@ -171,6 +171,7 @@ public static class AssuranceGenerator
             config.ClosedToEscapeHatch)
         {
             SeparateRecords = corpus.SeparateRecords,
+            NamedValuesWatched = config.NamedValues == AssuranceNamedValues.Watched,
         };
 
         var problems = new List<AssuranceViolation>();
