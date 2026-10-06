@@ -23,6 +23,7 @@ using Broiler.App;
 using Broiler.Code.Core.Hosting;
 using Broiler.Code.Core.Shell;
 using Broiler.Graphics;
+using Broiler.Graphics.Geometry;
 using Broiler.UI;
 using Broiler.UI.CodeEditor.Standard;
 using Broiler.UI.Standard;
