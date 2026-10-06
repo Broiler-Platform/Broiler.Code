@@ -45,17 +45,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Broiler.UI.Button" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.CodeEditor" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.ComboBox" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.Edit" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.Label" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.Menu" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.Panel" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.Splitter" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.TabView" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.Toolbar" Version="0.1.0-preview.4" />
-    <PackageReference Include="Broiler.UI.TreeView" Version="0.1.0-preview.4" />
+    <PackageReference Include="Broiler.UI.Button" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.CodeEditor" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.ComboBox" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.Edit" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.Label" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.Menu" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.Panel" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.Splitter" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.TabView" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.Toolbar" Version="0.1.0-preview.18" />
+    <PackageReference Include="Broiler.UI.TreeView" Version="0.1.0-preview.18" />
   </ItemGroup>
 
 </Project>
