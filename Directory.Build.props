@@ -1,6 +1,17 @@
 <Project>
 
   <!--
+    The Broiler Code version: the floor the Publish workflow raises past every earlier
+    code-v* tag (eng/resolve-preview-version.mjs) and then passes back in, so the file
+    version of a published head matches its release asset. Scoped to this repository's own
+    projects: components can import these props in an in-tree build and keep their own.
+  -->
+  <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('Broiler.Code'))">
+    <BroilerCodeVersion Condition="'$(BroilerCodeVersion)' == ''">0.1.0-preview.1</BroilerCodeVersion>
+    <Version>$(BroilerCodeVersion)</Version>
+  </PropertyGroup>
+
+  <!--
     Where the component projects live, for the components that ask.
 
     Every component repository vendors the ones it depends on as submodules so it builds

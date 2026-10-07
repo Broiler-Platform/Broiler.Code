@@ -1,0 +1,225 @@
+name: Publish
+
+# Dispatch-only. Every run publishes the Windows and Linux editor heads in two variants each,
+# stamps them with the next preview version, attaches them to the run as artifacts, then
+# drafts a GitHub pre-release carrying them:
+#
+#   Broiler.Code-<version>-win-x64-self-contained.zip         Broiler.Code.Windows.exe
+#   Broiler.Code-<version>-win-x64-framework-dependent.zip    Broiler.Code.Windows.exe + assemblies
+#   Broiler.Code-<version>-linux-x64-self-contained.zip       Broiler.Code.Linux
+#   Broiler.Code-<version>-linux-x64-framework-dependent.zip  Broiler.Code.Linux + assemblies
+#
+# Self-contained is a single-file executable, not NativeAOT. Both heads carry the Roslyn
+# language service (Microsoft.CodeAnalysis.CSharp, for the review pane's assurance scanner),
+# and Roslyn is neither trimming- nor AOT-compatible. A self-contained single-file executable
+# keeps the JIT and is still the whole application: the .NET runtime and every assembly
+# inside one file, nothing to install, nothing beside it. It is not trimmed, for the same
+# reason. This is the shape Broiler.Browser's Release workflow uses for the same cause.
+#
+# Framework-dependent is the head's ordinary publish output for the same runtime identifier:
+# far smaller, and it runs on the .NET 10 runtime already installed on the machine.
+#
+# Everything restores from nuget.org (NuGet.config); nothing is pushed to a feed. The draft
+# release (eng/release-draft.sh) stays private until someone publishes it.
+#
+# The version is BroilerCodeVersion (Directory.Build.props) raised past every earlier run's
+# code-v* tag, and a successful run tags its commit, so preview numbers only ever increase
+# and never name two builds. See eng/resolve-preview-version.mjs.
+on:
+  workflow_dispatch:
+    inputs:
+      version-suffix:
+        description: >-
+          Optional preview.N override (unused, and at least the next preview). Empty picks
+          the next preview automatically.
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+# One run at a time, so two runs cannot pick the same preview number.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  version:
+    name: Resolve preview version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Set up
+        uses: ./.github/actions/setup-broiler
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Test the version resolver
+        run: node --test eng/resolve-preview-version.test.mjs
+
+      - name: Resolve version
+        id: version
+        env:
+          VERSION_SUFFIX: ${{ inputs.version-suffix }}
+        run: node eng/resolve-preview-version.mjs
+
+  build:
+    name: ${{ matrix.rid }} (${{ matrix.variant }})
+    needs: version
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        variant: [self-contained, framework-dependent]
+        include:
+          # The pinned configurations carry the runtime identifier a self-contained publish
+          # needs; the framework-dependent publish uses them too, so its apphost is the
+          # platform's own executable rather than a portable `dotnet Broiler.Code.*.dll`.
+          # The Windows head targets net10.0-windows and renders through Direct2D.
+          - os: windows-latest
+            rid: win-x64
+            project: src/Broiler.Code.Windows/Broiler.Code.Windows.csproj
+            configuration: Release-Windows
+            executable: Broiler.Code.Windows.exe
+          # The Linux head is plain net10.0 and could be published from anywhere; publishing
+          # it on Linux keeps the host that builds it the one it runs on.
+          - os: ubuntu-latest
+            rid: linux-x64
+            project: src/Broiler.Code.Linux/Broiler.Code.Linux.csproj
+            configuration: Release-Linux
+            executable: Broiler.Code.Linux
+          # Single-file bundles the runtime and every assembly; IncludeNativeLibrariesForSelfExtract
+          # bundles any native library a package brings too, rather than leaving it beside the
+          # executable.
+          - variant: self-contained
+            publish-args: >-
+              --self-contained true
+              -p:PublishSingleFile=true
+              -p:IncludeNativeLibrariesForSelfExtract=true
+          - variant: framework-dependent
+            publish-args: --self-contained false
+
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      OUT: artifacts/publish/${{ matrix.rid }}-${{ matrix.variant }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Set up
+        uses: ./.github/actions/setup-broiler
+
+      # BroilerCodeVersion flows into Version, so the file version matches the artifact.
+      # ContinuousIntegrationBuild makes the build deterministic, with source paths in the
+      # symbols normalised rather than the runner's.
+      - name: Publish
+        run: |
+          dotnet publish '${{ matrix.project }}' \
+            -c '${{ matrix.configuration }}' \
+            ${{ matrix.publish-args }} \
+            -p:ContinuousIntegrationBuild=true \
+            -p:BroilerCodeVersion="$VERSION" \
+            -o "$OUT"
+
+      # Symbols (.pdb, and Linux's detached .dbg) and XML docs are dead weight in a release.
+      - name: Drop symbols and XML docs
+        run: find "$OUT" -type f \( -name '*.pdb' -o -name '*.dbg' -o -name '*.xml' \) -delete
+
+      # A self-contained publish must be the executable alone: anything else beside it would
+      # be a file the application needs, so shipping without it would be broken - fail rather
+      # than drop it. A framework-dependent publish only has to carry its executable.
+      - name: Check the publish output
+        env:
+          EXECUTABLE: ${{ matrix.executable }}
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          if [ ! -f "$OUT/$EXECUTABLE" ]; then
+            echo "::error::$EXECUTABLE is missing from the publish output."
+            find "$OUT" -type f
+            exit 1
+          fi
+          if [ "$VARIANT" = self-contained ]; then
+            others=$(find "$OUT" -type f ! -name "$EXECUTABLE")
+            if [ -n "$others" ]; then
+              echo "::error::Expected only $EXECUTABLE in the self-contained output."
+              find "$OUT" -type f
+              exit 1
+            fi
+          fi
+
+      - name: Upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: broiler-code-${{ matrix.rid }}-${{ matrix.variant }}-${{ env.VERSION }}
+          path: ${{ env.OUT }}
+          if-no-files-found: error
+
+  release:
+    name: Tag and draft release ${{ needs.version.outputs.tag }}
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      TAG: ${{ needs.version.outputs.tag }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      # Only after every head and variant built: a failed run leaves its number free. The
+      # tag is pushed here rather than left to the release, because a draft release does
+      # not create its tag until it is published - and the next run counts tags.
+      - name: Tag the commit
+        run: |
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$TAG"
+
+      - name: Download the published heads
+        uses: actions/download-artifact@v6
+        with:
+          pattern: broiler-code-*
+          path: artifacts
+
+      # A draft pre-release: nothing is public until someone reviews and publishes it.
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash eng/release-draft.sh "$VERSION" artifacts
+
+      - name: Summary
+        run: |
+          {
+            echo "### Broiler.Code $VERSION"
+            echo
+            echo "Dependencies restored from nuget.org; commit tagged \`$TAG\`."
+            echo
+            echo "A draft pre-release **Broiler Code $VERSION** was created with the"
+            echo "self-contained and framework-dependent zips for win-x64 and linux-x64."
+            echo "Review it under Releases and publish it there."
+          } >> "$GITHUB_STEP_SUMMARY"
