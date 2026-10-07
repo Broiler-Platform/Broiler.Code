@@ -1,5 +1,5 @@
 {
-  "$comment": "Per-declaration assurance for Broiler.Code. Product projects only: the src/*.Tests suites and the tests/broiler-code-phase0 harnesses, fixtures and payload probes are not listed, so they are not covered. src/Broiler.App/*.cs has no project of its own and is covered through the literal <Compile Include> in the Windows and Linux heads. No source here is third-party-derived, so there are no spdxOverrides.",
+  "$comment": "Per-declaration assurance for Broiler.Code. Product projects only: the src/*.Tests suites and the tests/broiler-code-phase0 harnesses, fixtures and payload probes are not listed, so they are not covered. No source here is third-party-derived, so there are no spdxOverrides.",
   "schema": 1,
   "component": "Broiler.Code",
   "projects": [

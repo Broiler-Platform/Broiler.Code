@@ -19,13 +19,11 @@
     <RuntimeIdentifier Condition="'$(Configuration)' == 'Debug-Windows' Or '$(Configuration)' == 'Release-Windows'">win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
-  <!-- The Win32 clipboard is shared with the Browser and Writer heads rather
-       than reimplemented in each. -->
-  <ItemGroup>
-    <Compile Include="..\Broiler.App\WindowsClipboard.cs" Link="WindowsClipboard.cs" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Broiler.Graphics.Windows" />
+    <!-- The Win32 clipboard is shared with the Browser, Writer and Mail heads rather
+         than reimplemented in each. -->
+    <PackageReference Include="Broiler.Hosting.Windows" />
     <PackageReference Include="Broiler.UI.Button.Standard" />
     <PackageReference Include="Broiler.UI.CodeEditor.Standard" />
     <PackageReference Include="Broiler.UI.ComboBox.Standard" />

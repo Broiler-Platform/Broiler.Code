@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Broiler.App;
 using Broiler.Code.Core.Hosting;
 using Broiler.Code.Core.Shell;
 using Broiler.Graphics;

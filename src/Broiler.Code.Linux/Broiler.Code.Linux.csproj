@@ -17,12 +17,10 @@
     <RuntimeIdentifier Condition="'$(Configuration)' == 'Debug-Linux' Or '$(Configuration)' == 'Release-Linux'">linux-x64</RuntimeIdentifier>
   </PropertyGroup>
 
-  <!-- The X11 clipboard, shared with the Browser and Writer heads. -->
-  <ItemGroup>
-    <Compile Include="..\Broiler.App\LinuxX11Clipboard.cs" Link="LinuxX11Clipboard.cs" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Broiler.Graphics.Linux.OpenGL" />
+    <!-- The X11 clipboard, shared with the Browser, Writer and Mail heads. -->
+    <PackageReference Include="Broiler.Hosting.Linux" />
     <PackageReference Include="Broiler.Input.Keyboard.Linux" />
     <PackageReference Include="Broiler.Input.Mouse.Linux" />
     <PackageReference Include="Broiler.UI.Button.Standard" />
