@@ -22,8 +22,8 @@
       Raising this pin is a reviewed change, not a routine bump: the language
       service and the build worker have to agree about what the language means.
     -->
-    <PackageReference Include="Broiler.UI.CodeEditor" Version="0.1.0-preview.18" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageReference Include="Broiler.UI.CodeEditor" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
   <!--
