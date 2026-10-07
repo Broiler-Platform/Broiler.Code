@@ -18,7 +18,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Broiler.App;
 using Broiler.Code.Core.Hosting;
 using Broiler.Code.Core.Shell;
 using Broiler.Graphics;
@@ -27,6 +26,7 @@ using Broiler.Graphics.Geometry;
 using Broiler.Graphics.Linux.OpenGL;
 using Broiler.Graphics.Rendering;
 using Broiler.Graphics.RenderList;
+using Broiler.Hosting.Linux;
 using Broiler.UI;
 
 namespace Broiler.Code.Linux;

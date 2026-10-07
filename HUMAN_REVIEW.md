@@ -5,7 +5,7 @@ GENERATED - DO NOT EDIT MANUALLY. Regenerate with
 `CODE-ASSURANCE.md`, `assurance.manifest.json` and every generated source header from the
 product tree.
 
-> **Status: PENDING.** Human-reviewed: 0 of 1541 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
+> **Status: PENDING.** Human-reviewed: 0 of 1472 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
 > fails while any relevant unit is without a decision bound to its current fingerprint.
 
 ## 1. How To Use This File
@@ -49,13 +49,13 @@ did, which is the narrower and the more useful of the two.
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 104 |
-| Code units | 2227 |
-| Relevant | 1541 |
-| Exempt | 686 |
-| Assessed | 1541 of 1541 (100%) |
-| Human reviewed | 0 of 1541 (0%) |
-| Unverified | 1541 |
+| Files scanned | 102 |
+| Code units | 2119 |
+| Relevant | 1472 |
+| Exempt | 647 |
+| Assessed | 1472 of 1472 (100%) |
+| Human reviewed | 0 of 1472 (0%) |
+| Unverified | 1472 |
 | Aliases naming a decision | 0 |
 
 ## 4. Review States
@@ -67,11 +67,11 @@ annotations and the current fingerprints; nothing stores them.
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1541 |
+| HUMAN_PENDING | 1472 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 686 |
+| EXEMPT | 647 |
 
 ## 5. Aliases In The Tree
 
@@ -85,8 +85,6 @@ relevant units in a state that blocks a release.
 
 | File | Units | Relevant | Exempt | Unverified | IP risk | Security risk | Criteria |
 |---|---:|---:|---:|---:|---|---|---:|
-| `src/Broiler.App/LinuxX11Clipboard.cs` | 93 | 54 | 39 | 54 | Low | Critical | 54/54 |
-| `src/Broiler.App/WindowsClipboard.cs` | 15 | 15 | 0 | 15 | Low | Critical | 15/15 |
 | `src/Broiler.Code.Core/CodeAnalysisController.cs` | 26 | 11 | 15 | 11 | Low | High | 11/7 |
 | `src/Broiler.Code.Core/Diagnostics/DiagnosticMerge.cs` | 17 | 9 | 8 | 9 | Low | Medium | 8/0 |
 | `src/Broiler.Code.Core/Diagnostics/ProblemsModel.cs` | 21 | 17 | 4 | 17 | Low | Medium | 14/0 |
@@ -205,144 +203,6 @@ The units at the top of the security vocabulary, with the observation that would
 one wrong and the human line it carries. The set is read from the assessments rather than
 written out, so a unit that becomes `High` joins it at the next generation.
 
-- `Broiler.App.LinuxX11Clipboard` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `903946`, PENDING
-  - Falsified if: a property read copies more bytes than Xlib returned for the reported format and item count, reading past the native buffer that holds another X client's data
-- `Broiler.App.LinuxX11Clipboard.SelectionClear` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `A2346E`, PENDING
-  - Falsified if: the value differs from 29, the SelectionClear event code in X.h, so losing a selection to another application is never noticed
-- `Broiler.App.LinuxX11Clipboard.SelectionRequest` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `72784A`, PENDING
-  - Falsified if: the value differs from 30, the SelectionRequest event code in X.h, so pastes from other applications go unanswered or another event is answered as one
-- `Broiler.App.LinuxX11Clipboard.SelectionNotify` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `8DD9B8`, PENDING
-  - Falsified if: the value differs from 31, the SelectionNotify event code in X.h, so every paste waits out its timeout and replies reach requestors with the wrong event type
-- `Broiler.App.LinuxX11Clipboard.PropertyNotify` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `6D775A`, PENDING
-  - Falsified if: the value differs from 28, the PropertyNotify event code in X.h, so no INCR chunk is ever read and large pastes time out empty
-- `Broiler.App.LinuxX11Clipboard.PropertyNewValue` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `3514A3`, PENDING
-  - Falsified if: the value differs from 0, the PropertyNewValue state in X.h, so the INCR loop reacts to its own property deletions and ends a transfer on an empty read
-- `Broiler.App.LinuxX11Clipboard.PropertyChangeMask` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `E4CE20`, PENDING
-  - Falsified if: the value differs from bit 22, the PropertyChangeMask in X.h, so the window receives no PropertyNotify events and every INCR paste times out
-- `Broiler.App.LinuxX11Clipboard.PropModeReplace` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `AE7507`, PENDING
-  - Falsified if: the value differs from 0, the PropModeReplace mode in X.h, so an answer is appended to whatever the requestor's property already held
-- `Broiler.App.LinuxX11Clipboard.XaAtom` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `32BEDC`, PENDING
-  - Falsified if: the value differs from 4, XA_ATOM in Xatom.h, so the TARGETS reply is typed as something other than an atom list and requestors ignore it
-- `Broiler.App.LinuxX11Clipboard.XaString` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `7BCC6A`, PENDING
-  - Falsified if: the value differs from 31, XA_STRING in Xatom.h, so the Latin-1 fallback asks for and answers a different target
-- `Broiler.App.LinuxX11Clipboard.ConvertTimeout` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `92791A`, PENDING
-  - Falsified if: a paste from an owner that never sends SelectionNotify holds the calling thread for longer than one second per requested target
-- `Broiler.App.LinuxX11Clipboard.LinuxX11Clipboard(IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `74BCB6`, PENDING
-  - Falsified if: an atom field is interned from a different name than the one it stands for, such as the INCR atom from a name other than INCR, so chunked pastes are decoded as their size header
-- `Broiler.App.LinuxX11Clipboard.TryOpen()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `E08E02`, PENDING
-  - Falsified if: on a machine without libX11.so.6 or without a reachable display, TryOpen throws instead of returning null
-- `Broiler.App.LinuxX11Clipboard.OwnsClipboard` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `32C3E7`, PENDING
-  - Falsified if: a disposed instance calls XGetSelectionOwner on its closed display instead of reporting false
-- `Broiler.App.LinuxX11Clipboard.TryGetText(out string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `D1F473`, PENDING
-  - Falsified if: an owner that never answers keeps TryGetText from returning for longer than two ConvertTimeout periods
-- `Broiler.App.LinuxX11Clipboard.SetText(string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `21F32A`, PENDING
-  - Falsified if: a copy whose XSetSelectionOwner call does not take ownership leaves the text in place for TryGetText to return as the clipboard
-- `Broiler.App.LinuxX11Clipboard.ProcessPendingEvents()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `494FC7`, PENDING
-  - Falsified if: a SelectionRequest already queued when the call starts is still unanswered when it returns
-- `Broiler.App.LinuxX11Clipboard.Dispose()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `CFF845`, PENDING
-  - Falsified if: a second Dispose calls XDestroyWindow or XCloseDisplay again on the closed connection
-- `Broiler.App.LinuxX11Clipboard.HandleEvent(ref XEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `CD9D0C`, PENDING
-  - Falsified if: a SelectionClear for PRIMARY alone discards the text this process still serves as the CLIPBOARD owner
-- `Broiler.App.LinuxX11Clipboard.AnswerSelectionRequest(ref XSelectionRequestEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=ICCCM s2.2, `51F355`, PENDING
-  - Falsified if: a SelectionRequest for a target this process refuses gets no SelectionNotify, leaving the requesting application waiting
-- `Broiler.App.LinuxX11Clipboard.TryWriteRequestedTarget(ref XSelectionRequestEvent, IntPtr, string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `D3A55C`, PENDING
-  - Falsified if: a text whose encoded form exceeds MaxPropertyBytes is written with one XChangeProperty instead of being refused
-- `Broiler.App.LinuxX11Clipboard.MaxPropertyBytes()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `CA31DB`, PENDING
-  - Falsified if: the returned limit plus the XChangeProperty request header exceeds the server's maximum request length, so an answer of exactly that size draws a BadLength error
-- `Broiler.App.LinuxX11Clipboard.TryConvert(IntPtr, Encoding, out string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `1A03B7`, PENDING
-  - Falsified if: an INCR reply is returned as the text of its size header instead of being read in chunks
-- `Broiler.App.LinuxX11Clipboard.TryWaitForSelectionNotify(IntPtr, out bool)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `BAC71B`, PENDING
-  - Falsified if: a SelectionNotify addressed to another requestor window or for another target ends the wait as though the owner had answered this conversion
-- `Broiler.App.LinuxX11Clipboard.TryReadIncrementally(Encoding, out string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `E0C149`, PENDING
-  - Falsified if: an owner that sends a one-byte chunk every 900 ms keeps the loop running on the calling thread with no limit on total time or buffered bytes
-- `Broiler.App.LinuxX11Clipboard.Deadline()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `535EA5`, PENDING
-  - Falsified if: the returned timestamp lies further than ConvertTimeout from the current Stopwatch timestamp, for example because TimeSpan ticks are mixed with Stopwatch ticks
-- `Broiler.App.LinuxX11Clipboard.TryReadProperty(bool, out byte[], out IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `02D2D8`, PENDING
-  - Falsified if: Marshal.Copy copies more bytes than the item count times the element size Xlib allocates for the returned format, which is 1, 2 or sizeof(long) bytes
-- `Broiler.App.LinuxX11Clipboard.InternAtom(IntPtr, string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `049CB1`, PENDING
-  - Falsified if: an atom is interned with only-if-exists set, so a name the server has not seen before comes back as None
-- `Broiler.App.LinuxX11Clipboard.XEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `B2D302`, PENDING
-  - Falsified if: the struct is smaller than the 192-byte XEvent union Xlib uses on linux-x64, so XNextEvent writes past it
-- `Broiler.App.LinuxX11Clipboard.XSelectionRequestEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `76C4EB`, PENDING
-  - Falsified if: a field offset differs from Xlib's XSelectionRequestEvent on linux-x64, for example Requestor not at byte 40, so replies are sent to the wrong window
-- `Broiler.App.LinuxX11Clipboard.XSelectionEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `5D0165`, PENDING
-  - Falsified if: a field offset differs from Xlib's XSelectionEvent on linux-x64, for example Property not at byte 56, so a refusal is read as an answer
-- `Broiler.App.LinuxX11Clipboard.XPropertyEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `F95034`, PENDING
-  - Falsified if: a field offset differs from Xlib's XPropertyEvent on linux-x64, for example State not at byte 56, so INCR chunk notifications are misread
-- `Broiler.App.LinuxX11Clipboard.XOpenDisplay(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `C11F35`, PENDING
-  - Falsified if: the Display pointer is returned through a type narrower than IntPtr, so a 64-bit connection address is truncated
-- `Broiler.App.LinuxX11Clipboard.XCloseDisplay(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `09A14C`, PENDING
-  - Falsified if: the display parameter is declared narrower than IntPtr, so Dispose closes a truncated pointer instead of its connection
-- `Broiler.App.LinuxX11Clipboard.XDefaultScreen(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `AA3524`, PENDING
-  - Falsified if: the screen number is returned through a type other than a 32-bit int, so XRootWindow is asked for a screen that does not exist
-- `Broiler.App.LinuxX11Clipboard.XRootWindow(IntPtr, int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `7A72F9`, PENDING
-  - Falsified if: the Window result is declared narrower than the 64-bit XID Xlib returns on linux-x64, so the selection window is created under a truncated parent
-- `Broiler.App.LinuxX11Clipboard.XCreateSimpleWindow(IntPtr, IntPtr, int, int, uint, uint, uint, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `2926C1`, PENDING
-  - Falsified if: a parameter's type or position differs from the XCreateSimpleWindow prototype in Xlib.h, for example border and background declared narrower than unsigned long
-- `Broiler.App.LinuxX11Clipboard.XDestroyWindow(IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `1F41FA`, PENDING
-  - Falsified if: the window parameter is declared narrower than IntPtr, so Dispose destroys a different window id
-- `Broiler.App.LinuxX11Clipboard.XSelectInput(IntPtr, IntPtr, long)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `E92C2A`, PENDING
-  - Falsified if: the event mask is declared as a type other than the 64-bit C long Xlib takes on linux-x64, so PropertyChangeMask does not reach the server
-- `Broiler.App.LinuxX11Clipboard.XInternAtom(IntPtr, string, int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `927623`, PENDING
-  - Falsified if: the atom name is marshalled as UTF-16 rather than a NUL-terminated byte string, so every atom is interned under a truncated name
-- `Broiler.App.LinuxX11Clipboard.XSetSelectionOwner(IntPtr, IntPtr, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `54D4C2`, PENDING
-  - Falsified if: a parameter is declared in a different order from Xlib's selection, owner, time, so ownership is claimed for the wrong selection
-- `Broiler.App.LinuxX11Clipboard.XGetSelectionOwner(IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `83913D`, PENDING
-  - Falsified if: the returned Window is declared narrower than IntPtr, so the comparison with this process's own window never matches
-- `Broiler.App.LinuxX11Clipboard.XConvertSelection(IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `59DB00`, PENDING
-  - Falsified if: a parameter is declared in a different order from Xlib's selection, target, property, requestor, time, so the owner writes its answer to the wrong property
-- `Broiler.App.LinuxX11Clipboard.XChangeProperty(IntPtr, IntPtr, IntPtr, IntPtr, int, int, byte[], int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `A69735`, PENDING
-  - Falsified if: the element count is declared as a type other than the 32-bit int Xlib takes, so the byte array is sent with a length it does not have and Xlib reads past it
-- `Broiler.App.LinuxX11Clipboard.XChangeProperty(IntPtr, IntPtr, IntPtr, IntPtr, int, int, IntPtr[], int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `AAF4A5`, PENDING
-  - Falsified if: the array's elements are narrower than a C long, so a format-32 write of the TARGETS list reads past the array
-- `Broiler.App.LinuxX11Clipboard.XDeleteProperty(IntPtr, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `93C844`, PENDING
-  - Falsified if: the property atom is declared narrower than IntPtr, so a different property is deleted and a stale transfer is read as the answer
-- `Broiler.App.LinuxX11Clipboard.XGetWindowProperty(IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, int, IntPtr, out IntPtr, out int, out IntPtr, out IntPtr, out IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `F503CE`, PENDING
-  - Falsified if: an out parameter is declared narrower than what Xlib writes through it, for example nitems or bytes_after as int, so Xlib overwrites the caller's stack
-- `Broiler.App.LinuxX11Clipboard.XSendEvent(IntPtr, IntPtr, int, long, ref XEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `B581CA`, PENDING
-  - Falsified if: the event is passed by value or as a struct smaller than XEvent, so Xlib reads past the caller's event
-- `Broiler.App.LinuxX11Clipboard.XMaxRequestSize(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `A35B94`, PENDING
-  - Falsified if: the return is declared as a type other than the 64-bit C long Xlib returns on linux-x64, so the request limit used to refuse oversized answers is garbage
-- `Broiler.App.LinuxX11Clipboard.XExtendedMaxRequestSize(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `48608A`, PENDING
-  - Falsified if: the return is declared as a type other than the 64-bit C long Xlib returns on linux-x64, so the BIG-REQUESTS limit used to refuse oversized answers is garbage
-- `Broiler.App.LinuxX11Clipboard.XPending(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `C5AF79`, PENDING
-  - Falsified if: the import binds to an entry other than XPending, so the event loops run on a count that does not reflect the queue
-- `Broiler.App.LinuxX11Clipboard.XNextEvent(IntPtr, out XEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `0AFABC`, PENDING
-  - Falsified if: the event is received by value or into a struct smaller than the 192-byte XEvent union, so Xlib writes past the caller's storage
-- `Broiler.App.LinuxX11Clipboard.XFlush(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, Spec=none cited, `2B1605`, PENDING
-  - Falsified if: the import binds to an entry other than XFlush, so replies and ownership changes stay in the output buffer and other applications wait on them
-- `Broiler.App.LinuxX11Clipboard.XFree(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, Spec=none cited, `09B78A`, PENDING
-  - Falsified if: the import binds to an entry other than the XFree of libX11, so buffers Xlib allocated are released by a different allocator
-- `Broiler.App.WindowsClipboard` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `F39BF4`, PENDING
-  - Falsified if: a CF_UNICODETEXT block with no terminating NUL inside its allocation is read past the end of the block
-- `Broiler.App.WindowsClipboard.CfUnicodeText` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `82BB56`, PENDING
-  - Falsified if: the value differs from 13, CF_UNICODETEXT, so a block in another clipboard format is read as NUL-terminated UTF-16
-- `Broiler.App.WindowsClipboard.GmemMoveable` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, Spec=none cited, `6C1EE9`, PENDING
-  - Falsified if: the value differs from 0x0002, GMEM_MOVEABLE, so the block handed to SetClipboardData is fixed memory the clipboard does not accept
-- `Broiler.App.WindowsClipboard.TryGetText(out string)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `23A8D0`, PENDING
-  - Falsified if: a CF_UNICODETEXT block with no terminating NUL inside its GlobalSize is read past the end of the block
-- `Broiler.App.WindowsClipboard.SetText(string)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `33578F`, PENDING
-  - Falsified if: the terminating NUL is written outside the (text.Length + 1) * 2 bytes allocated for the block
-- `Broiler.App.WindowsClipboard.OpenClipboard(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, Spec=none cited, `0B1567`, PENDING
-  - Falsified if: the BOOL result is marshalled as a one-byte bool, so a failed open reads as success and the clipboard is used without being held
-- `Broiler.App.WindowsClipboard.CloseClipboard()` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, Spec=none cited, `819D6E`, PENDING
-  - Falsified if: the import binds to an entry other than CloseClipboard in user32, so the clipboard stays open and blocks every other application's copy
-- `Broiler.App.WindowsClipboard.EmptyClipboard()` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, Spec=none cited, `82E0CE`, PENDING
-  - Falsified if: the import binds to an entry other than EmptyClipboard in user32, so SetClipboardData runs without this window having taken clipboard ownership
-- `Broiler.App.WindowsClipboard.IsClipboardFormatAvailable(uint)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, Spec=none cited, `AAAC79`, PENDING
-  - Falsified if: the format parameter is declared as a type other than the 32-bit UINT the function takes, so availability is asked for a different format
-- `Broiler.App.WindowsClipboard.GetClipboardData(uint)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, Spec=none cited, `317039`, PENDING
-  - Falsified if: the HANDLE result is declared narrower than IntPtr, so a 64-bit handle is truncated before GlobalLock
-- `Broiler.App.WindowsClipboard.SetClipboardData(uint, IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `BDB3DF`, PENDING
-  - Falsified if: the HANDLE result is declared narrower than IntPtr, so a successful call can read as zero and the caller frees a block the clipboard now owns
-- `Broiler.App.WindowsClipboard.GlobalAlloc(uint, UIntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `B864A6`, PENDING
-  - Falsified if: the byte count is declared narrower than SIZE_T, so a large request allocates a smaller block than the caller then writes
-- `Broiler.App.WindowsClipboard.GlobalFree(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `80E1CC`, PENDING
-  - Falsified if: the HGLOBAL parameter is declared narrower than IntPtr, so a different block is released
-- `Broiler.App.WindowsClipboard.GlobalLock(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, Spec=none cited, `D52183`, PENDING
-  - Falsified if: the returned pointer is declared narrower than IntPtr, so a 64-bit block address is truncated before text is read or written through it
-- `Broiler.App.WindowsClipboard.GlobalUnlock(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, Spec=none cited, `BDEB39`, PENDING
-  - Falsified if: the import binds to an entry other than GlobalUnlock in kernel32, so every paste and copy leaves the block's lock count raised
 - `Broiler.Code.Core.CodeAnalysisController` in `src/Broiler.Code.Core/CodeAnalysisController.cs` - Security=High, Spec=none cited, `23AD15`, PENDING
   - Falsified if: a classification computed for an older snapshot is applied to the editor after a newer edit has started a run
 - `Broiler.Code.Core.CodeAnalysisController.CodeAnalysisController(UiCodeEditor, SourceBufferDocument, ICodeClassifier, IUiDispatcher, IAnalysisScheduler?, int)` in `src/Broiler.Code.Core/CodeAnalysisController.cs` - Security=High, Spec=none cited, `6C2E25`, PENDING
@@ -678,7 +538,7 @@ written out, so a unit that becomes `High` joins it at the next generation.
 - `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `557605`, PENDING
   - Falsified if: an assurance.config.json outside the granted root, reached through a '..' segment, a link below the root or a sibling directory whose name begins with the root's, decides how a file is scanned
 - `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.MaxConfigurationBytes` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `6152DB`, PENDING
-  - Falsified if: a configuration file of several megabytes is read and parsed again on every rescan of a file under it
+  - Falsified if: a configuration file of several megabytes is read and parsed on the thread that rescans the open file
 - `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.CSharpComponentAssuranceScanner(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `6F6F0F`, PENDING
   - Falsified if: the root prefix is built without a trailing separator, so a sibling directory such as work2 beside the root work counts as inside it
 - `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.Scan(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, Spec=none cited, `6236D4`, PENDING
@@ -1647,5 +1507,5 @@ An assessment is a comment, so changing one moves no fingerprint anywhere, and n
 mechanical checks that it is right; the check holds its values to their vocabularies and no
 further.
 
-1541 of the 1541 assessed units declare `Origin=AI`. Reading a declaration is the only thing
+1472 of the 1472 assessed units declare `Origin=AI`. Reading a declaration is the only thing
 that makes it read.

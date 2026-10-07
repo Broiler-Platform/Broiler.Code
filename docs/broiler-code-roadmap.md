@@ -683,7 +683,8 @@ reachable from evdev, and the only `ITextInputProvider` in the repository is
 Android's. The head therefore reports IME as unavailable, rather than
 substituting something that appears to work while dropping candidates.
 
-The clipboard gap is closed. `LinuxX11Clipboard` owns the CLIPBOARD and PRIMARY
+The clipboard gap is closed. `LinuxX11Clipboard`, from the Broiler.Hosting.Linux
+package, owns the CLIPBOARD and PRIMARY
 selections on a display connection of its own and answers other applications'
 `SelectionRequest` events from the head's loop, so a copy here is a paste
 anywhere on the display and vice versa. It is the head's own connection rather

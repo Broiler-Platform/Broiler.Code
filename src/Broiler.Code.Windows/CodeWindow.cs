@@ -17,7 +17,6 @@
 
 using System;
 using System.Runtime.Versioning;
-using Broiler.App;
 using Broiler.Code.Core.Hosting;
 using Broiler.Code.Core.Shell;
 using Broiler.Graphics;
@@ -27,6 +26,7 @@ using Broiler.Graphics.Rendering;
 using Broiler.Graphics.RenderList;
 using Broiler.Graphics.Windowing;
 using Broiler.Graphics.Windows;
+using Broiler.Hosting.Windows;
 using Broiler.UI;
 using Broiler.UI.CodeEditor.Standard;
 

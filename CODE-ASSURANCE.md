@@ -13,15 +13,15 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 104 |
+| Files scanned | 102 |
 | Files not covered | 0 |
-| Files carrying an annotation | 104 |
-| Code units | 2227 |
-| Relevant | 1541 |
-| Exempt by predicate | 686 |
-| Annotated | 1541 of 1541 (100%) |
-| Human reviewed | 0 of 1541 (0%) |
-| Unverified | 1541 |
+| Files carrying an annotation | 102 |
+| Code units | 2119 |
+| Relevant | 1472 |
+| Exempt by predicate | 647 |
+| Annotated | 1472 of 1472 (100%) |
+| Human reviewed | 0 of 1472 (0%) |
+| Unverified | 1472 |
 
 ## Review states
 
@@ -29,18 +29,18 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1541 |
+| HUMAN_PENDING | 1472 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 686 |
+| EXEMPT | 647 |
 
 ## IP risk
 
 | Value | Units |
 |---|---:|
-| None | 597 |
-| Low | 944 |
+| None | 548 |
+| Low | 924 |
 | Medium | 0 |
 | High | 0 |
 | Unknown | 0 |
@@ -53,8 +53,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 | None | 59 |
 | Low | 404 |
 | Medium | 365 |
-| High | 677 |
-| Critical | 36 |
+| High | 629 |
+| Critical | 15 |
 | *not annotated* | 0 |
 
 ## Resource impact
@@ -63,79 +63,10 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | Maximum | 9 / 10 |
 | Average over annotated units | 2.2 / 10 |
-| Units scored | 1541 |
+| Units scored | 1472 |
 
 ## High-security review areas
 
-- `Broiler.App.LinuxX11Clipboard` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.SelectionClear` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.SelectionRequest` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.SelectionNotify` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.PropertyNotify` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.PropertyNewValue` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.PropertyChangeMask` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.PropModeReplace` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XaAtom` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XaString` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.ConvertTimeout` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.LinuxX11Clipboard(IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.TryOpen()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.OwnsClipboard` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.TryGetText(out string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.SetText(string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.ProcessPendingEvents()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.Dispose()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.HandleEvent(ref XEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.AnswerSelectionRequest(ref XSelectionRequestEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.TryWriteRequestedTarget(ref XSelectionRequestEvent, IntPtr, string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.MaxPropertyBytes()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.TryConvert(IntPtr, Encoding, out string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.TryWaitForSelectionNotify(IntPtr, out bool)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.TryReadIncrementally(Encoding, out string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.Deadline()` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.TryReadProperty(bool, out byte[], out IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.InternAtom(IntPtr, string)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XSelectionRequestEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XSelectionEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XPropertyEvent` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XOpenDisplay(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XCloseDisplay(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XDefaultScreen(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XRootWindow(IntPtr, int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XCreateSimpleWindow(IntPtr, IntPtr, int, int, uint, uint, uint, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XDestroyWindow(IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XSelectInput(IntPtr, IntPtr, long)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XInternAtom(IntPtr, string, int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XSetSelectionOwner(IntPtr, IntPtr, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XGetSelectionOwner(IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XConvertSelection(IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XChangeProperty(IntPtr, IntPtr, IntPtr, IntPtr, int, int, byte[], int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XChangeProperty(IntPtr, IntPtr, IntPtr, IntPtr, int, int, IntPtr[], int)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XDeleteProperty(IntPtr, IntPtr, IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XGetWindowProperty(IntPtr, IntPtr, IntPtr, IntPtr, IntPtr, int, IntPtr, out IntPtr, out int, out IntPtr, out IntPtr, out IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XSendEvent(IntPtr, IntPtr, int, long, ref XEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XMaxRequestSize(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XExtendedMaxRequestSize(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XPending(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XNextEvent(IntPtr, out XEvent)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XFlush(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.LinuxX11Clipboard.XFree(IntPtr)` in `src/Broiler.App/LinuxX11Clipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.CfUnicodeText` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.GmemMoveable` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.WindowsClipboard.TryGetText(out string)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.SetText(string)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.OpenClipboard(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.WindowsClipboard.CloseClipboard()` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.WindowsClipboard.EmptyClipboard()` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.WindowsClipboard.IsClipboardFormatAvailable(uint)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.WindowsClipboard.GetClipboardData(uint)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, human line PENDING
-- `Broiler.App.WindowsClipboard.SetClipboardData(uint, IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.GlobalAlloc(uint, UIntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.GlobalFree(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.GlobalLock(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=Critical, human line PENDING
-- `Broiler.App.WindowsClipboard.GlobalUnlock(IntPtr)` in `src/Broiler.App/WindowsClipboard.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.CodeAnalysisController` in `src/Broiler.Code.Core/CodeAnalysisController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.CodeAnalysisController.CodeAnalysisController(UiCodeEditor, SourceBufferDocument, ICodeClassifier, IUiDispatcher, IAnalysisScheduler?, int)` in `src/Broiler.Code.Core/CodeAnalysisController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.CodeAnalysisController.Dispose()` in `src/Broiler.Code.Core/CodeAnalysisController.cs` - Security=High, human line PENDING
@@ -785,8 +716,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Units carrying a criterion | 1252 |
-| Units required to carry one | 713 |
+| Units carrying a criterion | 1183 |
+| Units required to carry one | 644 |
 | Required and missing | 0 |
 
 A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make
@@ -812,7 +743,7 @@ that the rule is reviewable in one place rather than in several hundred.
 | CompilerSuppliedRecordOrEnumMember | 143 |
 | DelegatingOverrideOrOperator | 2 |
 | InsideAssemblyMarker | 0 |
-| FieldDeclaringStorage | 254 |
+| FieldDeclaringStorage | 215 |
 | EnumMemberOfADeclaredVocabulary | 137 |
 | DeclaredInSource | 0 |
 
@@ -837,14 +768,14 @@ through a `<Compile Include>` it states, is left out of the record.
 ## Change detection
 
 `assurance.manifest.json` lists **every** code unit in the 9 covered assemblies -
-2227 of them, exempt and relevant alike - with the fingerprint of its declaration.
+2119 of them, exempt and relevant alike - with the fingerprint of its declaration.
 This manifest is a change-detection record, not a review. A unit listed there is watched, not reviewed:
 the entry records what the declaration's tokens hashed to when the generator last ran, and
 nothing else. What the manifest adds is that a unit the exemption predicate treats as
 trivial is no longer invisible: a semantic change to one moves a value in a generated file
 the check compares byte for byte. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code` holds the manifest to the tree.
 
-Beside the units it lists **every covered file** - 104 of them - with a
+Beside the units it lists **every covered file** - 102 of them - with a
 fingerprint over the complete token stream of its compilation unit. A unit entry exists only
 for a declaration kind the scanner enumerates, and an enumeration is a whitelist: an
 `[assembly: ...]` attribute is a member of nothing and can be in no unit at all.
