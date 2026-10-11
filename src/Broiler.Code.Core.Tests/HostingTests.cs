@@ -99,8 +99,8 @@ public sealed class HostingTests
 
         Broiler.UI.UiInputEvent key = router.FromText("a");
         Broiler.UI.UiInputEvent pointer = router.FromPointerMove(
-            new Broiler.Graphics.BPointerEventArgs(
-                new Broiler.Graphics.BPoint(1, 2), Broiler.Graphics.BMouseButtons.None));
+            new Broiler.Graphics.Windowing.BPointerEventArgs(
+                new Broiler.Graphics.Geometry.BPoint(1, 2), Broiler.Graphics.Windowing.BMouseButtons.None));
 
         Assert.NotEqual(key.Header.DeviceId, pointer.Header.DeviceId);
     }

@@ -21,8 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Broiler.Graphics.Windows" />
-    <!-- The Win32 clipboard is shared with the Browser, Writer and Mail heads rather
-         than reimplemented in each. -->
+    <!-- The Win32 clipboard and window sizing, shared with the other desktop applications. -->
     <PackageReference Include="Broiler.Hosting.Windows" />
     <PackageReference Include="Broiler.UI.Button.Standard" />
     <PackageReference Include="Broiler.UI.CodeEditor.Standard" />

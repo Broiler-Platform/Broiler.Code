@@ -5,7 +5,7 @@ GENERATED - DO NOT EDIT MANUALLY. Regenerate with
 `CODE-ASSURANCE.md`, `assurance.manifest.json` and every generated source header from the
 product tree.
 
-> **Status: PENDING.** Human-reviewed: 0 of 1472 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
+> **Status: PENDING.** Human-reviewed: 0 of 1457 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
 > fails while any relevant unit is without a decision bound to its current fingerprint.
 
 ## 1. How To Use This File
@@ -49,13 +49,13 @@ did, which is the narrower and the more useful of the two.
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 102 |
-| Code units | 2119 |
-| Relevant | 1472 |
-| Exempt | 647 |
-| Assessed | 1472 of 1472 (100%) |
-| Human reviewed | 0 of 1472 (0%) |
-| Unverified | 1472 |
+| Files scanned | 101 |
+| Code units | 2088 |
+| Relevant | 1457 |
+| Exempt | 631 |
+| Assessed | 1457 of 1457 (100%) |
+| Human reviewed | 0 of 1457 (0%) |
+| Unverified | 1457 |
 | Aliases naming a decision | 0 |
 
 ## 4. Review States
@@ -67,11 +67,11 @@ annotations and the current fingerprints; nothing stores them.
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1472 |
+| HUMAN_PENDING | 1457 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 647 |
+| EXEMPT | 631 |
 
 ## 5. Aliases In The Tree
 
@@ -118,8 +118,7 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Language.CSharp.Syntax/PortableCSharpClassifier.cs` | 16 | 12 | 4 | 12 | Low | High | 11/5 |
 | `src/Broiler.Code.Linux/CodeHost.cs` | 4 | 4 | 0 | 4 | Low | High | 4/2 |
 | `src/Broiler.Code.Linux/CodeShellFactory.cs` | 4 | 4 | 0 | 4 | Low | High | 4/3 |
-| `src/Broiler.Code.Linux/CodeWindow.cs` | 34 | 18 | 16 | 18 | Low | High | 13/6 |
-| `src/Broiler.Code.Linux/LinuxCodeInput.cs` | 31 | 16 | 15 | 16 | Low | High | 13/7 |
+| `src/Broiler.Code.Linux/CodeWindow.cs` | 33 | 18 | 15 | 18 | Low | High | 13/6 |
 | `src/Broiler.Code.Linux/LinuxFileDialogs.cs` | 20 | 15 | 5 | 15 | Low | High | 10/10 |
 | `src/Broiler.Code.Linux/Program.cs` | 2 | 2 | 0 | 2 | Low | High | 2/2 |
 | `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` | 35 | 35 | 0 | 35 | Low | High | 17/12 |
@@ -168,7 +167,7 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Review/ReviewStore.cs` | 14 | 13 | 1 | 13 | Low | High | 12/10 |
 | `src/Broiler.Code.Windows/CodeHost.cs` | 13 | 12 | 1 | 12 | Low | Critical | 7/5 |
 | `src/Broiler.Code.Windows/CodeShellFactory.cs` | 4 | 4 | 0 | 4 | Low | High | 4/3 |
-| `src/Broiler.Code.Windows/CodeWindow.cs` | 29 | 18 | 11 | 18 | Low | High | 17/4 |
+| `src/Broiler.Code.Windows/CodeWindow.cs` | 30 | 19 | 11 | 19 | Low | High | 18/5 |
 | `src/Broiler.Code.Windows/Program.cs` | 2 | 2 | 0 | 2 | Low | High | 2/2 |
 | `src/Broiler.Code.Windows/WindowsFileDialogs.cs` | 49 | 17 | 32 | 17 | Low | Critical | 17/17 |
 | `src/Broiler.Code.Windows/WindowsTextInputService.cs` | 29 | 19 | 10 | 19 | Low | Critical | 18/16 |
@@ -619,30 +618,16 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a relative XDG_DATA_HOME is used as given, so the scratch workspace is created under the process's current directory
 - `Broiler.Code.Linux.CodeWindow` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `27C58D`, PENDING
   - Falsified if: without --ignore-focus, keys typed after the window lost focus keep reaching the editor on later frames because the evdev devices stay active
-- `Broiler.Code.Linux.CodeWindow.CodeWindow(BSize, Action<string>, bool, int)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `3DE714`, PENDING
+- `Broiler.Code.Linux.CodeWindow.CodeWindow(BSize, Action<string>, bool, int)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `E750A2`, PENDING
   - Falsified if: a pollMilliseconds of zero or less reaches PeriodicTimer as a period below one millisecond
 - `Broiler.Code.Linux.CodeWindow.TryGetText(out string)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `B03E24`, PENDING
   - Falsified if: with no X11 clipboard open, TryGetText returns true or a text other than the empty string
 - `Broiler.Code.Linux.CodeWindow.SetText(string)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `B5EF0D`, PENDING
   - Falsified if: on a host with no X11 clipboard, SetText throws instead of dropping the text
-- `Broiler.Code.Linux.CodeWindow.RunAsync(CancellationToken)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `B2CC6F`, PENDING
+- `Broiler.Code.Linux.CodeWindow.RunAsync(CancellationToken)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `BC8B25`, PENDING
   - Falsified if: after WaitForNextTickAsync resumes on a thread-pool thread, the next Drain runs off the thread that constructed the dispatcher and throws InvalidOperationException
 - `Broiler.Code.Linux.CodeWindow.DisposeAsync()` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, Spec=none cited, `3A89A2`, PENDING
   - Falsified if: a second DisposeAsync disposes the X11 surface or the clipboard connection again
-- `Broiler.Code.Linux.LinuxCodeInput` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, Spec=none cited, `52B01F`, PENDING
-  - Falsified if: a key typed while another application has focus is dispatched to the editor although the window never reported focus to SetActiveAsync
-- `Broiler.Code.Linux.LinuxCodeInput.IsAvailable` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, Spec=none cited, `380C67`, PENDING
-  - Falsified if: IsAvailable reads false while a keyboard or mouse device is open, so SetActiveAsync(false) returns without stopping it
-- `Broiler.Code.Linux.LinuxCodeInput.StartAsync(CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, Spec=none cited, `5A21D5`, PENDING
-  - Falsified if: an opened keyboard delivers key events to the pending queue before SetActiveAsync(true) has started it
-- `Broiler.Code.Linux.LinuxCodeInput.SetActiveAsync(bool, CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, Spec=none cited, `14B20F`, PENDING
-  - Falsified if: SetActiveAsync(false) returns normally while the keyboard device is still started, so keys typed into another application are queued for the editor
-- `Broiler.Code.Linux.LinuxCodeInput.DisposeAsync()` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, Spec=none cited, `724DAA`, PENDING
-  - Falsified if: after DisposeAsync completes, the keyboard or mouse device is still open or its events still reach the pending queue
-- `Broiler.Code.Linux.LinuxCodeInput.OpenKeyboardAsync(CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, Spec=none cited, `5E3814`, PENDING
-  - Falsified if: when opening the first available keyboard throws, the next available keyboard is not tried and keyboard input stays disabled
-- `Broiler.Code.Linux.LinuxCodeInput.OpenMouseAsync(CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, Spec=none cited, `D690DE`, PENDING
-  - Falsified if: when opening the first available mouse throws, the next available mouse is not tried and mouse input stays disabled
 - `Broiler.Code.Linux.LinuxFileDialogs` in `src/Broiler.Code.Linux/LinuxFileDialogs.cs` - Security=High, Spec=none cited, `D8426B`, PENDING
   - Falsified if: a grant from an open, save or folder request roots storage at a directory other than the chosen folder or the directory that contains the chosen file
 - `Broiler.Code.Linux.LinuxFileDialogs.LinuxFileDialogs()` in `src/Broiler.Code.Linux/LinuxFileDialogs.cs` - Security=High, Spec=none cited, `BEF9D7`, PENDING
@@ -1301,10 +1286,12 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: UI work posted from a worker thread runs on a thread other than the one pumping this window's message loop
 - `Broiler.Code.Windows.CodeWindow.CodeWindow()` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, Spec=none cited, `8E4DC8`, PENDING
   - Falsified if: the dispatcher is created on a thread other than the one that runs the message loop, so CheckAccess answers for a thread that never drains it
-- `Broiler.Code.Windows.CodeWindow.OnNativeWindowMessage(IntPtr, uint, IntPtr, IntPtr)` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, Spec=none cited, `A244C0`, PENDING
+- `Broiler.Code.Windows.CodeWindow.OnNativeWindowMessage(IntPtr, uint, IntPtr, IntPtr)` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, Spec=none cited, `810587`, PENDING
   - Falsified if: a committed IME composition is inserted twice, once from the composition message and again from the WM_CHAR the default window procedure generates for the same result string
 - `Broiler.Code.Windows.CodeWindow.AttachServices(UiSession, StandardCodeEditor)` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, Spec=none cited, `7EDD26`, PENDING
   - Falsified if: the clipboard or text-input service is bound to a window handle other than this window's NativeHandle, so paste or IME composition acts on another window
+- `Broiler.Code.Windows.CodeWindow.SetFocus(IntPtr)` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, Spec=none cited, `66F237`, PENDING
+  - Falsified if: the import binds to an entry other than SetFocus in user32, so focus is not transferred to the render window
 - `Broiler.Code.Windows.Program` in `src/Broiler.Code.Windows/Program.cs` - Security=High, Spec=none cited, `A32934`, PENDING
   - Falsified if: an argument beginning with a dash is opened as the workspace directory instead of being treated as an option
 - `Broiler.Code.Windows.Program.Main(string[])` in `src/Broiler.Code.Windows/Program.cs` - Security=High, Spec=none cited, `D0FC29`, PENDING
@@ -1507,5 +1494,5 @@ An assessment is a comment, so changing one moves no fingerprint anywhere, and n
 mechanical checks that it is right; the check holds its values to their vocabularies and no
 further.
 
-1472 of the 1472 assessed units declare `Origin=AI`. Reading a declaration is the only thing
+1457 of the 1457 assessed units declare `Origin=AI`. Reading a declaration is the only thing
 that makes it read.

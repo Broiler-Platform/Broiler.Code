@@ -174,6 +174,10 @@ upstream defect, the second is fixable here. Do not import a suppression list fr
 consumer repository; those were measured against a much larger graph and would hide the
 next real warning.
 
+The platform hosting glue — the Win32 clipboard and window sizing, and the X11 clipboard and evdev
+input coordination — comes from the `Broiler.Hosting.Windows` and `Broiler.Hosting.Linux`
+packages, the same ones the other Broiler applications use.
+
 ## Repository layout
 
 | Path | Contents |
@@ -184,9 +188,8 @@ next real warning.
 | `src/Broiler.Code.Core` | The seam: workspace snapshots adapted to the control-facing editor interfaces, plus the shell |
 | `src/Broiler.Code.Language.CSharp.Syntax` | Portable C# classifier — the fallback a host without Roslyn composes |
 | `src/Broiler.Code.Language.CSharp.Roslyn` | Semantic language service on one pinned Roslyn toolset |
-| `src/Broiler.Code.Windows` | Windows head — `WinExe`, Direct2D, Win32 clipboard |
-| `src/Broiler.Code.Linux` | Linux head — X11 clipboard, evdev input |
-| `src/Broiler.App` | Source-only directory shared by the desktop heads — the per-platform clipboards. It has no project of its own; each head links the file it needs. |
+| `src/Broiler.Code.Windows` | Windows head — `WinExe`, Direct2D, Win32 clipboard and window sizing |
+| `src/Broiler.Code.Linux` | Linux head — X11 clipboard and evdev input coordination |
 | `src/Broiler.Code.*.Tests` | xUnit suites — workspaces, shell and adapters, language services, review model |
 | `tests/broiler-code-phase0` | Phase 0 harnesses, fixtures, traces, payload probes and recorded baselines |
 | `docs/` | Architecture records, budgets, the SDK-mutation matrix and the roadmap |

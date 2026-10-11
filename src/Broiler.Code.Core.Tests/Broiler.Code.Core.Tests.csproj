@@ -13,6 +13,19 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Broiler.Graphics" />
+    <PackageReference Include="Broiler.UI" />
+    <PackageReference Include="Broiler.UI.Button.Standard" />
+    <PackageReference Include="Broiler.UI.CodeEditor.Standard" />
+    <PackageReference Include="Broiler.UI.ComboBox.Standard" />
+    <PackageReference Include="Broiler.UI.Edit.Standard" />
+    <PackageReference Include="Broiler.UI.Label.Standard" />
+    <PackageReference Include="Broiler.UI.Menu.Standard" />
+    <PackageReference Include="Broiler.UI.Panel.Standard" />
+    <PackageReference Include="Broiler.UI.Splitter.Standard" />
+    <PackageReference Include="Broiler.UI.TabView.Standard" />
+    <PackageReference Include="Broiler.UI.Toolbar.Standard" />
+    <PackageReference Include="Broiler.UI.TreeView.Standard" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +35,9 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="Broiler.Graphics" />
+    <Using Include="Broiler.Graphics.Geometry" />
+    <Using Include="Broiler.Graphics.RenderList" />
   </ItemGroup>
 
 </Project>

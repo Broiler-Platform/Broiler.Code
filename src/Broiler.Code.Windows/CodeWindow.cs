@@ -3,19 +3,20 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   18
-// Annotated:        18/18
+// Relevant units:   19
+// Annotated:        19/19
 // Exempt:           11
-// Human-reviewed:   0/18
+// Human-reviewed:   0/19
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         17/4
+// Criteria:         18/5
 // Resource impact:  7/10 max
-// Unverified:       18
+// Unverified:       19
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
 using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Broiler.Code.Core.Hosting;
 using Broiler.Code.Core.Shell;
@@ -189,12 +190,23 @@ internal sealed class CodeWindow : Direct2DWindow
 
     private bool _composing;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=A244C0
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=810587
     // Broiler-Falsified-If: a committed IME composition is inserted twice, once from the composition message and again from the WM_CHAR the default window procedure generates for the same result string
     // Broiler-Human:        PENDING
     protected override void OnNativeWindowMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam)
     {
         base.OnNativeWindowMessage(hwnd, message, wParam, lParam);
+        if (hwnd == NativeHandle)
+        {
+            WindowsWindowSizing.OnMessage(hwnd, message, lParam, DpiScale);
+            // Transfer Win32 focus from the top-level frame to the render child window
+            // on activation and focus so keystrokes are never dropped.
+            if ((message == 0x0006 && wParam.ToInt64() != 0) || message == 0x0007)
+            {
+                if (RenderNativeHandle != IntPtr.Zero)
+                    _ = SetFocus(RenderNativeHandle);
+            }
+        }
         _textInput?.TryHandleMessage(message, wParam, lParam);
     }
 
@@ -262,4 +274,10 @@ internal sealed class CodeWindow : Direct2DWindow
 
         base.Dispose(disposing);
     }
+
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=66F237
+    // Broiler-Falsified-If: the import binds to an entry other than SetFocus in user32, so focus is not transferred to the render window
+    // Broiler-Human:        PENDING
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetFocus(IntPtr hWnd);
 }

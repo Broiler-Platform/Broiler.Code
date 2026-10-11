@@ -13,15 +13,15 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 102 |
+| Files scanned | 101 |
 | Files not covered | 0 |
-| Files carrying an annotation | 102 |
-| Code units | 2119 |
-| Relevant | 1472 |
-| Exempt by predicate | 647 |
-| Annotated | 1472 of 1472 (100%) |
-| Human reviewed | 0 of 1472 (0%) |
-| Unverified | 1472 |
+| Files carrying an annotation | 101 |
+| Code units | 2088 |
+| Relevant | 1457 |
+| Exempt by predicate | 631 |
+| Annotated | 1457 of 1457 (100%) |
+| Human reviewed | 0 of 1457 (0%) |
+| Unverified | 1457 |
 
 ## Review states
 
@@ -29,18 +29,18 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1472 |
+| HUMAN_PENDING | 1457 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 647 |
+| EXEMPT | 631 |
 
 ## IP risk
 
 | Value | Units |
 |---|---:|
-| None | 548 |
-| Low | 924 |
+| None | 544 |
+| Low | 913 |
 | Medium | 0 |
 | High | 0 |
 | Unknown | 0 |
@@ -51,9 +51,9 @@ and the figures below are the measurement of how far from that claim the per-uni
 | Value | Units |
 |---|---:|
 | None | 59 |
-| Low | 404 |
-| Medium | 365 |
-| High | 629 |
+| Low | 401 |
+| Medium | 359 |
+| High | 623 |
 | Critical | 15 |
 | *not annotated* | 0 |
 
@@ -63,7 +63,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | Maximum | 9 / 10 |
 | Average over annotated units | 2.2 / 10 |
-| Units scored | 1472 |
+| Units scored | 1457 |
 
 ## High-security review areas
 
@@ -280,13 +280,6 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Linux.CodeWindow.SetText(string)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, human line PENDING
 - `Broiler.Code.Linux.CodeWindow.RunAsync(CancellationToken)` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, human line PENDING
 - `Broiler.Code.Linux.CodeWindow.DisposeAsync()` in `src/Broiler.Code.Linux/CodeWindow.cs` - Security=High, human line PENDING
-- `Broiler.Code.Linux.LinuxCodeInput` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, human line PENDING
-- `Broiler.Code.Linux.LinuxCodeInput.IsAvailable` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, human line PENDING
-- `Broiler.Code.Linux.LinuxCodeInput.StartAsync(CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, human line PENDING
-- `Broiler.Code.Linux.LinuxCodeInput.SetActiveAsync(bool, CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, human line PENDING
-- `Broiler.Code.Linux.LinuxCodeInput.DisposeAsync()` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, human line PENDING
-- `Broiler.Code.Linux.LinuxCodeInput.OpenKeyboardAsync(CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, human line PENDING
-- `Broiler.Code.Linux.LinuxCodeInput.OpenMouseAsync(CancellationToken)` in `src/Broiler.Code.Linux/LinuxCodeInput.cs` - Security=High, human line PENDING
 - `Broiler.Code.Linux.LinuxFileDialogs` in `src/Broiler.Code.Linux/LinuxFileDialogs.cs` - Security=High, human line PENDING
 - `Broiler.Code.Linux.LinuxFileDialogs.LinuxFileDialogs()` in `src/Broiler.Code.Linux/LinuxFileDialogs.cs` - Security=High, human line PENDING
 - `Broiler.Code.Linux.LinuxFileDialogs.RequestOpenAsync(FileDialogRequest, CancellationToken)` in `src/Broiler.Code.Linux/LinuxFileDialogs.cs` - Security=High, human line PENDING
@@ -618,6 +611,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Windows.CodeWindow.CodeWindow()` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.CodeWindow.OnNativeWindowMessage(IntPtr, uint, IntPtr, IntPtr)` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.CodeWindow.AttachServices(UiSession, StandardCodeEditor)` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, human line PENDING
+- `Broiler.Code.Windows.CodeWindow.SetFocus(IntPtr)` in `src/Broiler.Code.Windows/CodeWindow.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.Program` in `src/Broiler.Code.Windows/Program.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.Program.Main(string[])` in `src/Broiler.Code.Windows/Program.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.WindowsFileDialogs` in `src/Broiler.Code.Windows/WindowsFileDialogs.cs` - Security=Critical, human line PENDING
@@ -716,8 +710,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Units carrying a criterion | 1183 |
-| Units required to carry one | 644 |
+| Units carrying a criterion | 1171 |
+| Units required to carry one | 638 |
 | Required and missing | 0 |
 
 A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make
@@ -737,13 +731,13 @@ that the rule is reviewable in one place rather than in several hundred.
 
 | Case | Units |
 |---|---:|
-| TrivialPropertyOrAccessor | 130 |
+| TrivialPropertyOrAccessor | 127 |
 | ParameterAssigningConstructor | 9 |
 | TrivialExpressionBodiedMember | 11 |
 | CompilerSuppliedRecordOrEnumMember | 143 |
 | DelegatingOverrideOrOperator | 2 |
 | InsideAssemblyMarker | 0 |
-| FieldDeclaringStorage | 215 |
+| FieldDeclaringStorage | 202 |
 | EnumMemberOfADeclaredVocabulary | 137 |
 | DeclaredInSource | 0 |
 
@@ -768,14 +762,14 @@ through a `<Compile Include>` it states, is left out of the record.
 ## Change detection
 
 `assurance.manifest.json` lists **every** code unit in the 9 covered assemblies -
-2119 of them, exempt and relevant alike - with the fingerprint of its declaration.
+2088 of them, exempt and relevant alike - with the fingerprint of its declaration.
 This manifest is a change-detection record, not a review. A unit listed there is watched, not reviewed:
 the entry records what the declaration's tokens hashed to when the generator last ran, and
 nothing else. What the manifest adds is that a unit the exemption predicate treats as
 trivial is no longer invisible: a semantic change to one moves a value in a generated file
 the check compares byte for byte. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code` holds the manifest to the tree.
 
-Beside the units it lists **every covered file** - 102 of them - with a
+Beside the units it lists **every covered file** - 101 of them - with a
 fingerprint over the complete token stream of its compilation unit. A unit entry exists only
 for a declaration kind the scanner enumerates, and an enumeration is a whitelist: an
 `[assembly: ...]` attribute is a member of nothing and can be in no unit at all.

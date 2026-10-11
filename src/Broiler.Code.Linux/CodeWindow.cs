@@ -5,7 +5,7 @@
 // ----------------------
 // Relevant units:   18
 // Annotated:        18/18
-// Exempt:           16
+// Exempt:           15
 // Human-reviewed:   0/18
 // IP risk:          Low
 // Security risk:    High
@@ -54,8 +54,7 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
     private readonly LinuxOpenGlRenderer _renderer = new();
     private readonly LinuxOpenGlX11WindowSurface _surface;
     private readonly UiThreadDispatcher _dispatcher;
-    private readonly EvdevInputRouter _router;
-    private readonly LinuxCodeInput _input;
+    private readonly LinuxInputCoordinator _input;
     private readonly TimeSpan _pollInterval;
     private readonly bool _ignoreFocus;
 
@@ -72,7 +71,7 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
     private bool _invalidated = true;
     private bool _disposed;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=3DE714
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=E750A2
     // Broiler-Falsified-If: a pollMilliseconds of zero or less reaches PeriodicTimer as a period below one millisecond
     // Broiler-Human:        PENDING
     public CodeWindow(BSize size, Action<string> log, bool ignoreFocus = false, int pollMilliseconds = 16)
@@ -81,12 +80,15 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
 
         _surface = _renderer.CreateX11WindowSurface(
             BSurfaceDescriptor.Default(size), "Broiler Code");
-        _router = new EvdevInputRouter(size);
 
         // Constructed on the thread that will run the loop, so CheckAccess
         // answers for the thread that actually drains it.
         _dispatcher = new UiThreadDispatcher(() => _invalidated = true);
-        _input = new LinuxCodeInput(_router, log);
+        _input = new LinuxInputCoordinator(
+            enabled: true,
+            log,
+            externalPointer: true,
+            applicationName: "Broiler Code");
         _pollInterval = TimeSpan.FromMilliseconds(Math.Max(1, pollMilliseconds));
         _ignoreFocus = ignoreFocus;
     }
@@ -101,7 +103,7 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
 
     public UiThreadDispatcher Dispatcher => _dispatcher;
 
-    public LinuxCodeInput Input => _input;
+    public LinuxInputCoordinator Input => _input;
 
     /// <summary>Whether this host has a real clipboard to offer.</summary>
     // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E985CC
@@ -166,7 +168,7 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
             SetFocus(_editor);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=B2CC6F
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=BC8B25
     // Broiler-Falsified-If: after WaitForNextTickAsync resumes on a thread-pool thread, the next Drain runs off the thread that constructed the dispatcher and throws InvalidOperationException
     // Broiler-Human:        PENDING
     public async Task<int> RunAsync(CancellationToken cancellationToken)
@@ -174,7 +176,7 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
         if (_session is null)
             throw new InvalidOperationException("Attach a session before running the window.");
 
-        await _input.StartAsync(cancellationToken).ConfigureAwait(false);
+        await _input.InitializeAsync(cancellationToken).ConfigureAwait(false);
 
         using var timer = new PeriodicTimer(_pollInterval);
         do
@@ -187,7 +189,7 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
             // process owns the selection: between these calls, another
             // application pasting from Code sees an empty clipboard.
             _clipboard?.ProcessPendingEvents();
-            _router.SetViewport(_surface.Size);
+            _input.SetViewport(_surface.Size);
 
             // Devices are only read while the window has focus, so typing into
             // another application does not also type in here. evdev is a global
@@ -200,7 +202,7 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
             if (_surface.TryGetPointerPosition(out int pointerX, out int pointerY, out bool inside) && inside)
             {
                 double scale = Scale <= 0 ? 1 : Scale;
-                _input.SetAbsolutePointer(pointerX / scale, pointerY / scale);
+                _input.SetExternalPointer(pointerX / scale, pointerY / scale);
             }
 
             _input.Drain(DispatchInput);
