@@ -18,12 +18,13 @@
     in that host's transitive closure — which is exactly the composition Phase 0
     measured and declined.
   -->
-  <ItemGroup>
-    <ProjectReference Include="..\..\Broiler.UI\src\Abstractions\Text\Broiler.UI.CodeEditor\Broiler.UI.CodeEditor.csproj" />
-  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Broiler.Code.Language.CSharp.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Broiler.UI.CodeEditor" />
   </ItemGroup>
 
 </Project>

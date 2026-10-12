@@ -25,7 +25,7 @@
     <PackageVersion Include="Broiler.Input.Mouse.Linux" Version="$(BroilerInputVersion)" />
     <PackageVersion Include="Broiler.UI" Version="$(BroilerUiVersion)" />
     <PackageVersion Include="Broiler.UI.Button" Version="$(BroilerUiVersion)" />
-    <PackageVersion Include="Broiler.UI.CodeEditor" Version="$(BroilerUiVersion)" />
+    <PackageVersion Include="Broiler.UI.CodeEditor" Version="0.1.0-preview.20" />
     <PackageVersion Include="Broiler.UI.ComboBox" Version="$(BroilerUiVersion)" />
     <PackageVersion Include="Broiler.UI.Edit" Version="$(BroilerUiVersion)" />
     <PackageVersion Include="Broiler.UI.Label" Version="$(BroilerUiVersion)" />
