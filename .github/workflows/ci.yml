@@ -65,8 +65,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v5
-        with:
-          submodules: true
 
       - name: Set up
         uses: ./.github/actions/setup-broiler
@@ -115,8 +113,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v5
-        with:
-          submodules: true
 
       - name: Set up
         uses: ./.github/actions/setup-broiler
@@ -127,62 +123,6 @@ jobs:
       - name: Test
         if: matrix.test
         run: dotnet test ${{ matrix.solution }} -c Release --no-build
-
-  # Built, not run. The prototype and the Roslyn footprint measurement are
-  # benchmarks whose numbers belong to the recorded baselines under
-  # tests/broiler-code-phase0/baselines, taken on a known machine; a number from a
-  # shared runner would not be comparable to them. What CI can usefully protect is
-  # that the harnesses still compile.
-  #
-  # The SampleReports fixture is deliberately outside every solution: it fails to
-  # compile by design, which is the input the build worker harness measures.
-  phase0:
-    name: Phase 0 harnesses
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v5
-        with:
-          submodules: true
-
-      - name: Set up
-        uses: ./.github/actions/setup-broiler
-
-      - name: Build
-        run: dotnet build Broiler.Code.Phase0.slnx -c Release
-
-  # The payload probes are the measurement behind keeping Roslyn out of
-  # Broiler.Code.Core's closure. Built, not published, for the same reason as the
-  # Phase 0 harnesses: the number they exist to produce is a trimmed browser
-  # payload size, and one taken on a shared runner is not comparable to the
-  # recorded baseline. What CI protects is that both compositions still compile.
-  # Run tests/broiler-code-phase0/payload-probes/measure-payloads.ps1 to take the
-  # measurement deliberately.
-  #
-  # The wasm-tools workload is installed even though this is only a build: both
-  # probes use Microsoft.NET.Sdk.WebAssembly, and a runner without the workload
-  # has none of its targets.
-  payload-probes:
-    name: Payload probes
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v5
-        with:
-          submodules: true
-
-      - name: Set up
-        uses: ./.github/actions/setup-broiler
-
-      - name: Install the wasm-tools workload
-        run: dotnet workload install wasm-tools
-
-      - name: Build
-        run: dotnet build Broiler.WebAssembly.Code.slnx -c Release
 
   # Broiler Code owns the review tool, so this repository measures its own review
   # coverage with it. It reports; it does not gate. See
@@ -196,10 +136,6 @@ jobs:
       - name: Check out
         uses: actions/checkout@v5
         with:
-          # Recursive: most of the source a checkout of this repository contains
-          # lives in the components, and a coverage number computed without them
-          # would describe the shell alone and claim to describe Broiler Code.
-          submodules: recursive
           fetch-depth: 1
 
       - name: Set up .NET

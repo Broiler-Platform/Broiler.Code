@@ -1,4 +1,9 @@
 <Solution>
+  <!-- Generated from eng/solutions.json by scripts/update-solutions.ps1. -->
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+  </Configurations>
   <Folder Name="/Entry points/">
     <Project Path="src/Broiler.Code.Core.Tests/Broiler.Code.Core.Tests.csproj" />
     <Project Path="src/Broiler.Code.Language.CSharp.Assurance.Tests/Broiler.Code.Language.CSharp.Assurance.Tests.csproj" />
@@ -6,7 +11,6 @@
     <Project Path="src/Broiler.Code.Review.Tests/Broiler.Code.Review.Tests.csproj" />
     <Project Path="src/Broiler.Code.Workspaces.Tests/Broiler.Code.Workspaces.Tests.csproj" />
   </Folder>
-  <Folder Name="/Dependencies/" />
   <Folder Name="/Dependencies/src/">
     <Project Path="src/Broiler.Code.Core/Broiler.Code.Core.csproj" />
     <Project Path="src/Broiler.Code.Language.CSharp.Assurance/Broiler.Code.Language.CSharp.Assurance.csproj" />

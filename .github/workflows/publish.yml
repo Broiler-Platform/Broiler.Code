@@ -58,8 +58,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v5
-        with:
-          submodules: true
 
       - name: Set up
         uses: ./.github/actions/setup-broiler
@@ -128,8 +126,6 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v5
-        with:
-          submodules: true
 
       - name: Set up
         uses: ./.github/actions/setup-broiler

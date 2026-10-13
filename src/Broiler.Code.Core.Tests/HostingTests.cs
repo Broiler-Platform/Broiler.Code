@@ -242,7 +242,7 @@ public sealed class HostingTests
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            if (File.Exists(Path.Combine(directory.FullName, ".gitmodules")) &&
+            if (File.Exists(Path.Combine(directory.FullName, "Broiler.Code.Tests.slnx")) &&
                 File.Exists(Path.Combine(directory.FullName, "Directory.Build.props")))
             {
                 return Path.Combine([directory.FullName, .. parts]);

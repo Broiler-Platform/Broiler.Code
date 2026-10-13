@@ -4,44 +4,31 @@ namespace Broiler.Code.Core.Tests;
 
 /// <summary>
 /// The dependency rules ADR 0021 and the architecture document state. They are
-/// asserted against the project files because that is where they are actually
-/// enforceable — a comment saying "no Roslyn here" does not stop a reference
-/// being added.
+/// asserted against local project files and restored component assemblies — a
+/// comment saying "no Roslyn here" does not stop a reference being added.
 /// </summary>
 public sealed class CodeEditorArchitectureTests
 {
     [Fact(Timeout = 600000)]
     public void The_Abstraction_References_Only_Ui_And_Graphics()
     {
-        string[] references = References(
-            "Broiler.UI", "src", "Abstractions", "Text", "Broiler.UI.CodeEditor",
-            "Broiler.UI.CodeEditor.csproj");
+        // Inspect the assembly restored from NuGet; component source is not in this checkout.
+        string[] references = [.. System.Reflection.Assembly.Load("Broiler.UI.CodeEditor")
+            .GetReferencedAssemblies()
+            .Select(reference => reference.Name!)
+            .Where(name => name.StartsWith("Broiler.", StringComparison.Ordinal))
+            .OrderBy(name => name, StringComparer.Ordinal)];
 
-        // Graphics is reached through the root property rather than by walking
-        // up into Broiler.UI's own nested checkout of it. The two are not the
-        // same directory: the relative spelling this used to assert resolved to
-        // Broiler.UI/Broiler.Graphics, and only eng/fold-duplicate-checkouts
-        // made it mean the top-level one. Naming the property says outright
-        // what the fold used to arrange, so the spelling is asserted rather
-        // than normalized away — a component dropping its nested copy is an
-        // architectural change, not a formatting one.
-        Assert.Equal(
-        [
-            "$(BroilerGraphicsRoot)/src/Broiler.Graphics/Broiler.Graphics.csproj",
-            "../../../Foundation/Broiler.UI/Broiler.UI.csproj",
-        ],
-            references);
+        Assert.Equal(["Broiler.Graphics", "Broiler.UI"], references);
     }
 
     [Fact(Timeout = 600000)]
-    public void The_Abstraction_Depends_On_No_Package_And_No_Product_Assembly()
+    public void The_Abstraction_Depends_On_No_Language_Service_Or_Product_Assembly()
     {
-        XDocument project = Load(
-            "Broiler.UI", "src", "Abstractions", "Text", "Broiler.UI.CodeEditor",
-            "Broiler.UI.CodeEditor.csproj");
+        string[] references = [.. System.Reflection.Assembly.Load("Broiler.UI.CodeEditor")
+            .GetReferencedAssemblies().Select(reference => reference.Name!)];
 
-        Assert.Empty(project.Descendants("PackageReference"));
-        Assert.DoesNotContain(References(project), reference =>
+        Assert.DoesNotContain(references, reference =>
             reference.Contains("Roslyn", StringComparison.OrdinalIgnoreCase) ||
             reference.Contains("CodeAnalysis", StringComparison.OrdinalIgnoreCase) ||
             reference.Contains("Broiler.Code", StringComparison.Ordinal) ||
@@ -81,22 +68,6 @@ public sealed class CodeEditorArchitectureTests
         // puts Core on.
         Assert.Equal(
         [
-            "../../Broiler.Graphics/src/Broiler.Graphics/Broiler.Graphics.csproj",
-            "../../Broiler.Input/src/Broiler.Input.Keyboard/Broiler.Input.Keyboard.csproj",
-            "../../Broiler.Input/src/Broiler.Input.Mouse/Broiler.Input.Mouse.csproj",
-            "../../Broiler.Input/src/Broiler.Input.Text/Broiler.Input.Text.csproj",
-            "../../Broiler.UI/src/Abstractions/Commands/Broiler.UI.Button/Broiler.UI.Button.csproj",
-            "../../Broiler.UI/src/Abstractions/Commands/Broiler.UI.Menu/Broiler.UI.Menu.csproj",
-            "../../Broiler.UI/src/Abstractions/Commands/Broiler.UI.Toolbar/Broiler.UI.Toolbar.csproj",
-            "../../Broiler.UI/src/Abstractions/Content/Broiler.UI.Label/Broiler.UI.Label.csproj",
-            "../../Broiler.UI/src/Abstractions/Layout/Broiler.UI.Panel/Broiler.UI.Panel.csproj",
-            "../../Broiler.UI/src/Abstractions/Layout/Broiler.UI.Splitter/Broiler.UI.Splitter.csproj",
-            "../../Broiler.UI/src/Abstractions/Layout/Broiler.UI.TabView/Broiler.UI.TabView.csproj",
-            "../../Broiler.UI/src/Abstractions/Text/Broiler.UI.CodeEditor/Broiler.UI.CodeEditor.csproj",
-            "../../Broiler.UI/src/Abstractions/Text/Broiler.UI.Edit/Broiler.UI.Edit.csproj",
-            "../../Broiler.UI/src/Abstractions/ValueAndSelection/Broiler.UI.ComboBox/Broiler.UI.ComboBox.csproj",
-            "../../Broiler.UI/src/Abstractions/ValueAndSelection/Broiler.UI.TreeView/Broiler.UI.TreeView.csproj",
-
             // The review model sits below Core on the same side of the seam as
             // the workspace: no UI, no Roslyn, no platform. Its own rule is
             // asserted by The_Review_Model_Depends_Only_On_The_Workspace below.
@@ -105,11 +76,16 @@ public sealed class CodeEditorArchitectureTests
         ],
             references);
 
-        Assert.DoesNotContain(references, reference =>
-            reference.Contains(".Standard", StringComparison.Ordinal) ||
-            reference.Contains("Windows", StringComparison.OrdinalIgnoreCase) ||
-            reference.Contains("Linux", StringComparison.OrdinalIgnoreCase) ||
-            reference.Contains("Android", StringComparison.OrdinalIgnoreCase));
+        string[] packages = [.. Load("src", "Broiler.Code.Core", "Broiler.Code.Core.csproj")
+            .Descendants("PackageReference")
+            .Select(reference => (string)reference.Attribute("Include")!)
+            .OrderBy(name => name, StringComparer.Ordinal)];
+        Assert.Equal(
+        [
+            "Broiler.UI.Button", "Broiler.UI.CodeEditor", "Broiler.UI.ComboBox",
+            "Broiler.UI.Edit", "Broiler.UI.Label", "Broiler.UI.Menu", "Broiler.UI.Panel",
+            "Broiler.UI.Splitter", "Broiler.UI.TabView", "Broiler.UI.Toolbar", "Broiler.UI.TreeView",
+        ], packages);
     }
 
     /// <summary>
@@ -149,7 +125,7 @@ public sealed class CodeEditorArchitectureTests
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            if (File.Exists(Path.Combine(directory.FullName, ".gitmodules")) &&
+            if (File.Exists(Path.Combine(directory.FullName, "Broiler.Code.Tests.slnx")) &&
                 File.Exists(Path.Combine(directory.FullName, "Directory.Build.props")))
             {
                 return Path.Combine([directory.FullName, .. parts]);
