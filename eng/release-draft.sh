@@ -97,7 +97,12 @@ broiler-review --help
 \`\`\`
 
 Includes human-review coverage, stale-review checks and C# assurance commands.
-The package is attached here; this workflow does not push it to a NuGet feed.
+After creating this draft, the Publish workflow uploads the same tested package
+to nuget.org. Once NuGet validation completes, install directly from the feed:
+
+\`\`\`sh
+dotnet tool install --global Broiler.SDK --version $version --source https://api.nuget.org/v3/index.json
+\`\`\`
 NOTES
 
 gh release create "$tag" "${assets[@]}" \

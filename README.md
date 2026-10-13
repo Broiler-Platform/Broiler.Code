@@ -89,7 +89,8 @@ broiler-review --help
 Use the version of the package you built (the example is the current default).
 See [Broiler.SDK](docs/broiler-sdk.md) for local tool installation, versioning and
 package validation. CI validates the package on Windows and Linux; Publish adds
-it to the draft release alongside the editor downloads.
+it to the draft release alongside the editor downloads and publishes it to
+nuget.org using the `NUGET_TOKEN` Actions secret.
 
 ## Human review
 

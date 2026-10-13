@@ -23,6 +23,15 @@ dotnet pack src/Broiler.Code.Review.Cli -c Release -p:BroilerCodeVersion=0.1.0-p
 
 ## Install and use
 
+Install the latest published preview from nuget.org:
+
+```sh
+dotnet tool install --global Broiler.SDK --prerelease --source https://api.nuget.org/v3/index.json
+broiler-review --help
+```
+
+Use `--version <version>` instead of `--prerelease` to pin a published release.
+
 Install a built or downloaded package from its containing directory. The example
 uses the repository's default preview version; substitute the version you built
 or downloaded. A .NET 10 runtime is required to run the tool, and the SDK supplies
@@ -66,6 +75,19 @@ assurance commands against a small standalone C# project. To run the same check:
 ./scripts/test-sdk-package.ps1 -PackagePath ./artifacts/packages/Broiler.SDK.0.1.0-preview.1.nupkg
 ```
 
-The dispatch-only Publish workflow includes the versioned `.nupkg` in its run
-artifacts and draft GitHub release. It does not push to a NuGet feed. The package
-can be distributed through a local source or pushed to a feed by its maintainer.
+The dispatch-only Publish workflow builds and tests the package, includes the
+versioned `.nupkg` in its run artifacts and draft GitHub release, then publishes
+that same artifact to nuget.org. The desktop release remains a draft; the SDK
+package becomes public after NuGet validation completes.
+
+Publishing uses the `NUGET_TOKEN` GitHub Actions repository or organization secret,
+which must contain a nuget.org API key with permission to push `Broiler.SDK`.
+The workflow checks for this secret before building. Maintainers activate a
+release by running **Actions → Publish → Run workflow**, optionally selecting
+a `preview.N` override. The version tag is created before the NuGet push so a
+failed publication cannot cause a later build to reuse its version.
+
+If the NuGet publishing job fails, rerun the failed job to retry the original
+validated artifact. `--skip-duplicate` allows this retry to succeed if nuget.org
+accepted the package before the original run lost its connection. A new workflow
+run instead reserves a new preview version.

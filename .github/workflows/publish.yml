@@ -20,8 +20,9 @@ name: Publish
 # Framework-dependent is the head's ordinary publish output for the same runtime identifier:
 # far smaller, and it runs on the .NET 10 runtime already installed on the machine.
 #
-# Everything restores from nuget.org (NuGet.config); nothing is pushed to a feed. The draft
-# release (eng/release-draft.sh) stays private until someone publishes it.
+# Everything restores from nuget.org (NuGet.config). After the version is tagged and the
+# draft release is created, Broiler.SDK is pushed to nuget.org using NUGET_TOKEN.
+# The desktop release stays a draft; the NuGet package is publicly available.
 #
 # The version is BroilerCodeVersion (Directory.Build.props) raised past every earlier run's
 # code-v* tag, and a successful run tags its commit, so preview numbers only ever increase
@@ -58,6 +59,15 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v5
+
+      - name: Require NuGet publishing credentials
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_TOKEN }}
+        run: |
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error::Publishing Broiler.SDK requires the NUGET_TOKEN repository or organization secret."
+            exit 1
+          fi
 
       - name: Set up
         uses: ./.github/actions/setup-broiler
@@ -241,7 +251,7 @@ jobs:
           name: broiler-sdk-${{ env.VERSION }}
           path: artifacts/broiler-sdk-${{ env.VERSION }}
 
-      # A draft pre-release: nothing is public until someone reviews and publishes it.
+      # The desktop pre-release stays a draft. The following job publishes the SDK to NuGet.
       - name: Draft the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -258,4 +268,48 @@ jobs:
             echo "self-contained and framework-dependent zips for win-x64 and linux-x64."
             echo "It also includes the Broiler.SDK NuGet tool package."
             echo "Review it under Releases and publish it there."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  nuget-publish:
+    name: Publish Broiler.SDK to NuGet.org
+    # Reserve the version with its tag before publishing an immutable package. Download
+    # the artifact that passed the SDK smoke test; never rebuild it in the publishing job.
+    needs: [version, sdk-package, release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download the validated SDK package
+        uses: actions/download-artifact@v6
+        with:
+          name: broiler-sdk-${{ env.VERSION }}
+          path: artifacts/packages
+
+      - name: Push Broiler.SDK to NuGet.org
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_TOKEN }}
+        run: |
+          dotnet nuget push "artifacts/packages/Broiler.SDK.$VERSION.nupkg" \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key "$NUGET_API_KEY" \
+            --skip-duplicate
+
+      - name: Summary
+        run: |
+          {
+            echo "### Broiler.SDK $VERSION"
+            echo
+            echo "Published to [NuGet.org](https://www.nuget.org/packages/Broiler.SDK/$VERSION)."
+            echo "The package may take a few minutes to finish validation and become available."
+            echo
+            echo '```sh'
+            echo "dotnet tool install --global Broiler.SDK --version $VERSION"
+            echo 'broiler-review --help'
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

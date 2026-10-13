@@ -1,7 +1,7 @@
 // Chooses the next Broiler.Code preview version for the Publish workflow.
 //
-// The workflow does not push its packages anywhere, so the record of what has been built is
-// the repository's tags: every successful run tags its commit code-v<version>. The next
+// The workflow reserves a version by tagging its commit code-v<version> before publishing
+// Broiler.SDK to NuGet.org. The repository's tags record those reserved versions. The next
 // version is the configured floor, BroilerCodeVersion from Directory.Build.props, raised
 // past every tagged preview on the same release line.
 import { execFileSync } from 'node:child_process';
