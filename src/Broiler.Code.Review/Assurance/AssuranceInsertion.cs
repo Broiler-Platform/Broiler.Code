@@ -5,7 +5,7 @@
 // ----------------------
 // Relevant units:   17
 // Annotated:        17/17
-// Exempt:           11
+// Exempt:           13
 // Human-reviewed:   0/17
 // IP risk:          Low
 // Security risk:    High
@@ -58,6 +58,10 @@ public sealed record AssuranceAssessment
     public string? Security { get; init; }
 
     public int? Resources { get; init; }
+
+    public int? Cs { get; init; }
+
+    public int? Cl { get; init; }
 
     public string? FalsifiedIf { get; init; }
 
@@ -125,7 +129,7 @@ public static class AssuranceInsertion
     /// Every problem with an entry that can be found without the file. Empty
     /// means the entry is well formed.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=93EBB6
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=B1A5EC
     // Broiler-Falsified-If: an entry assessed High or Critical whose falsification criterion is only whitespace is returned with no problem
     // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Validate(AssuranceAssessment entry)
@@ -137,7 +141,8 @@ public static class AssuranceInsertion
         if (entry.IsExemption)
         {
             if (entry.Origin is not null || entry.Spec is not null || entry.Ip is not null ||
-                entry.Security is not null || entry.Resources is not null || entry.FalsifiedIf is not null)
+                entry.Security is not null || entry.Resources is not null || entry.Cs is not null ||
+                entry.Cl is not null || entry.FalsifiedIf is not null)
             {
                 problems.Add("states EXEMPT beside assessment fields; an exemption is not an assessment");
             }
@@ -172,6 +177,12 @@ public static class AssuranceInsertion
             problems.Add("has no resources");
         else if (resources is < 0 or > 10)
             problems.Add($"resources {resources.ToString(CultureInfo.InvariantCulture)} is not an integer 0 to 10");
+
+        if (entry.Cs is { } cs && cs is < 0 or > 10)
+            problems.Add($"CS {cs.ToString(CultureInfo.InvariantCulture)} is not an integer 0 to 10");
+
+        if (entry.Cl is { } cl && cl is < 0 or > 10)
+            problems.Add($"CL {cl.ToString(CultureInfo.InvariantCulture)} is not an integer 0 to 10");
 
         if (entry.Spec is { } spec)
         {
@@ -222,9 +233,9 @@ public static class AssuranceInsertion
     /// <summary>
     /// The lines of the block for a valid entry, at <paramref name="indent"/>.
     /// The field order is the owning component's: Origin, Spec, IP, Security,
-    /// Resources, Fingerprint.
+    /// Resources, CS, CL, Fingerprint.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=B9DC7B
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=56DCA7
     // Broiler-Falsified-If: a rendered block's last line is anything other than the human marker followed by PENDING, whatever the entry holds
     // Broiler-Human:        PENDING
     public static IReadOnlyList<string> Render(AssuranceAssessment entry, string indent)
@@ -251,8 +262,14 @@ public static class AssuranceInsertion
 
         fields.Append("; IP=").Append(entry.Ip)
             .Append("; Security=").Append(entry.Security)
-            .Append("; Resources=").Append(entry.Resources!.Value.ToString(CultureInfo.InvariantCulture))
-            .Append("; Fingerprint=").Append(AssuranceVocabulary.ToBeFilled);
+            .Append("; Resources=").Append(entry.Resources!.Value.ToString(CultureInfo.InvariantCulture));
+
+        if (entry.Cs is { } cs)
+            fields.Append("; CS=").Append(cs.ToString(CultureInfo.InvariantCulture));
+        if (entry.Cl is { } cl)
+            fields.Append("; CL=").Append(cl.ToString(CultureInfo.InvariantCulture));
+
+        fields.Append("; Fingerprint=").Append(AssuranceVocabulary.ToBeFilled);
 
         var lines = new List<string> { AssuranceAnnotation.RenderLine(indent, AssuranceVocabulary.AiMarker, fields.ToString()) };
         if (entry.FalsifiedIf is { } criterion)

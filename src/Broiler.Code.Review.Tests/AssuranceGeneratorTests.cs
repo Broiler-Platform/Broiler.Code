@@ -138,6 +138,9 @@ public sealed class AssuranceGeneratorTests
         Assert.Equal(
             $"// Broiler-Human:        EB; Security=High; Resources=1; Fingerprint={FoldFingerprint}",
             Rewritten(Probe("EB; Fingerprint=TBF; Security=High; Resources=1", aiFingerprint: FoldFingerprint), "// Broiler-Human:"));
+        Assert.Equal(
+            $"// Broiler-Human:        EB; CS=10; CL=0; Fingerprint={FoldFingerprint}",
+            Rewritten(Probe("EB; Fingerprint=TBF; CS=10; CL=0", aiFingerprint: FoldFingerprint), "// Broiler-Human:"));
     }
 
     [Fact(Timeout = 600000)]
@@ -216,6 +219,8 @@ public sealed class AssuranceGeneratorTests
     [InlineData("WITNESS-ONLY; Fingerprint=TBF", true)]
     [InlineData("WITNESS-ONLY; Fingerprint=44EBF3", true)]
     [InlineData("Maik Ratzmer; IP=Low; Fingerprint=44EBF3", true)]
+    [InlineData("EB; CS=10; CL=0", true)]
+    [InlineData("EB; CS=9; CL=1; Fingerprint=44EBF3", true)]
     [InlineData("STALE; Previous=WITNESS-ONLY@112233", true)]
     [InlineData("PENDING; Fingerprint=TBF", false)]
     [InlineData("STALE", false)]

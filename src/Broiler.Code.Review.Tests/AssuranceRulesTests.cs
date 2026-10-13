@@ -67,7 +67,7 @@ public sealed class AssuranceRulesTests
     public void Every_Field_Is_Held_To_Its_Vocabulary()
     {
         AssuranceAnnotation annotation = Parse(
-            "// Broiler-AI: Origin=Human; IP=Some; Security=Severe; Resources=11; Fingerprint=abc123; Spec=; Extra=1\n" +
+            "// Broiler-AI: Origin=Human; IP=Some; Security=Severe; Resources=11; CS=12; CL=-1; Fingerprint=abc123; Spec=; Extra=1\n" +
             "// Broiler-Human: PENDING",
             out _)!;
 
@@ -77,6 +77,8 @@ public sealed class AssuranceRulesTests
                 "IP=Some is outside its vocabulary (None, Low, Medium, High, Unknown)",
                 "Security=Severe is outside its vocabulary (None, Low, Medium, High, Critical)",
                 "Resources=11 is not an integer 0 to 10",
+                "CS=12 is not an integer 0 to 10",
+                "CL=-1 is not an integer 0 to 10",
                 "Fingerprint=abc123 is neither TBF nor six uppercase hex characters",
                 "Spec= is empty",
                 "Extra=1 is not a field this system defines",
@@ -121,6 +123,12 @@ public sealed class AssuranceRulesTests
         Assert.Equal(
             ["// Broiler-Falsified-If: states the field Security=Low, and a falsification criterion is prose, not data"],
             AssuranceRules.CriterionProblems("it is really Security=Low"));
+        Assert.Equal(
+            ["// Broiler-Falsified-If: states the field CS=10, and a falsification criterion is prose, not data"],
+            AssuranceRules.CriterionProblems("it is really CS=10"));
+        Assert.Equal(
+            ["// Broiler-Falsified-If: states the field CL=0, and a falsification criterion is prose, not data"],
+            AssuranceRules.CriterionProblems("it is really CL=0"));
     }
 
     /// <summary>
@@ -183,8 +191,11 @@ public sealed class AssuranceRulesTests
     [InlineData("11", false)]
     [InlineData("-1", false)]
     [InlineData("five", false)]
-    public void Resources_Is_An_Integer_From_Zero_To_Ten(string value, bool valid) =>
+    public void Score_Is_An_Integer_From_Zero_To_Ten(string value, bool valid)
+    {
+        Assert.Equal(valid, AssuranceRules.TryParseScore(value, out _));
         Assert.Equal(valid, AssuranceRules.TryParseResources(value, out _));
+    }
 
     [Fact(Timeout = 600000)]
     public void A_Stale_Line_Keeps_The_Previous_Reviewer()

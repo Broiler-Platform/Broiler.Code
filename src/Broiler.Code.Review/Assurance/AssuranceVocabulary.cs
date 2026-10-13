@@ -3,15 +3,15 @@
 //
 // Broiler Code Assurance
 // ----------------------
-// Relevant units:   27
-// Annotated:        27/27
+// Relevant units:   29
+// Annotated:        29/29
 // Exempt:           0
-// Human-reviewed:   0/27
+// Human-reviewed:   0/29
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         26/17
+// Criteria:         28/19
 // Resource impact:  1/10 max
-// Unverified:       27
+// Unverified:       29
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
@@ -211,6 +211,18 @@ public static class AssuranceVocabulary
     public static readonly string[] RequiredFields =
         ["Origin", "IP", "Security", "Resources", FingerprintField];
 
+    /// <summary>The conceptual stability field on an assessment line.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=55EDC8
+    // Broiler-Falsified-If: the field name differs from "CS", so a stability field on an assessment line is not recognized
+    // Broiler-Human:        PENDING
+    public const string ConceptualStabilityField = "CS";
+
+    /// <summary>The change likelihood field on an assessment line.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=3149A8
+    // Broiler-Falsified-If: the field name differs from "CL", so a likelihood field on an assessment line is not recognized
+    // Broiler-Human:        PENDING
+    public const string ChangeLikelihoodField = "CL";
+
     /// <summary>
     /// The fields a reviewer may state on their own line, beside their name.
     ///
@@ -218,11 +230,11 @@ public static class AssuranceVocabulary
     /// own here rather than editing the AI line, so the disagreement survives
     /// the next generation instead of being overwritten by it.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=D911D4
-    // Broiler-Falsified-If: a human line carrying a part after the name that opens with none of the four field prefixes, such as a second name, is read as a defined shape
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=B138DD
+    // Broiler-Falsified-If: a human line carrying a part after the name that opens with none of the defined field prefixes, such as a second name, is read as a defined shape
     // Broiler-Human:        PENDING
     public static readonly string[] HumanFieldMarkers =
-        [FingerprintField + "=", "IP=", "Security=", "Resources="];
+        [FingerprintField + "=", "IP=", "Security=", "Resources=", ConceptualStabilityField + "=", ChangeLikelihoodField + "="];
 
     /// <summary>
     /// True for a value the owning component would accept as a fingerprint:

@@ -171,7 +171,7 @@ public static class AssuranceHumanReviewRecord
         "to fill in and nothing here to leave blank.\n" +
         "\n";
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=25B077
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=1409FD
     // Broiler-Human:        PENDING
     private static string HowAReviewIsRecorded() =>
         "## 2. How A Review Is Recorded\n" +
@@ -196,7 +196,7 @@ public static class AssuranceHumanReviewRecord
         "| `<alias>; Fingerprint=<six hex>` | A decision bound to one exact version of one declaration. |\n" +
         "| `STALE; Previous=<alias>@<fingerprint>` | Written by the generator when the code moved after a decision. Only a human clears it, by stating their alias again. |\n" +
         "\n" +
-        "A human may state their own `IP=`, `Security=` and `Resources=` assessment beside their alias,\n" +
+        "A human may state their own `IP=`, `Security=`, `Resources=`, `CS=` and `CL=` assessment beside their alias,\n" +
         "which is how a reader disagrees with the machine assessment on the line above: an assessment is\n" +
         "a comment and moves no fingerprint, so there is nowhere else to say it.\n" +
         "\n" +

@@ -30,7 +30,8 @@ public int ReadLengthPrefixed(ReadOnlySpan<byte> input) …
 The block sits between the doc comment and the declaration's first token,
 including any attributes. `Fingerprint=TBF` is written by the assessor, and the
 generator fills in the value. The human line is always `PENDING` when an
-assessment is written, and only a person changes it.
+assessment is written, and only a person changes it (they may state their own
+`IP=`, `Security=`, `Resources=`, `CS=` and `CL=` assessment beside their alias).
 
 ## Origin: where the declaration's text came from
 
@@ -95,6 +96,52 @@ what it directly drives. It is not a measure of how often the code is called.
 | 5–6 | Recursion that follows input nesting, caches that grow with input, large buffers, or quadratic worst cases. |
 | 7–8 | Growth driven by untrusted length or count fields, backtracking, whole-document layout or paint, image, font or media decode, or anything that is bounded only by a budget kept elsewhere. |
 | 9–10 | The unit exhausts CPU or memory by design unless an external limit stops it. Examples are a script execution loop and decompression. |
+
+## Code Stability Assessment (CS / CL)
+
+The Code Stability Assessment extends the Human Review System with two independent metrics, each rated from **0 to 10**.
+
+### 1. Conceptual Stability (CS)
+Measures how mature, well-defined, and fundamentally final an implementation is, independent of its current development activity.
+
+- **0–3:** Experimental, evolving, or conceptually immature.
+- **4–6:** Established approach with potential for significant improvement.
+- **7–9:** Mature, standardized, or well-understood implementation.
+- **10:** Conceptually definitive; fundamental improvements are highly unlikely.
+
+### 2. Change Likelihood (CL)
+Estimates the probability that an implementation will require modification in the foreseeable future, considering requirements, defects, dependencies, standards, and development activity.
+
+- **0–3:** Changes unlikely.
+- **4–6:** Occasional changes expected.
+- **7–9:** Frequent or significant changes likely.
+- **10:** Highly volatile; substantial changes expected.
+
+### Examples
+
+| Implementation | CS | CL |
+|---|---:|---:|
+| Basic integer addition | 10 | 0 |
+| UTF-8 decoding | 9 | 1 |
+| ECMAScript `ToBoolean` | 10 | 1 |
+| HTML tokenizer | 9 | 3 |
+| CSS layout engine | 9 | 5 |
+| Experimental JIT compiler | 4 | 9 |
+
+*Scores are illustrative, not empirically measured.*
+
+### Human Review Integration
+
+- **High CS + Low CL:** Mature, stable code; potentially lower routine review priority.
+- **High CS + High CL:** Established concept undergoing frequent changes; investigate implementation quality or external pressures.
+- **Low CS + Low CL:** Immature or experimental code that is currently inactive; monitor technical debt.
+- **Low CS + High CL:** Evolving implementation; prioritize review and validation.
+
+**Key principle:** CS measures conceptual permanence, while CL measures expected change. Neither indicates correctness, security, or code quality by itself.
+
+CS and CL complement the existing Security, Resources, and Intellectual Property assessments. They should guide review prioritization, never override mandatory risk-based reviews.
+
+A high CS may reduce routine review effort but should increase scrutiny of unexpected changes to otherwise mature code.
 
 ## Keeping values consistent across related units
 

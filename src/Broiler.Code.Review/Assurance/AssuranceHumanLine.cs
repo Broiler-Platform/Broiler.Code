@@ -155,8 +155,8 @@ public static class AssuranceHumanLine
     /// <summary>
     /// True for the four human-line shapes the format defines and nothing else:
     /// <c>PENDING</c>; a reviewer alias; an alias followed by any of
-    /// <c>Fingerprint=</c>, <c>IP=</c>, <c>Security=</c> and <c>Resources=</c>;
-    /// or <c>STALE; Previous=reviewer@fingerprint</c>. The head must be an
+    /// <c>Fingerprint=</c>, <c>IP=</c>, <c>Security=</c>, <c>Resources=</c>,
+    /// <c>CS=</c> and <c>CL=</c>; or <c>STALE; Previous=reviewer@fingerprint</c>. The head must be an
     /// alias (<see cref="AssuranceVocabulary.IsAlias"/>), where the owning
     /// component takes anything without an <c>=</c>.
     /// </summary>

@@ -318,7 +318,7 @@ public sealed class AssuranceInsertTests
     [Fact(Timeout = 600000)]
     public void A_Value_Outside_Its_Vocabulary_Is_Refused()
     {
-        AssuranceAssessment entry = Assess(Source, "N.C.Run()") with { Origin = "Human", Ip = "low", Resources = 11 };
+        AssuranceAssessment entry = Assess(Source, "N.C.Run()") with { Origin = "Human", Ip = "low", Resources = 11, Cs = 12, Cl = -1 };
 
         AssuranceInsertFileResult result = Apply(Source, entry);
 
@@ -326,8 +326,24 @@ public sealed class AssuranceInsertTests
         Assert.Equal(
             "origin 'Human' is outside its vocabulary (Original, AI, Specification, Derived, Ported, ThirdParty); " +
             "ip 'low' is outside its vocabulary (None, Low, Medium, High, Unknown); " +
-            "resources 11 is not an integer 0 to 10",
+            "resources 11 is not an integer 0 to 10; " +
+            "CS 12 is not an integer 0 to 10; " +
+            "CL -1 is not an integer 0 to 10",
             result.Entries[0].Message);
+    }
+
+    [Fact(Timeout = 600000)]
+    public void Stability_Assessment_Scores_Are_Rendered()
+    {
+        AssuranceAssessment entry = Assess(Source, "N.C.Run()") with { Cs = 10, Cl = 0 };
+
+        AssuranceInsertFileResult result = Apply(Source, entry);
+
+        Assert.True(result.Entries[0].Applied);
+        Assert.Contains(
+            "    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; CS=10; CL=0; Fingerprint=TBF\n",
+            result.Text,
+            StringComparison.Ordinal);
     }
 
     [Fact(Timeout = 600000)]
@@ -610,5 +626,40 @@ public sealed class AssuranceInsertTests
 
         Assert.Equal(2, exit);
         Assert.Contains(expected, error, StringComparison.Ordinal);
+    }
+
+    [Fact(Timeout = 600000)]
+    public void Insert_Command_Writes_Stability_Assessment_Scores()
+    {
+        using var component = new TemporaryComponent();
+        component.Project("src/A/A.csproj");
+        component.Write("src/A/C.cs", Source);
+        component.Write("assurance.config.json", """{ "projects": [ "src/A/A.csproj" ] }""");
+
+        string assessJson = $$"""
+            {
+              "schema": 1,
+              "assessments": [
+                {
+                  "file": "src/A/C.cs",
+                  "unit": "N.C.Run()",
+                  "fingerprint": "{{Fingerprint(Source, "N.C.Run()")}}",
+                  "origin": "AI",
+                  "ip": "Low",
+                  "security": "Low",
+                  "resources": 1,
+                  "cs": 9,
+                  "cl": 1
+                }
+              ]
+            }
+            """;
+        component.Write("assess.json", assessJson);
+
+        (int exit, string output, string error) = component.Run(
+            "insert", "--root", component.Root, "--assessments", component.PathOf("assess.json"));
+
+        Assert.Equal(0, exit);
+        Assert.Contains("Origin=AI; IP=Low; Security=Low; Resources=1; CS=9; CL=1; Fingerprint=TBF", component.Read("src/A/C.cs"), StringComparison.Ordinal);
     }
 }

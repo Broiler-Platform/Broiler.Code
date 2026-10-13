@@ -5,7 +5,7 @@
 // ----------------------
 // Relevant units:   15
 // Annotated:        15/15
-// Exempt:           0
+// Exempt:           1
 // Human-reviewed:   0/15
 // IP risk:          Low
 // Security risk:    High
@@ -200,7 +200,7 @@ public static partial class AssuranceRules
     /// <see cref="AssuranceAnnotation.TryParseStrict"/>; the lenient parse keeps
     /// shapes this would misreport.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=703D05
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=FDC4E0
     // Broiler-Falsified-If: a non-exempt block missing one of the five required fields yields no problem
     // Broiler-Human:        PENDING
     public static IEnumerable<string> VocabularyProblems(AssuranceAnnotation annotation)
@@ -238,6 +238,8 @@ public static partial class AssuranceRules
                 "IP" => Closed(field.Value, AssuranceVocabulary.IpRiskValues),
                 "Security" => Closed(field.Value, AssuranceVocabulary.SecurityRiskValues),
                 "Resources" => TryParseResources(field.Value, out _) ? null : "is not an integer 0 to 10",
+                "CS" => TryParseScore(field.Value, out _) ? null : "is not an integer 0 to 10",
+                "CL" => TryParseScore(field.Value, out _) ? null : "is not an integer 0 to 10",
                 "Fingerprint" => string.Equals(field.Value, AssuranceVocabulary.ToBeFilled, StringComparison.Ordinal) ||
                     AssuranceVocabulary.IsWellFormedFingerprint(field.Value)
                     ? null
@@ -292,6 +294,21 @@ public static partial class AssuranceRules
             SecurityWritingNoCriterion.Contains(security, StringComparer.Ordinal);
     }
 
+    /// <summary>Reads an assessment score: an integer from 0 to 10.</summary>
+    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=F643F9
+    // Broiler-Human:        PENDING
+    public static bool TryParseScore(string? value, out int score)
+    {
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out score) &&
+            score is >= 0 and <= 10)
+        {
+            return true;
+        }
+
+        score = 0;
+        return false;
+    }
+
     /// <summary>
     /// Reads a <c>Resources</c> value: an integer from 0 to 10.
     ///
@@ -300,20 +317,11 @@ public static partial class AssuranceRules
     /// surrounding whitespace is accepted as it is there, and the answer does not
     /// depend on the machine's locale.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=2E1379
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=8249CA
     // Broiler-Falsified-If: a value of 11 or -1 is accepted, or the answer for 7 changes with the machine's current culture
     // Broiler-Human:        PENDING
-    public static bool TryParseResources(string? value, out int resources)
-    {
-        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out resources) &&
-            resources is >= 0 and <= 10)
-        {
-            return true;
-        }
-
-        resources = 0;
-        return false;
-    }
+    public static bool TryParseResources(string? value, out int resources) =>
+        TryParseScore(value, out resources);
 
     /// <summary>
     /// One of this format's fields written as <c>Key=Value</c>: a field name of
@@ -321,11 +329,11 @@ public static partial class AssuranceRules
     /// of a comparison operator, and a value. The owning component's
     /// expression with its identifier narrowed to those names.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=D5C99A
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=C35448
     // Broiler-Falsified-If: a format field name followed by an equals sign and a value, written in lower case or with spaces around the sign, is not matched
     // Broiler-Human:        PENDING
     [GeneratedRegex(
-        @"(?<![=!<>\w.-])\b(?:Origin|Spec|IP|Security|Resources|Fingerprint|EXEMPT|Previous)\s*=\s*(?![=])\S+",
+        @"(?<![=!<>\w.-])\b(?:Origin|Spec|IP|Security|Resources|CS|CL|Fingerprint|EXEMPT|Previous)\s*=\s*(?![=])\S+",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex FieldOnACriterion();
 

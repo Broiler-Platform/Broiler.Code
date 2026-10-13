@@ -18,10 +18,11 @@ replaces the sentence with a measurement:
 That is a much stronger claim, and unlike the first one it is falsifiable.
 
 Companion records: the [Broiler Code architecture](broiler-code.md), the
-[Broiler Code roadmap](../broiler-code-roadmap.md), and
+[Broiler Code roadmap](../broiler-code-roadmap.md),
 [reviewing one declaration at a time](broiler-code-assurance.md) — the narrower
 per-unit claim some components record in the source itself, which this pane also
-carries.
+carries — and the [assurance rubric](broiler-code-assurance-rubric.md) defining
+assessment scores (Origin, IP, Security, Resources, and Code Stability CS / CL).
 
 ## What the product is
 

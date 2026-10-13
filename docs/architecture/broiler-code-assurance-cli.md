@@ -208,6 +208,7 @@ exit `1`: a run that did not read everything has not listed everything.
 { "schema": 1, "assessments": [
   { "file": "src/A/X.cs", "unit": "N.C.Run()", "fingerprint": "4A3BFD",
     "origin": "AI", "spec": "ADR-0007 s6", "ip": "Low", "security": "High", "resources": 2,
+    "cs": 9, "cl": 1,
     "falsifiedIf": "a negative value reaches the running total" },
   { "file": "src/A/X.cs", "unit": "N.C.Shim()", "exempt": "generated interop shim" }
 ] }
@@ -218,11 +219,12 @@ is refused. Every block records `Fingerprint=TBF` and `// Broiler-Human: PENDING
 in the owning component's padded format. `unit` is the name `list` printed, which
 identifies one unit of the file; `fingerprint` is the value `list` printed for the
 version assessed, and an entry whose fingerprint the unit no longer computes is
-refused as stale. `file` is read as a `--files` path is. `resources` is any
-integral JSON number (`2` or `2.0`).
+refused as stale. `file` is read as a `--files` path is. `resources`, `cs` and
+`cl` are integral JSON numbers (`2` or `2.0`, from 0 to 10; `cs` and `cl` are
+optional Code Stability Assessment scores).
 
-An entry is refused when: a value is outside its vocabulary or `resources` is
-not an integer 0 to 10; `security` is `High` or `Critical` and there is no
+An entry is refused when: a value is outside its vocabulary, `resources` is
+not an integer 0 to 10, or `cs` or `cl` is not an integer 0 to 10; `security` is `High` or `Critical` and there is no
 `falsifiedIf`, or it is `None`, `Low` or `Medium` and there is one (the rubric
 writes a criterion only at the top of the vocabulary); the criterion is not one
 line of prose, states one of this
@@ -261,7 +263,7 @@ file, in path order:
    records the current one** — the version the last generation wrote down and
    the one the reviewer can have been reading — and otherwise becomes
    `STALE; Previous=<reviewer>@<recorded fingerprint>`, or is refused when the AI
-   line records none yet; their own `IP=`, `Security=` and `Resources=` are kept;
+   line records none yet; their own `IP=`, `Security=`, `Resources=`, `CS=` and `CL=` are kept;
    a matching fingerprint is kept (moved last); a different one becomes
    `STALE; Previous=<reviewer>@<fingerprint>`; and a `STALE` line is left
    exactly as it is. The three lines are re-rendered at the AI line's indent,

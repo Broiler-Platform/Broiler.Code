@@ -16,12 +16,12 @@ and the figures below are the measurement of how far from that claim the per-uni
 | Files scanned | 101 |
 | Files not covered | 0 |
 | Files carrying an annotation | 101 |
-| Code units | 2088 |
-| Relevant | 1457 |
-| Exempt by predicate | 631 |
-| Annotated | 1457 of 1457 (100%) |
-| Human reviewed | 0 of 1457 (0%) |
-| Unverified | 1457 |
+| Code units | 2093 |
+| Relevant | 1459 |
+| Exempt by predicate | 634 |
+| Annotated | 1459 of 1459 (100%) |
+| Human reviewed | 0 of 1459 (0%) |
+| Unverified | 1459 |
 
 ## Review states
 
@@ -29,17 +29,17 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1457 |
+| HUMAN_PENDING | 1459 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 631 |
+| EXEMPT | 634 |
 
 ## IP risk
 
 | Value | Units |
 |---|---:|
-| None | 544 |
+| None | 547 |
 | Low | 913 |
 | Medium | 0 |
 | High | 0 |
@@ -52,8 +52,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | None | 59 |
 | Low | 401 |
-| Medium | 359 |
-| High | 623 |
+| Medium | 360 |
+| High | 625 |
 | Critical | 15 |
 | *not annotated* | 0 |
 
@@ -63,7 +63,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | Maximum | 9 / 10 |
 | Average over annotated units | 2.2 / 10 |
-| Units scored | 1457 |
+| Units scored | 1459 |
 
 ## High-security review areas
 
@@ -546,6 +546,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.FingerprintWidth` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.FingerprintField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.ExemptField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
+- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ConceptualStabilityField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
+- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ChangeLikelihoodField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.HumanFieldMarkers` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.IsWellFormedFingerprint(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.MaxAliasLength` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
@@ -710,8 +712,8 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Units carrying a criterion | 1171 |
-| Units required to carry one | 638 |
+| Units carrying a criterion | 1173 |
+| Units required to carry one | 640 |
 | Required and missing | 0 |
 
 A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make
@@ -733,8 +735,8 @@ that the rule is reviewable in one place rather than in several hundred.
 |---|---:|
 | TrivialPropertyOrAccessor | 127 |
 | ParameterAssigningConstructor | 9 |
-| TrivialExpressionBodiedMember | 11 |
-| CompilerSuppliedRecordOrEnumMember | 143 |
+| TrivialExpressionBodiedMember | 12 |
+| CompilerSuppliedRecordOrEnumMember | 145 |
 | DelegatingOverrideOrOperator | 2 |
 | InsideAssemblyMarker | 0 |
 | FieldDeclaringStorage | 202 |
@@ -762,7 +764,7 @@ through a `<Compile Include>` it states, is left out of the record.
 ## Change detection
 
 `assurance.manifest.json` lists **every** code unit in the 9 covered assemblies -
-2088 of them, exempt and relevant alike - with the fingerprint of its declaration.
+2093 of them, exempt and relevant alike - with the fingerprint of its declaration.
 This manifest is a change-detection record, not a review. A unit listed there is watched, not reviewed:
 the entry records what the declaration's tokens hashed to when the generator last ran, and
 nothing else. What the manifest adds is that a unit the exemption predicate treats as

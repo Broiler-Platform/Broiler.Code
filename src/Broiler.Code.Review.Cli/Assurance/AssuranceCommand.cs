@@ -541,7 +541,7 @@ internal static partial class AssuranceCommand
     // Broiler-Human:        PENDING
     private static string Invariant(FormattableString text) => text.ToString(CultureInfo.InvariantCulture);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=C5BB3F
+    // Broiler-AI:           Origin=AI; IP=Low; Security=None; Resources=0; Fingerprint=562B1A
     // Broiler-Human:        PENDING
     private const string Usage =
         """
@@ -563,7 +563,7 @@ internal static partial class AssuranceCommand
                 --strict fails the run. A covered file that cannot be read always does.
         insert  Writes machine assessments above those units:
                   { "schema": 1, "assessments": [ { "file", "unit", "fingerprint", "origin",
-                    "spec"?, "ip", "security", "resources", "falsifiedIf"? } ] }
+                    "spec"?, "ip", "security", "resources", "cs"?, "cl"?, "falsifiedIf"? } ] }
                 or { "file", "unit", "fingerprint"?, "exempt": "<reason>" } for the EXEMPT form.
                 Each block records Fingerprint=TBF and a human line of PENDING. The input has no
                 field for the human line. Needs assurance.config.json at the root.

@@ -218,7 +218,7 @@ value is written out as a literal rather than computed.
 - **It does not seal an approval.** By design; see the first decision above. A
   unit signed here is reviewed once that component's generator has run.
 - **It does not write the reviewer's own risk assessment.** The format lets a
-  human record `IP=`, `Security=` or `Resources=` beside their name, disagreeing
+  human record `IP=`, `Security=`, `Resources=`, `CS=` or `CL=` beside their name, disagreeing
   with the machine. Such an assessment is parsed, shown, and preserved when the
   same reviewer signs again — but there is no way to enter one.
 - **It does not report what moved under a stale approval.** The token stream a

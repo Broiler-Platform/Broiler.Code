@@ -473,7 +473,7 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
     /// A field key as a row label. The format's keys are terse because they are
     /// written inside a comment; a pane has room for the words.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=435DB7
+    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=D239E4
     // Broiler-Falsified-If: a key the table does not list is shown as something other than the key itself
     // Broiler-Human:        PENDING
     private static string Humanize(string key) => key switch
@@ -481,6 +481,8 @@ public sealed class ReviewPaneSource : IObservableTreeDataSource, IDisposable
         "IP" => "IP risk",
         "Security" => "Security risk",
         "Resources" => "Resource impact",
+        "CS" => "Conceptual Stability",
+        "CL" => "Change Likelihood",
         "Spec" => "Specification",
         "EXEMPT" => "Exempt because",
         _ => key,

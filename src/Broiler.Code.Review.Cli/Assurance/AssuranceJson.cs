@@ -74,16 +74,16 @@ internal static class AssuranceJson
     // Broiler-Human:        PENDING
     public const int Schema = 1;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=62AFDF
+    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=7A5E1B
     // Broiler-Falsified-If: the list names a field for the human line, so an assessments entry can set it
     // Broiler-Human:        PENDING
     private static readonly string[] AssessmentFields =
-        ["file", "unit", "fingerprint", "origin", "spec", "ip", "security", "resources", "falsifiedIf", "exempt"];
+        ["file", "unit", "fingerprint", "origin", "spec", "ip", "security", "resources", "cs", "cl", "CS", "CL", "falsifiedIf", "exempt"];
 
     /// <summary>
     /// Reads an assessments file:
     /// <c>{ "schema": 1, "assessments": [ { "file", "unit", "fingerprint", "origin",
-    /// "spec"?, "ip", "security", "resources", "falsifiedIf"? } ] }</c>, or an
+    /// "spec"?, "ip", "security", "resources", "cs"?, "cl"?, "falsifiedIf"? } ] }</c>, or an
     /// entry of the form <c>{ "file", "unit", "fingerprint"?, "exempt": "reason" }</c>.
     ///
     /// The schema has no field for the human line, and an entry naming any field
@@ -169,7 +169,7 @@ internal static class AssuranceJson
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=E4100D
+    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=6D06D8
     // Broiler-Falsified-If: an entry carrying a property the schema does not define, such as one named for the human line, comes back with no problem
     // Broiler-Human:        PENDING
     private static (AssuranceAssessment Entry, string? Problem) ReadEntry(JsonElement element, int index)
@@ -180,6 +180,8 @@ internal static class AssuranceJson
 
         var strings = new Dictionary<string, string>(StringComparer.Ordinal);
         int? resources = null;
+        int? cs = null;
+        int? cl = null;
         var problems = new List<string>();
 
         foreach (JsonProperty property in element.EnumerateObject())
@@ -197,18 +199,23 @@ internal static class AssuranceJson
             if (value.ValueKind == JsonValueKind.Null)
                 continue;
 
-            if (property.Name == "resources")
+            if (property.Name is "resources" or "cs" or "cl" or "CS" or "CL")
             {
                 // An integral number however it is written: 2.0 is what a
                 // serializer that holds every number as a double writes for 2.
                 if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double score) &&
                     score == Math.Floor(score) && score is >= int.MinValue and <= int.MaxValue)
                 {
-                    resources = (int)score;
+                    if (property.Name == "resources")
+                        resources = (int)score;
+                    else if (property.Name is "cs" or "CS")
+                        cs = (int)score;
+                    else
+                        cl = (int)score;
                 }
                 else
                 {
-                    problems.Add("\"resources\" must be an integer 0 to 10");
+                    problems.Add($"\"{property.Name}\" must be an integer 0 to 10");
                 }
 
                 continue;
@@ -234,6 +241,8 @@ internal static class AssuranceJson
             Ip = strings.GetValueOrDefault("ip")?.Trim(),
             Security = strings.GetValueOrDefault("security")?.Trim(),
             Resources = resources,
+            Cs = cs,
+            Cl = cl,
             FalsifiedIf = strings.GetValueOrDefault("falsifiedIf"),
             Exempt = strings.GetValueOrDefault("exempt"),
         };

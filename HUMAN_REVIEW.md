@@ -5,7 +5,7 @@ GENERATED - DO NOT EDIT MANUALLY. Regenerate with
 `CODE-ASSURANCE.md`, `assurance.manifest.json` and every generated source header from the
 product tree.
 
-> **Status: PENDING.** Human-reviewed: 0 of 1457 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
+> **Status: PENDING.** Human-reviewed: 0 of 1459 relevant units. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release`
 > fails while any relevant unit is without a decision bound to its current fingerprint.
 
 ## 1. How To Use This File
@@ -36,7 +36,7 @@ and may never invent an alias, which the check asserts in both directions.
 | `<alias>; Fingerprint=<six hex>` | A decision bound to one exact version of one declaration. |
 | `STALE; Previous=<alias>@<fingerprint>` | Written by the generator when the code moved after a decision. Only a human clears it, by stating their alias again. |
 
-A human may state their own `IP=`, `Security=` and `Resources=` assessment beside their alias,
+A human may state their own `IP=`, `Security=`, `Resources=`, `CS=` and `CL=` assessment beside their alias,
 which is how a reader disagrees with the machine assessment on the line above: an assessment is
 a comment and moves no fingerprint, so there is nowhere else to say it.
 
@@ -50,12 +50,12 @@ did, which is the narrower and the more useful of the two.
 | Metric | Value |
 |---|---:|
 | Files scanned | 101 |
-| Code units | 2088 |
-| Relevant | 1457 |
-| Exempt | 631 |
-| Assessed | 1457 of 1457 (100%) |
-| Human reviewed | 0 of 1457 (0%) |
-| Unverified | 1457 |
+| Code units | 2093 |
+| Relevant | 1459 |
+| Exempt | 634 |
+| Assessed | 1459 of 1459 (100%) |
+| Human reviewed | 0 of 1459 (0%) |
+| Unverified | 1459 |
 | Aliases naming a decision | 0 |
 
 ## 4. Review States
@@ -67,11 +67,11 @@ annotations and the current fingerprints; nothing stores them.
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1457 |
+| HUMAN_PENDING | 1459 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 631 |
+| EXEMPT | 634 |
 
 ## 5. Aliases In The Tree
 
@@ -144,17 +144,17 @@ relevant units in a state that blocks a release.
 | `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` | 20 | 20 | 0 | 20 | Low | High | 20/15 |
 | `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` | 11 | 11 | 0 | 11 | Low | High | 9/8 |
 | `src/Broiler.Code.Review/Assurance/AssuranceHumanReviewRecord.cs` | 14 | 14 | 0 | 14 | Low | Medium | 11/0 |
-| `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` | 28 | 17 | 11 | 17 | Low | High | 15/8 |
+| `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` | 30 | 17 | 13 | 17 | Low | High | 15/8 |
 | `src/Broiler.Code.Review/Assurance/AssuranceLines.cs` | 14 | 11 | 3 | 11 | Low | High | 10/3 |
 | `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` | 21 | 21 | 0 | 21 | Low | High | 15/10 |
 | `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` | 13 | 11 | 2 | 11 | Low | High | 6/6 |
 | `src/Broiler.Code.Review/Assurance/AssuranceReportContext.cs` | 13 | 10 | 3 | 10 | Low | Low | 7/0 |
 | `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` | 9 | 9 | 0 | 9 | Low | High | 9/9 |
-| `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` | 15 | 15 | 0 | 15 | Low | High | 15/13 |
+| `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` | 16 | 15 | 1 | 15 | Low | High | 15/13 |
 | `src/Broiler.Code.Review/Assurance/AssuranceScannedFile.cs` | 7 | 6 | 1 | 6 | None | High | 2/2 |
 | `src/Broiler.Code.Review/Assurance/AssuranceUnit.cs` | 19 | 7 | 12 | 7 | None | High | 6/2 |
 | `src/Broiler.Code.Review/Assurance/AssuranceUnitState.cs` | 14 | 6 | 8 | 6 | Low | High | 6/4 |
-| `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` | 27 | 27 | 0 | 27 | Low | High | 26/17 |
+| `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` | 29 | 29 | 0 | 29 | Low | High | 28/19 |
 | `src/Broiler.Code.Review/FileReview.cs` | 18 | 10 | 8 | 10 | Low | High | 10/2 |
 | `src/Broiler.Code.Review/IRevisionProvider.cs` | 5 | 4 | 1 | 4 | None | Medium | 4/0 |
 | `src/Broiler.Code.Review/NoteAnchoring.cs` | 6 | 6 | 0 | 6 | Low | High | 6/4 |
@@ -696,11 +696,11 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a file path containing a comma or a colon is emitted unescaped, so it ends the file property and starts another
 - `Broiler.Code.Review.Cli.Assurance.AssuranceJson` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, Spec=none cited, `007837`, PENDING
   - Falsified if: an assessments entry carrying a field for the human line is read into an assessment instead of refused
-- `Broiler.Code.Review.Cli.Assurance.AssuranceJson.AssessmentFields` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, Spec=none cited, `62AFDF`, PENDING
+- `Broiler.Code.Review.Cli.Assurance.AssuranceJson.AssessmentFields` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, Spec=none cited, `7A5E1B`, PENDING
   - Falsified if: the list names a field for the human line, so an assessments entry can set it
 - `Broiler.Code.Review.Cli.Assurance.AssuranceJson.ReadAssessments(string)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, Spec=none cited, `04D3A0`, PENDING
   - Falsified if: a document whose top-level object carries a property other than schema, assessments and $comment is read instead of refused
-- `Broiler.Code.Review.Cli.Assurance.AssuranceJson.ReadEntry(JsonElement, int)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, Spec=none cited, `E4100D`, PENDING
+- `Broiler.Code.Review.Cli.Assurance.AssuranceJson.ReadEntry(JsonElement, int)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, Spec=none cited, `6D06D8`, PENDING
   - Falsified if: an entry carrying a property the schema does not define, such as one named for the human line, comes back with no problem
 - `Broiler.Code.Review.Cli.Assurance.AssuranceCommand` in `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` - Security=High, Spec=none cited, `CCE5C4`, PENDING
   - Falsified if: after prune, a block whose human line names a person or reads STALE has lost a line
@@ -1028,9 +1028,9 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a human line indented with tabs is not returned
 - `Broiler.Code.Review.Assurance.AssuranceInsertion` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `160B8B`, PENDING
   - Falsified if: text returned by Apply holds a newly inserted human line that reads anything other than PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Validate(AssuranceAssessment)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `93EBB6`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceInsertion.Validate(AssuranceAssessment)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `B1A5EC`, PENDING
   - Falsified if: an entry assessed High or Critical whose falsification criterion is only whitespace is returned with no problem
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Render(AssuranceAssessment, string)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `B9DC7B`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceInsertion.Render(AssuranceAssessment, string)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `56DCA7`, PENDING
   - Falsified if: a rendered block's last line is anything other than the human marker followed by PENDING, whatever the entry holds
 - `Broiler.Code.Review.Assurance.AssuranceInsertion.Apply(string, string, IAssuranceFileScanner, IReadOnlyList<AssuranceAssessment>, bool, string?)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, Spec=none cited, `E5D891`, PENDING
   - Falsified if: two entries naming the same unit of one file are applied, or one of them is, instead of both being refused
@@ -1114,13 +1114,13 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: a Spec value containing a claim phrase yields no problem
 - `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaimsIn(string)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `0C28B4`, PENDING
   - Falsified if: a claim phrase the expression matches is left out of the returned list, so the text carrying it is accepted
-- `Broiler.Code.Review.Assurance.AssuranceRules.VocabularyProblems(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `703D05`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceRules.VocabularyProblems(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `FDC4E0`, PENDING
   - Falsified if: a non-exempt block missing one of the five required fields yields no problem
 - `Broiler.Code.Review.Assurance.AssuranceRules.RequiresFalsificationCriterion(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `1B1FA3`, PENDING
   - Falsified if: a non-exempt block whose security value is High or Critical returns false
 - `Broiler.Code.Review.Assurance.AssuranceRules.CarriesCriterionBelowHigh(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `C3A4FA`, PENDING
   - Falsified if: a block that states an exemption, or one assessed High, is answered true, so prune takes its criterion line
-- `Broiler.Code.Review.Assurance.AssuranceRules.FieldOnACriterion()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `D5C99A`, PENDING
+- `Broiler.Code.Review.Assurance.AssuranceRules.FieldOnACriterion()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `C35448`, PENDING
   - Falsified if: a format field name followed by an equals sign and a value, written in lower case or with spaces around the sign, is not matched
 - `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaim()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, Spec=none cited, `897B3A`, PENDING
   - Falsified if: a claim phrase written in mixed case, or with a tab between its two words, is not matched
@@ -1160,8 +1160,12 @@ written out, so a unit that becomes `High` joins it at the next generation.
   - Falsified if: the field name differs from the owning component's, so a fingerprint stated on a human line is not found and the line reads as left for the generator
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.ExemptField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, Spec=none cited, `BE996E`, PENDING
   - Falsified if: the field name differs from the owning component's, so a unit this tool reads as exempt blocks release there, or the reverse
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.HumanFieldMarkers` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, Spec=none cited, `D911D4`, PENDING
-  - Falsified if: a human line carrying a part after the name that opens with none of the four field prefixes, such as a second name, is read as a defined shape
+- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ConceptualStabilityField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, Spec=none cited, `55EDC8`, PENDING
+  - Falsified if: the field name differs from "CS", so a stability field on an assessment line is not recognized
+- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ChangeLikelihoodField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, Spec=none cited, `3149A8`, PENDING
+  - Falsified if: the field name differs from "CL", so a likelihood field on an assessment line is not recognized
+- `Broiler.Code.Review.Assurance.AssuranceVocabulary.HumanFieldMarkers` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, Spec=none cited, `B138DD`, PENDING
+  - Falsified if: a human line carrying a part after the name that opens with none of the defined field prefixes, such as a second name, is read as a defined shape
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.IsWellFormedFingerprint(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, Spec=none cited, `6A4AEF`, PENDING
   - Falsified if: a lowercase hex value, or one of a length other than six, is accepted as a fingerprint
 - `Broiler.Code.Review.Assurance.AssuranceVocabulary.MaxAliasLength` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, Spec=none cited, `AA3F31`, PENDING
@@ -1494,5 +1498,5 @@ An assessment is a comment, so changing one moves no fingerprint anywhere, and n
 mechanical checks that it is right; the check holds its values to their vocabularies and no
 further.
 
-1457 of the 1457 assessed units declare `Origin=AI`. Reading a declaration is the only thing
+1459 of the 1459 assessed units declare `Origin=AI`. Reading a declaration is the only thing
 that makes it read.
