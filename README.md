@@ -80,6 +80,22 @@ disagree.
 The full record is [`docs/architecture/broiler-code.md`](docs/architecture/broiler-code.md);
 the phased plan is [`docs/broiler-code-roadmap.md`](docs/broiler-code-roadmap.md).
 
+## Development tools: Broiler.SDK
+
+Create the `Broiler.SDK` NuGet tool package with the existing review CLI and C#
+assurance tools:
+
+```bash
+dotnet pack src/Broiler.Code.Review.Cli -c Release
+dotnet tool install --global Broiler.SDK --version 0.1.0-preview.1 --source ./artifacts/packages
+broiler-review --help
+```
+
+Use the version of the package you built (the example is the current default).
+See [Broiler.SDK](docs/broiler-sdk.md) for local tool installation, versioning and
+package validation. CI validates the package on Windows and Linux; Publish adds
+it to the draft release alongside the editor downloads.
+
 ## Human review
 
 `Broiler.Code.Review` evaluates a repository's `.broiler-review/` records: which files a

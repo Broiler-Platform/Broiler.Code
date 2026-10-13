@@ -9,7 +9,19 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>Broiler.Code.Review.Cli</RootNamespace>
     <AssemblyName>Broiler.Code.Review.Cli</AssemblyName>
-    <IsPackable>false</IsPackable>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>broiler-review</ToolCommandName>
+    <PackageId>Broiler.SDK</PackageId>
+    <Authors>Broiler Platform contributors</Authors>
+    <Description>Broiler development tools: human code-review coverage, stale-review checks, and C# code-assurance annotations and reports.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/Broiler-Platform/Broiler.Code</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Broiler-Platform/Broiler.Code</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>broiler;development;code-review;assurance;dotnet-tool</PackageTags>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\packages</PackageOutputPath>
   </PropertyGroup>
 
   <!--
@@ -37,6 +49,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Broiler.Code.Review.Tests" />
+    <None Include="..\..\docs\broiler-sdk.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

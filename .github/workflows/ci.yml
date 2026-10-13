@@ -18,6 +18,40 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
 
 jobs:
+  sdk-package:
+    name: Broiler.SDK (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack development tools
+        run: dotnet pack src/Broiler.Code.Review.Cli -c Release -p:ContinuousIntegrationBuild=true
+
+      - name: Install and test the package
+        shell: pwsh
+        run: |
+          $packages = @(Get-ChildItem artifacts/packages/Broiler.SDK.*.nupkg)
+          if ($packages.Count -ne 1) { throw 'Expected one SDK package.' }
+          ./scripts/test-sdk-package.ps1 -PackagePath $packages[0].FullName
+
+      - name: Upload package
+        uses: actions/upload-artifact@v6
+        with:
+          name: broiler-sdk-${{ matrix.os }}
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+
   # The .slnx files are generated from eng/solutions.json. A hand-edit to one is
   # silently reverted by the next generator run, so the only thing keeping them
   # true is failing here when a checked-in solution no longer matches the real

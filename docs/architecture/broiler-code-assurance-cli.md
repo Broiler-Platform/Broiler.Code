@@ -19,11 +19,11 @@ broiler-review assurance status   --root <dir> [--config <file>]
 broiler-review assurance prune    --root <dir> [--dry-run] [--json <out>|-]
 ```
 
-`broiler-review` stands for the built tool. No project installs a command of that
-name; a workflow runs it as
-`dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance ...`,
-and a component states that form in `regenerateCommand` (below) so that the
-commands its messages and generated prose name are ones a reader can paste.
+`broiler-review` is installed by the [Broiler.SDK NuGet tool package](../broiler-sdk.md).
+A source checkout can also run it as
+`dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance ...`.
+A component states its chosen invocation in `regenerateCommand` (below) so that
+the commands its messages and generated prose name are ones a reader can paste.
 
 Exit codes: `0` done (for `check`, nothing wrong); `1` something was refused,
 `check` found a violation, `list` could not read a covered file (or, with

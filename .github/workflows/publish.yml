@@ -8,6 +8,7 @@ name: Publish
 #   Broiler.Code-<version>-win-x64-framework-dependent.zip    Broiler.Code.Windows.exe + assemblies
 #   Broiler.Code-<version>-linux-x64-self-contained.zip       Broiler.Code.Linux
 #   Broiler.Code-<version>-linux-x64-framework-dependent.zip  Broiler.Code.Linux + assemblies
+#   Broiler.SDK.<version>.nupkg                             broiler-review .NET tool
 #
 # Self-contained is a single-file executable, not NativeAOT. Both heads carry the Roslyn
 # language service (Microsoft.CodeAnalysis.CSharp, for the review pane's assurance scanner),
@@ -178,9 +179,41 @@ jobs:
           path: ${{ env.OUT }}
           if-no-files-found: error
 
+  sdk-package:
+    name: Broiler.SDK package
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v5
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack development tools
+        run: >-
+          dotnet pack src/Broiler.Code.Review.Cli -c Release
+          -p:ContinuousIntegrationBuild=true -p:BroilerCodeVersion="$VERSION"
+
+      - name: Install and test the package
+        shell: pwsh
+        run: ./scripts/test-sdk-package.ps1 -PackagePath "artifacts/packages/Broiler.SDK.$env:VERSION.nupkg"
+
+      - name: Upload package
+        uses: actions/upload-artifact@v6
+        with:
+          name: broiler-sdk-${{ env.VERSION }}
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+
   release:
     name: Tag and draft release ${{ needs.version.outputs.tag }}
-    needs: [version, build]
+    needs: [version, build, sdk-package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -206,6 +239,12 @@ jobs:
           pattern: broiler-code-*
           path: artifacts
 
+      - name: Download the SDK package
+        uses: actions/download-artifact@v6
+        with:
+          name: broiler-sdk-${{ env.VERSION }}
+          path: artifacts/broiler-sdk-${{ env.VERSION }}
+
       # A draft pre-release: nothing is public until someone reviews and publishes it.
       - name: Draft the release
         env:
@@ -221,5 +260,6 @@ jobs:
             echo
             echo "A draft pre-release **Broiler Code $VERSION** was created with the"
             echo "self-contained and framework-dependent zips for win-x64 and linux-x64."
+            echo "It also includes the Broiler.SDK NuGet tool package."
             echo "Review it under Releases and publish it there."
           } >> "$GITHUB_STEP_SUMMARY"
