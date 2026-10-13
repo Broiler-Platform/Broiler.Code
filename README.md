@@ -156,6 +156,9 @@ projects by changing the reference graph, then regenerate.
 .NET after a normal checkout. CI and Publish restore component dependencies as
 NuGet packages; they do not initialize component checkouts. The retired Phase 0
 harnesses and payload probes are no longer part of this checkout or its workflows.
+The shared [SampleReports fixture](tests/broiler-code-phase0/fixture/README.md)
+remains required test data for workspace parsing, evaluation and semantic diagnostics;
+its intentionally broken App project is excluded from the build solutions.
 
 ## Build configuration
 
@@ -187,6 +190,7 @@ packages, the same ones the other Broiler applications use.
 | `src/Broiler.Code.Windows` | Windows head — `WinExe`, Direct2D, Win32 clipboard and window sizing |
 | `src/Broiler.Code.Linux` | Linux head — X11 clipboard and evdev input coordination |
 | `src/Broiler.Code.*.Tests` | xUnit suites — workspaces, shell and adapters, language services, review model |
+| `tests/broiler-code-phase0/fixture` | Shared SampleReports test data, retained independently of the retired harnesses |
 | `docs/` | Architecture records, budgets, the SDK-mutation matrix and the roadmap |
 | `eng/`, `scripts/` | Solution manifest and generator |
 | `.github/` | CI workflow and the `setup-broiler` composite action |
