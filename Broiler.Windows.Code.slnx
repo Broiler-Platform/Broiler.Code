@@ -1,17 +1,8 @@
 <Solution>
-  <!-- Generated from eng/solutions.json by scripts/update-solutions.ps1. -->
-  <Configurations>
-    <BuildType Name="Debug" />
-    <BuildType Name="Release" />
-  </Configurations>
-  <Folder Name="/Entry points/">
-    <Project Path="src/Broiler.Code.Windows/Broiler.Code.Windows.csproj" />
-  </Folder>
-  <Folder Name="/Dependencies/src/">
-    <Project Path="src/Broiler.Code.Core/Broiler.Code.Core.csproj" />
-    <Project Path="src/Broiler.Code.Language.CSharp.Assurance/Broiler.Code.Language.CSharp.Assurance.csproj" />
-    <Project Path="src/Broiler.Code.Language.CSharp.Roslyn/Broiler.Code.Language.CSharp.Roslyn.csproj" />
-    <Project Path="src/Broiler.Code.Review/Broiler.Code.Review.csproj" />
-    <Project Path="src/Broiler.Code.Workspaces/Broiler.Code.Workspaces.csproj" />
-  </Folder>
+  <Project Path="src/Broiler.Code.Core/Broiler.Code.Core.csproj" />
+  <Project Path="src/Broiler.Code.Language.CSharp.Assurance/Broiler.Code.Language.CSharp.Assurance.csproj" />
+  <Project Path="src/Broiler.Code.Language.CSharp.Roslyn/Broiler.Code.Language.CSharp.Roslyn.csproj" />
+  <Project Path="src/Broiler.Code.Review/Broiler.Code.Review.csproj" />
+  <Project Path="src/Broiler.Code.Windows/Broiler.Code.Windows.csproj" />
+  <Project Path="src/Broiler.Code.Workspaces/Broiler.Code.Workspaces.csproj" />
 </Solution>
