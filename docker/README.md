@@ -29,7 +29,7 @@ flowchart TD
 ## Container Details
 
 ### 1. `base`
-- **Base OS**: `ubuntu:latest` (matching GitHub Actions `ubuntu-latest`).
+- **Base OS**: `ubuntu:24.04` (Ubuntu 24.04 LTS Noble Numbat, matching GitHub Actions `ubuntu-latest` runner LTS).
 - **.NET 10.0 SDK**: Latest .NET 10.0 SDK installed into `/usr/share/dotnet`, linked to `/usr/bin/dotnet`.
 - **NativeAOT & C/C++ Toolchain**: `build-essential`, `clang`, `zlib1g-dev`, `libicu-dev`, `libssl-dev`, `pkg-config` (required for publishing Linux NativeAOT heads in `Broiler.Writer` and `Broiler.Code`).
 - **Development & CI Utilities**: `git`, `curl`, `wget`, `jq`, `ca-certificates`, `tar`, `gzip`, `unzip`, `python3`, `python3-pip`, `python3-venv`.

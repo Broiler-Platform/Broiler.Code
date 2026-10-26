@@ -7,7 +7,8 @@
 # Serves as the foundation for 'browser' and 'office' specialised CI images.
 # -----------------------------------------------------------------------------
 
-ARG UBUNTU_VERSION=latest
+# Use Ubuntu 24.04 LTS (Noble Numbat), matching GitHub Actions 'ubuntu-latest' runner LTS
+ARG UBUNTU_VERSION=24.04
 FROM ubuntu:${UBUNTU_VERSION} AS base
 
 LABEL org.opencontainers.image.title="Broiler.SDK CI Base" \

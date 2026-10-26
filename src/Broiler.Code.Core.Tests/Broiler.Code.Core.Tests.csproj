@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,8 +11,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Broiler.Graphics" />
     <PackageReference Include="Broiler.UI" />
     <PackageReference Include="Broiler.UI.Button.Standard" />
@@ -26,6 +28,7 @@
     <PackageReference Include="Broiler.UI.TabView.Standard" />
     <PackageReference Include="Broiler.UI.Toolbar.Standard" />
     <PackageReference Include="Broiler.UI.TreeView.Standard" />
+    <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
   <ItemGroup>

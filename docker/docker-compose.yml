@@ -5,7 +5,7 @@ services:
       context: ./base
       dockerfile: Dockerfile
       args:
-        UBUNTU_VERSION: latest
+        UBUNTU_VERSION: "24.04"
         DOTNET_CHANNEL: "10.0"
 
   browser:
