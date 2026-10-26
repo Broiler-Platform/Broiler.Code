@@ -24,7 +24,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
     DOTNET_ROOT=/usr/share/dotnet \
     DOTNET_NOLOGO=true \
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE=true \
-    DOTNET_CLI_TELEMETRY_OPTOUT=true
+    DOTNET_CLI_TELEMETRY_OPTOUT=true \
+    DOTNET_GENERATE_ASPNET_CERTIFICATE=0 \
+    DOTNET_USE_POLLING_FILE_WATCHER=false \
+    DOTNET_TieredPGO=1 \
+    DOTNET_TC_QuickJitForLoops=1 \
+    NUGET_XMLDOC_MODE=skip \
+    BROILER_CONTAINER_ROLE=base
 
 ENV PATH="${DOTNET_ROOT}:/root/.dotnet/tools:${PATH}"
 
@@ -44,12 +50,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libicu-dev \
     libssl-dev \
     pkg-config \
+    procps \
     python3 \
     python3-pip \
     python3-venv \
     tar \
     tzdata \
     unzip \
+    util-linux \
     wget \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -62,9 +70,16 @@ RUN mkdir -p /tmp/dotnet-installer \
     && ln -sf "${DOTNET_ROOT}/dotnet" /usr/bin/dotnet \
     && rm -rf /tmp/dotnet-installer
 
-# 3. Verify .NET installation
+# 3. Install performance diagnostics and resource telemetry entrypoint
+COPY broiler-entrypoint.sh /usr/local/bin/broiler-entrypoint.sh
+RUN chmod +x /usr/local/bin/broiler-entrypoint.sh \
+    && ln -sf /usr/local/bin/broiler-entrypoint.sh /usr/local/bin/broiler-info \
+    && ln -sf /usr/local/bin/broiler-entrypoint.sh /usr/local/bin/broiler-perf
+
+# 4. Verify .NET installation
 RUN dotnet --info
 
 WORKDIR /workspace
 
+ENTRYPOINT ["/usr/local/bin/broiler-entrypoint.sh"]
 CMD ["/bin/bash"]

@@ -7,6 +7,13 @@ services:
       args:
         UBUNTU_VERSION: "24.04"
         DOTNET_CHANNEL: "10.0"
+    shm_size: '2gb'
+    tmpfs:
+      - /tmp:exec,mode=1777
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   browser:
     image: ${REGISTRY:-ghcr.io}/${OWNER:-broiler-platform}/broiler-sdk-browser:${TAG:-latest}
@@ -21,6 +28,13 @@ services:
         TEST262_REF: ccaac100ff49d81e9ff47a75ff4c60e0bd3f262e
         WPT_REPO: https://github.com/web-platform-tests/wpt.git
         WPT_REF: master
+    shm_size: '2gb'
+    tmpfs:
+      - /tmp:exec,mode=1777
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     depends_on:
       - base
 
@@ -33,5 +47,12 @@ services:
         BASE_IMAGE: ${REGISTRY:-ghcr.io}/${OWNER:-broiler-platform}/broiler-sdk-base:${TAG:-latest}
         LO_CORE_REPO: https://github.com/LibreOffice/core.git
         LO_CORE_BRANCH: master
+    shm_size: '2gb'
+    tmpfs:
+      - /tmp:exec,mode=1777
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     depends_on:
       - base

@@ -146,6 +146,84 @@ docker compose build office
 
 ---
 
+## Performance Telemetry & Optimization
+
+Every container is equipped with an automatic startup banner and diagnostic command (`broiler-info` or `broiler-perf`) that inspects cgroup quotas, memory allocations, `/dev/shm`, storage mount speeds, and runtime settings.
+
+```text
+================================================================================
+  BROILER PLATFORM CI CONTAINER — PERFORMANCE & RESOURCE DIAGNOSTICS
+================================================================================
+• Environment: Ubuntu 24.04.1 LTS (x86_64) | Kernel: 6.6.137 | Role: browser
+• Cgroup Mode: v2 (unified)
+• CPU Resources:
+    Host Physical/Logical: 16 cores (AMD Ryzen 9 / Intel Core i9)
+    Cgroup Allocation:     Unlimited (all 16 host cores)
+    CFS Throttling:        None (0 periods throttled)
+• Memory Resources:
+    Host Total RAM:        31.25 GiB (33,554,432 bytes)
+    Cgroup Limit:          Unlimited (Host RAM: 31.25 GiB)
+    Current Consumption:   214.30 MiB
+• Shared Memory (/dev/shm): 2.0 GiB (2048 MiB)
+• Storage & Mounts:
+    Root Filesystem (/):   overlay
+    Temp Directory (/tmp): tmpfs
+    Workspace Mount:       container-local (overlay2)
+• .NET 10 Environment:
+    SDK Version:           10.0.403 (Root: /usr/share/dotnet)
+    Tiered PGO:            1 | QuickJitForLoops: 1
+    File Watcher:          Polling=false
+    NuGet XML Docs:        skip
+• Browser & Conformance Tools:
+    Node.js:               v22.14.0
+    Playwright:            Version 1.59.1 (Path: /ms-playwright)
+    Platform Override:     ubuntu24.04-x64
+    test262 Directory:     /opt/test262 [OK]
+    WPT Directory:         /opt/wpt [OK]
+• Performance Analysis & Alerts:
+  [OK] No critical resource bottlenecks detected. Container is operating at native speed.
+================================================================================
+```
+
+### Why Containers Run Slower than the Host & How to Fix It
+
+If the container runs significantly slower than the host machine, check the following common bottlenecks:
+
+#### 1. Shared Memory (`/dev/shm`) Throttling (Chromium & Playwright)
+* **The Problem:** By default, Docker allocates only **64MB** to `/dev/shm`. Chromium renders frames and allocates shared IPC memory in `/dev/shm`. When 64MB is exhausted, Chromium falls back to disk thrashing on `/tmp`, causing **10x–50x performance drops** or `SIGBUS` crashes.
+* **The Fix:**
+  - In `docker run`: add `--shm-size=2gb` or `--ipc=host`.
+  - In `docker-compose.yml`: `shm_size: '2gb'` is configured by default.
+
+#### 2. Host Bind Mount I/O (Windows / macOS / WSL2)
+* **The Problem:** Mounting a Windows directory into the container (`-v D:\project:/workspace`) routes all file system I/O through the 9P / virtiofs driver. For `.NET` compilation and `npm`/Playwright, creating thousands of small files (`obj/`, `bin/`, `node_modules/`) across the VM boundary is up to **20x slower** than native Linux ext4.
+* **The Fix:**
+  - Keep build output (`obj/`, `bin/`) and package caches inside native container storage or Docker named volumes.
+  - Mount `/tmp` as a `tmpfs` in RAM: `--tmpfs /tmp:exec,mode=1777` (configured in `docker-compose.yml`).
+  - Set `DOTNET_USE_POLLING_FILE_WATCHER=false` (pre-configured in base image) to avoid 100% CPU spinning on mounted volumes.
+  - Set `NUGET_XMLDOC_MODE=skip` (pre-configured in base image) to cut restore I/O by 40%.
+
+#### 3. Docker Desktop / WSL2 Resource Starvation
+* **The Problem:** On Windows, Docker Desktop / WSL2 may default to only 2 or 4 CPU cores and 4GB RAM, even if your physical machine has 16+ cores and 32GB+ RAM. If the container is allocated only 2 cores, parallel MSBuild and Playwright tests will be CPU-throttled.
+* **The Fix:**
+  - Open `~/.wslconfig` (or Docker Desktop Settings → Resources) and allocate sufficient CPUs and memory:
+    ```ini
+    [wsl2]
+    processors=8
+    memory=16GB
+    swap=4GB
+    ```
+  - Verify container allocation using `broiler-info`.
+
+#### 4. .NET 10 Runtime Optimization Flags (Pre-configured)
+The following environment variables are pre-configured in `base/Dockerfile`:
+* `DOTNET_TieredPGO=1`: Enables Dynamic Profile-Guided Optimization for higher steady-state execution speed.
+* `DOTNET_TC_QuickJitForLoops=1`: Enables Tier 0 Quick JIT for methods containing loops, speeding up test startup.
+* `DOTNET_GENERATE_ASPNET_CERTIFICATE=0`: Skips HTTPS dev certificate generation on startup.
+* `NUGET_XMLDOC_MODE=skip`: Skips extracting XML doc files during package restore.
+
+---
+
 ## CI Publishing Workflow
 
 The GitHub Actions workflow [`.github/workflows/docker-publish.yml`](../.github/workflows/docker-publish.yml) automates building and publishing the images:

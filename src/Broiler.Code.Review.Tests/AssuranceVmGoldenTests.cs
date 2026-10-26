@@ -44,7 +44,10 @@ internal static class VmCheckout
 /// <summary>A fact that runs only where a Broiler.VM checkout is.</summary>
 public sealed class VmCheckoutFactAttribute : FactAttribute
 {
-    public VmCheckoutFactAttribute()
+    public VmCheckoutFactAttribute(
+        [System.Runtime.CompilerServices.CallerFilePath] string? sourceFilePath = null,
+        [System.Runtime.CompilerServices.CallerLineNumber] int sourceLineNumber = 0)
+        : base(sourceFilePath, sourceLineNumber)
     {
         Timeout = 600000;
         if (VmCheckout.Root is null)

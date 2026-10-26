@@ -112,7 +112,7 @@ public sealed class SemanticServiceTests
 
         // The symbol is declared in another file; the error belongs here.
         CodeDiagnosticAdornment error = Assert.Single(
-            result.Diagnostics.Where(d => d.Severity == CodeDiagnosticSeverity.Error));
+            result.Diagnostics, d => d.Severity == CodeDiagnosticSeverity.Error);
         Assert.Equal("CS7036", error.Code);
 
         (int line, _) = LineAndColumn(document.Snapshot, error.Start);
@@ -183,8 +183,8 @@ public sealed class SemanticServiceTests
 
             // The same text, two frameworks, two answers. A service that
             // guessed the defines would report one of these for both.
-            Assert.Empty(withoutDefine.Diagnostics.Where(d => d.Severity == CodeDiagnosticSeverity.Error));
-            Assert.NotEmpty(withDefine.Diagnostics.Where(d => d.Severity == CodeDiagnosticSeverity.Error));
+            Assert.DoesNotContain(withoutDefine.Diagnostics, d => d.Severity == CodeDiagnosticSeverity.Error);
+            Assert.Contains(withDefine.Diagnostics, d => d.Severity == CodeDiagnosticSeverity.Error);
         }
         finally
         {

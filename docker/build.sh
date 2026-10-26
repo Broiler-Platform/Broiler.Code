@@ -87,7 +87,7 @@ build_base() {
 
     if [ "$TEST" = true ]; then
         echo "==> Testing base image..."
-        docker run --rm "${BASE_IMAGE}" dotnet --info
+        docker run --rm --shm-size=2gb "${BASE_IMAGE}" dotnet --info
     fi
 
     if [ "$PUSH" = true ]; then
@@ -106,7 +106,7 @@ build_browser() {
 
     if [ "$TEST" = true ]; then
         echo "==> Testing browser image..."
-        docker run --rm "${BROWSER_IMAGE}" bash -c \
+        docker run --rm --shm-size=2gb "${BROWSER_IMAGE}" bash -c \
             "node --version && npx playwright --version && test -d /opt/test262/test && test -d /opt/wpt/css"
     fi
 
@@ -126,7 +126,7 @@ build_office() {
 
     if [ "$TEST" = true ]; then
         echo "==> Testing office image..."
-        docker run --rm "${OFFICE_IMAGE}" bash -c \
+        docker run --rm --shm-size=2gb "${OFFICE_IMAGE}" bash -c \
             "soffice --version && pdftoppm -v 2>&1 | head -n 1 && test -d /opt/libreoffice-extras"
     fi
 

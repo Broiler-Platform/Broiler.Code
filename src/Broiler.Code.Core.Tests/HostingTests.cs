@@ -13,7 +13,9 @@ public sealed class HostingTests
         int ranOn = -1;
 
         // Posted from a worker, as a classification or a build result would be.
-        Task.Run(() => dispatcher.Post(() => ranOn = Environment.CurrentManagedThreadId)).Wait();
+        var worker = new Thread(() => dispatcher.Post(() => ranOn = Environment.CurrentManagedThreadId));
+        worker.Start();
+        worker.Join();
 
         // Nothing ran yet: the whole point is that it waits for the UI thread
         // rather than executing inline on the poster's thread.
@@ -25,12 +27,12 @@ public sealed class HostingTests
     }
 
     [Fact(Timeout = 600000)]
-    public void Check_Access_Is_False_Off_The_Ui_Thread()
+    public async Task Check_Access_Is_False_Off_The_Ui_Thread()
     {
         var dispatcher = new UiThreadDispatcher();
 
         Assert.True(dispatcher.CheckAccess());
-        Assert.False(Task.Run(dispatcher.CheckAccess).Result);
+        Assert.False(await Task.Run(dispatcher.CheckAccess));
     }
 
     [Fact(Timeout = 600000)]

@@ -23,7 +23,9 @@ ENV BROILER_SOFFICE=/usr/bin/soffice \
     BROILER_OFFICE_FONT_DIR=/usr/share/fonts/truetype \
     BROILER_OFFICE_FONT_SET=office-fonts-1 \
     BROILER_OFFICE_EXTRAS_DIR=/opt/libreoffice-extras \
-    BROILER_OFFICE_EXTRAS_URL=https://github.com/LibreOffice/core/tree/master/sw/qa/extras
+    BROILER_OFFICE_EXTRAS_URL=https://github.com/LibreOffice/core/tree/master/sw/qa/extras \
+    SAL_USE_VCLPLUGIN=gen \
+    BROILER_CONTAINER_ROLE=office
 
 ARG LO_CORE_REPO=https://github.com/LibreOffice/core.git
 ARG LO_CORE_BRANCH=master

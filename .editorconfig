@@ -1,0 +1,8 @@
+root = true
+
+[*.cs]
+# xUnit v3 cooperative cancellation rules:
+# Existing test methods specify [Fact(Timeout = ...)] without cooperative cancellation tokens,
+# and methods with CancellationToken parameters do not need TestContext.Current.CancellationToken.
+dotnet_diagnostic.xUnit1069.severity = none
+dotnet_diagnostic.xUnit1051.severity = none

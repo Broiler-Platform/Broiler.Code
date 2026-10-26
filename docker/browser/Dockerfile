@@ -22,10 +22,12 @@ LABEL org.opencontainers.image.title="Broiler.SDK CI Browser" \
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0 \
     PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64 \
+    PLAYWRIGHT_CHROMIUM_FLAGS="--disable-dev-shm-usage" \
     TEST262_ROOT=/opt/test262 \
     WPT_ROOT=/opt/wpt \
     WPT_CHECKOUT_DIR=/opt/wpt \
-    DISPLAY=:99
+    DISPLAY=:99 \
+    BROILER_CONTAINER_ROLE=browser
 
 ARG NODE_MAJOR=22
 ARG PLAYWRIGHT_VERSION=1.59.1

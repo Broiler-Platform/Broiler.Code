@@ -48,7 +48,7 @@ function Build-Base {
 
     if ($Test) {
         Write-Host "==> Testing base image..." -ForegroundColor Yellow
-        docker run --rm $BaseImage dotnet --info
+        docker run --rm --shm-size=2gb $BaseImage dotnet --info
     }
 
     if ($Push) {
@@ -67,7 +67,7 @@ function Build-Browser {
 
     if ($Test) {
         Write-Host "==> Testing browser image..." -ForegroundColor Yellow
-        docker run --rm $BrowserImage bash -c "node --version && npx playwright --version && test -d /opt/test262/test && test -d /opt/wpt/css"
+        docker run --rm --shm-size=2gb $BrowserImage bash -c "node --version && npx playwright --version && test -d /opt/test262/test && test -d /opt/wpt/css"
     }
 
     if ($Push) {
@@ -86,7 +86,7 @@ function Build-Office {
 
     if ($Test) {
         Write-Host "==> Testing office image..." -ForegroundColor Yellow
-        docker run --rm $OfficeImage bash -c "soffice --version && pdftoppm -v 2>&1 | head -n 1 && test -d /opt/libreoffice-extras"
+        docker run --rm --shm-size=2gb $OfficeImage bash -c "soffice --version && pdftoppm -v 2>&1 | head -n 1 && test -d /opt/libreoffice-extras"
     }
 
     if ($Push) {
