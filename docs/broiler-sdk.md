@@ -91,3 +91,23 @@ If the NuGet publishing job fails, rerun the failed job to retry the original
 validated artifact. `--skip-duplicate` allows this retry to succeed if nuget.org
 accepted the package before the original run lost its connection. A new workflow
 run instead reserves a new preview version.
+
+## CI Container Images
+
+As part of `Broiler.SDK`, pre-built CI container images are maintained in the
+[`docker/`](../docker/README.md) directory and published to the GitHub Container
+Registry (`ghcr.io`):
+
+- **`base`** (`ghcr.io/broiler-platform/broiler-sdk-base:latest`) — Ubuntu latest
+  with the latest .NET 10.0 SDK, NativeAOT C/C++ compiler tools (`clang`, `zlib1g-dev`),
+  Python, and core build utilities.
+- **`browser`** (`ghcr.io/broiler-platform/broiler-sdk-browser:latest`) — extends
+  `base` with Node.js, Playwright, Chromium headless, and checkouts of `test262`
+  and `wpt`.
+- **`office`** (`ghcr.io/broiler-platform/broiler-sdk-office:latest`) — extends
+  `base` with LibreOffice headless, `poppler-utils` (`pdftoppm`), pinned metric-compatible
+  fonts, and LibreOffice `sw/qa/extras` testcases.
+
+See [docker/README.md](../docker/README.md) for local build scripts, Docker Compose
+definitions, and GitHub Actions integration examples.
+

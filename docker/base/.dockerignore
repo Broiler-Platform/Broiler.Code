@@ -1,0 +1,10 @@
+**/.git
+**/.github
+**/bin
+**/obj
+**/artifacts
+**/node_modules
+**/.vs
+**/.vscode
+*.tmp
+*.log

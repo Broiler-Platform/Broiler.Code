@@ -194,7 +194,8 @@ packages, the same ones the other Broiler applications use.
 | `tests/broiler-code-phase0/fixture` | Shared SampleReports test data, retained independently of the retired harnesses |
 | `docs/` | Architecture records, budgets, the SDK-mutation matrix and the roadmap |
 | `eng/`, `scripts/` | Solution manifest and generator |
-| `.github/` | CI workflow and the `setup-broiler` composite action |
+| `docker/` | Container definitions (`base`, `browser`, `office`) for GitHub Container Registry |
+| `.github/` | CI workflow, Docker publishing workflow, and the `setup-broiler` composite action |
 
 ## Dependencies
 
