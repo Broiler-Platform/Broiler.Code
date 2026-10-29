@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-24.04]
     steps:
       - name: Check out
         uses: actions/checkout@v5
@@ -59,7 +59,7 @@ jobs:
   # without regenerating leaves the new project out of every solution.
   solutions:
     name: Solution manifest
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
@@ -95,14 +95,14 @@ jobs:
           # The Linux head is plain net10.0 with P/Invoke into X11 and evdev, so it
           # compiles anywhere; building it on Linux keeps that honest.
           - name: Linux head
-            os: ubuntu-latest
+            os: ubuntu-24.04
             solution: Broiler.Linux.Code.slnx
             test: false
           # The suite is all net10.0. Running it on both hosts is deliberate: the
           # shell does clipboard, file-dialog and input-routing work that is easy to
           # make accidentally platform-specific.
           - name: Tests (Linux)
-            os: ubuntu-latest
+            os: ubuntu-24.04
             solution: Broiler.Code.Tests.slnx
             test: true
           - name: Tests (Windows)
@@ -129,7 +129,7 @@ jobs:
   # docs/architecture/broiler-code-review.md for why.
   review:
     name: Human review coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:

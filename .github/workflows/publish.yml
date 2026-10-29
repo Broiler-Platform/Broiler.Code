@@ -52,7 +52,7 @@ env:
 jobs:
   version:
     name: Resolve preview version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -99,7 +99,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-24.04]
         variant: [self-contained, framework-dependent]
         include:
           # The pinned configurations carry the runtime identifier a self-contained publish
@@ -113,7 +113,7 @@ jobs:
             executable: Broiler.Code.Windows.exe
           # The Linux head is plain net10.0 and could be published from anywhere; publishing
           # it on Linux keeps the host that builds it the one it runs on.
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             rid: linux-x64
             project: src/Broiler.Code.Linux/Broiler.Code.Linux.csproj
             configuration: Release-Linux
@@ -188,7 +188,7 @@ jobs:
   sdk-package:
     name: Broiler.SDK package
     needs: version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       VERSION: ${{ needs.version.outputs.version }}
@@ -220,7 +220,7 @@ jobs:
   release:
     name: Tag and draft release ${{ needs.version.outputs.tag }}
     needs: [version, build, sdk-package]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     env:
@@ -275,7 +275,7 @@ jobs:
     # Reserve the version with its tag before publishing an immutable package. Download
     # the artifact that passed the SDK smoke test; never rebuild it in the publishing job.
     needs: [version, sdk-package, release]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       VERSION: ${{ needs.version.outputs.version }}
