@@ -16,7 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Broiler.Graphics" Version="0.1.0-preview.14" />
-    <PackageVersion Include="Broiler.Graphics.Windows" Version="0.1.0-preview.14" />
+    <PackageVersion Include="Broiler.Graphics.Windows" Version="0.1.0-preview.15" />
     <PackageVersion Include="Broiler.Graphics.Linux.OpenGL" Version="$(BroilerGraphicsVersion)" />
     <PackageVersion Include="Broiler.Hosting.Windows" Version="0.1.0-preview.10" />
     <PackageVersion Include="Broiler.Hosting.Linux" Version="$(BroilerHostingVersion)" />
