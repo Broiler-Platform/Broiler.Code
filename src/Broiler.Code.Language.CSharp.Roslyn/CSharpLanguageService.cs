@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   10
 // Annotated:        10/10
 // Exempt:           3
@@ -29,8 +29,8 @@ using Microsoft.CodeAnalysis.Text;
 namespace Broiler.Code.Language.CSharp.Roslyn;
 
 /// <summary>One document's semantic result for one exact snapshot.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=A8C9C2
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=A8C9C2
+// Hairs-Human:        PENDING
 public sealed record SemanticAnalysisResult(
     ICodeTextSnapshot Snapshot,
     string DocumentPath,
@@ -38,9 +38,9 @@ public sealed record SemanticAnalysisResult(
     IReadOnlyList<CodeDiagnosticAdornment> Diagnostics,
     IReadOnlyList<CodeProjectDiagnostic> ProjectDiagnostics)
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=B5B1BD
-    // Broiler-Falsified-If: an unavailable result carries no project diagnostic naming why, so the document reads as free of errors
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=B5B1BD
+    // Hairs-Falsified-If: an unavailable result carries no project diagnostic naming why, so the document reads as free of errors
+    // Hairs-Human:        PENDING
     public static SemanticAnalysisResult Unavailable(
         ICodeTextSnapshot snapshot, string documentPath, GraphUnavailable reason) =>
         new(snapshot, documentPath, string.Empty, [], [reason.ToDiagnostic()]);
@@ -58,18 +58,18 @@ public sealed record SemanticAnalysisResult(
 /// from, and applying one to a document that has moved on is refused rather
 /// than rebased.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=75FA82
-// Broiler-Falsified-If: an analysis whose project graph is unavailable, or whose document is outside the evaluated compile set, returns no project diagnostic saying why
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=75FA82
+// Hairs-Falsified-If: an analysis whose project graph is unavailable, or whose document is outside the evaluated compile set, returns no project diagnostic saying why
+// Hairs-Human:        PENDING
 public sealed class CSharpLanguageService
 {
     private readonly IEvaluatedGraphSource _graphs;
     private readonly Dictionary<string, MetadataReference> _referenceCache =
         new(StringComparer.OrdinalIgnoreCase);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=A3A46A
-    // Broiler-Falsified-If: a null graph source is accepted and fails later inside Analyze instead of at construction
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=A3A46A
+    // Hairs-Falsified-If: a null graph source is accepted and fails later inside Analyze instead of at construction
+    // Hairs-Human:        PENDING
     public CSharpLanguageService(IEvaluatedGraphSource graphs) =>
         _graphs = graphs ?? throw new ArgumentNullException(nameof(graphs));
 
@@ -91,9 +91,9 @@ public sealed class CSharpLanguageService
     /// every source in the project, so a change to a signature in one file
     /// produces an error at its call site in another.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=750037
-    // Broiler-Falsified-If: a diagnostic located in another compile input is adorned on the analysed snapshot at that file's offsets
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=750037
+    // Hairs-Falsified-If: a diagnostic located in another compile input is adorned on the analysed snapshot at that file's offsets
+    // Hairs-Human:        PENDING
     public SemanticAnalysisResult Analyze(
         ICodeTextSnapshot snapshot,
         string documentPath,
@@ -197,9 +197,9 @@ public sealed class CSharpLanguageService
             snapshot, documentPath, graph.TargetFramework, adornments, projectDiagnostics);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=E33764
-    // Broiler-Falsified-If: a reference path the graph lists but that is missing on disk is handed to MetadataReference.CreateFromFile and fails the analysis
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=E33764
+    // Hairs-Falsified-If: a reference path the graph lists but that is missing on disk is handed to MetadataReference.CreateFromFile and fails the analysis
+    // Hairs-Human:        PENDING
     private List<MetadataReference> ResolveReferences(
         EvaluatedProjectGraph graph, CancellationToken cancellationToken)
     {
@@ -221,9 +221,9 @@ public sealed class CSharpLanguageService
         return references;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=519411
-    // Broiler-Falsified-If: a compile path that exists but cannot be opened, such as a directory or an access-denied file, throws UnauthorizedAccessException out of Analyze instead of being read as empty text
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=519411
+    // Hairs-Falsified-If: a compile path that exists but cannot be opened, such as a directory or an access-denied file, throws UnauthorizedAccessException out of Analyze instead of being read as empty text
+    // Hairs-Human:        PENDING
     private static string ReadOverlayOrFile(
         string path, IReadOnlyDictionary<string, string>? overlays)
     {
@@ -243,18 +243,18 @@ public sealed class CSharpLanguageService
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=CED33A
-    // Broiler-Falsified-If: a compile path spelled with different separators or dot segments than the document path, such as src/./A.cs, is not recognised as the document
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=CED33A
+    // Hairs-Falsified-If: a compile path spelled with different separators or dot segments than the document path, such as src/./A.cs, is not recognised as the document
+    // Hairs-Human:        PENDING
     private static bool IsSameDocument(string left, string right) =>
         string.Equals(
             System.IO.Path.GetFullPath(left),
             System.IO.Path.GetFullPath(right),
             StringComparison.OrdinalIgnoreCase);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=CD0181
-    // Broiler-Falsified-If: a Nullable value written in another letter case, such as Enable, maps to Disable
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=CD0181
+    // Hairs-Falsified-If: a Nullable value written in another letter case, such as Enable, maps to Disable
+    // Hairs-Human:        PENDING
     private static NullableContextOptions MapNullable(string? declared) => declared?.ToLowerInvariant() switch
     {
         "enable" => NullableContextOptions.Enable,
@@ -263,9 +263,9 @@ public sealed class CSharpLanguageService
         _ => NullableContextOptions.Disable,
     };
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=EE18CB
-    // Broiler-Falsified-If: a compiler error or warning is adorned with a lower severity than the one it was reported with
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=EE18CB
+    // Hairs-Falsified-If: a compiler error or warning is adorned with a lower severity than the one it was reported with
+    // Hairs-Human:        PENDING
     private static CodeDiagnosticSeverity MapSeverity(DiagnosticSeverity severity) => severity switch
     {
         DiagnosticSeverity.Error => CodeDiagnosticSeverity.Error,

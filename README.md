@@ -13,7 +13,7 @@ Everything below the application — graphics, media, input and the UI toolkit �
 own repository and is consumed here as a NuGet package.
 
 > **Preview.** Public APIs, repository layout and persisted behaviour are not frozen. A large
-> share of the implementation was AI-assisted; the review record under `.broiler-review/` is
+> share of the implementation was AI-assisted; the review record under `.hairs-review/` is
 > the only claim this repository makes about what a person has actually read.
 
 ## Getting started
@@ -60,7 +60,6 @@ than only documented:
 | Assembly | Depends on | Deliberately does **not** depend on |
 |---|---|---|
 | `Broiler.Code.Workspaces` | nothing | Broiler.UI, Roslyn, any platform |
-| `Broiler.Code.Review` | `Broiler.Code.Workspaces` | Broiler.UI, Roslyn, git |
 | `Broiler.Code.Language.CSharp.Syntax` | `Broiler.UI.CodeEditor` | Roslyn |
 | `Broiler.Code.Language.CSharp.Roslyn` | `Broiler.UI.CodeEditor`, workspaces, the review model, Roslyn | — |
 | `Broiler.Code.Core` | workspaces, review, Broiler.UI **abstractions**, Broiler.Input, Broiler.Graphics | Roslyn, any Broiler.UI implementation |
@@ -68,38 +67,29 @@ than only documented:
 
 Keeping Roslyn out of `Broiler.Code.Core`'s closure is what lets a browser or Android host
 compose the portable classifier alone — the decision the Phase 0 payload probes measured.
-`Broiler.Code.Review` has no UI reference for the same kind of reason: the coverage number CI
+`Hairs` has no UI reference for the same kind of reason: the coverage number CI
 publishes and the badge the editor draws are computed by the same code, so they cannot
 disagree.
 
 The full record is [`docs/architecture/broiler-code.md`](docs/architecture/broiler-code.md);
 the phased plan is [`docs/broiler-code-roadmap.md`](docs/broiler-code-roadmap.md).
 
-## Development tools: Broiler.SDK
+## Development tools: Hairs.Cli
 
-Create the `Broiler.SDK` NuGet tool package with the existing review CLI and C#
-assurance tools:
+Human-review coverage and C# code assurance are provided by the standalone Hairs and Hairs.Cli NuGet packages, pinned in .config/dotnet-tools.json and Directory.Packages.props:
 
 ```bash
-dotnet pack src/Broiler.Code.Review.Cli -c Release
-dotnet tool install --global Broiler.SDK --version 0.1.0-preview.1 --source ./artifacts/packages
-broiler-review --help
+dotnet tool restore --configfile NuGet.config
+dotnet tool run hairs -- --help
 ```
-
-Use the version of the package you built (the example is the current default).
-See [Broiler.SDK](docs/broiler-sdk.md) for local tool installation, versioning and
-package validation. CI validates the package on Windows and Linux; Publish adds
-it to the draft release alongside the editor downloads and publishes it to
-nuget.org using the `NUGET_TOKEN` Actions secret.
-
 ## Human review
 
-`Broiler.Code.Review` evaluates a repository's `.broiler-review/` records: which files a
+`Hairs` evaluates a repository's `.hairs-review/` records: which files a
 person has approved, and which approvals a later change has invalidated. Staleness is decided
 by content, not by commit, so a rebase does not invalidate a review and a revert restores one.
 
 ```bash
-dotnet run --project src/Broiler.Code.Review.Cli -- coverage --root .
+dotnet tool run hairs -- coverage --root .
 ```
 
 In the editor, **File ▸ Open Folder…** grants a directory and fills the Solution
@@ -118,9 +108,9 @@ one does not drag in another platform's backends.
 
 | Solution | Entry point | Projects |
 |---|---|---|
-| `Broiler.Windows.Code.slnx` | `src/Broiler.Code.Windows` | 6 |
-| `Broiler.Linux.Code.slnx` | `src/Broiler.Code.Linux` | 6 |
-| `Broiler.Code.Tests.slnx` | the five test projects | 12 |
+| `Broiler.Windows.Code.slnx` | `src/Broiler.Code.Windows` | 4 |
+| `Broiler.Linux.Code.slnx` | `src/Broiler.Code.Linux` | 4 |
+| `Broiler.Code.Tests.slnx` | the three test projects | 7 |
 
 The solutions are **generated, not hand-edited**. `eng/solutions.json` declares each entry
 point and the platform boundaries it must not cross; `scripts/update-solutions.ps1` walks the
@@ -149,8 +139,6 @@ projects by changing the reference graph, then regenerate.
 - **Build** — the Windows head on `windows-latest`, the Linux head on `ubuntu-latest`.
 - **Tests** — the suite on both hosts, because the shell does clipboard, file-dialog and
   input-routing work that is easy to make accidentally platform-specific.
-- **Broiler.SDK** — packs and installs the development tools on both hosts, then
-  exercises review and assurance commands.
 - **Human review** — coverage over this repository's sources, reported to the run summary.
 
 [`.github/actions/setup-broiler`](.github/actions/setup-broiler/action.yml) installs
@@ -183,8 +171,6 @@ packages, the same ones the other Broiler applications use.
 | Path | Contents |
 |---|---|
 | `src/Broiler.Code.Workspaces` | Text layer and workspace model. No references at all, deliberately. |
-| `src/Broiler.Code.Review` | Human review record, coverage and staleness — no UI, no Roslyn, no git |
-| `src/Broiler.Code.Review.Cli` | The half of the review workspace that runs where there is no display |
 | `src/Broiler.Code.Core` | The seam: workspace snapshots adapted to the control-facing editor interfaces, plus the shell |
 | `src/Broiler.Code.Language.CSharp.Syntax` | Portable C# classifier — the fallback a host without Roslyn composes |
 | `src/Broiler.Code.Language.CSharp.Roslyn` | Semantic language service on one pinned Roslyn toolset |

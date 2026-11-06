@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   11
 // Annotated:        11/11
 // Exempt:           5
@@ -33,9 +33,9 @@ namespace Broiler.Code.Language.CSharp.Roslyn;
 /// evaluation is gated on an explicit, scoped decision and an untrusted
 /// workspace stays in declared, non-evaluating mode.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=7D49B0
-// Broiler-Falsified-If: Untrusted is not the zero value, so a default-initialised trust setting lets evaluation run
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=0; Fingerprint=7D49B0
+// Hairs-Falsified-If: Untrusted is not the zero value, so a default-initialised trust setting lets evaluation run
+// Hairs-Human:        PENDING
 public enum WorkspaceTrust
 {
     Untrusted = 0,
@@ -56,16 +56,16 @@ public enum WorkspaceTrust
 /// boundary, and their outputs reach the language service as recorded inputs
 /// rather than by being executed here.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Critical; Resources=9; Fingerprint=797B08
-// Broiler-Falsified-If: an evaluator whose Trust is Untrusted, or any value other than Trusted, starts a dotnet process
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Critical; Resources=9; Fingerprint=797B08
+// Hairs-Falsified-If: an evaluator whose Trust is Untrusted, or any value other than Trusted, starts a dotnet process
+// Hairs-Human:        PENDING
 public sealed class DesignTimeEvaluator
 {
     private readonly string _workspaceRoot;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=7B19AE
-    // Broiler-Falsified-If: an empty or whitespace workspace root is accepted and the process's current directory becomes the containment root
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=7B19AE
+    // Hairs-Falsified-If: an empty or whitespace workspace root is accepted and the process's current directory becomes the containment root
+    // Hairs-Human:        PENDING
     public DesignTimeEvaluator(string workspaceRoot)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(workspaceRoot);
@@ -81,9 +81,9 @@ public sealed class DesignTimeEvaluator
     /// rather than a partial graph when it cannot: a compilation assembled from
     /// assumptions produces diagnostics that look authoritative and are not.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Critical; Resources=9; Fingerprint=7B6211
-    // Broiler-Falsified-If: an evaluation whose dotnet build never exits keeps running past TimeoutSeconds, because only the caller's cancellation token ends the wait
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Critical; Resources=9; Fingerprint=7B6211
+    // Hairs-Falsified-If: an evaluation whose dotnet build never exits keeps running past TimeoutSeconds, because only the caller's cancellation token ends the wait
+    // Hairs-Human:        PENDING
     public async ValueTask<(EvaluatedProjectGraph? Graph, GraphUnavailable? Unavailable)> EvaluateAsync(
         string projectRelativePath,
         string? targetFramework,
@@ -190,9 +190,9 @@ public sealed class DesignTimeEvaluator
     /// Reads MSBuild's structured output. Public so a worker on another machine
     /// can produce the JSON and this side can still parse it.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=2A2F09
-    // Broiler-Falsified-If: well-formed JSON of another shape, such as a Compile item whose FullPath is a number or an Items.Compile that is not an array, throws InvalidOperationException, which the JsonException handler in EvaluateAsync does not catch
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=2A2F09
+    // Hairs-Falsified-If: well-formed JSON of another shape, such as a Compile item whose FullPath is a number or an Items.Compile that is not an array, throws InvalidOperationException, which the JsonException handler in EvaluateAsync does not catch
+    // Hairs-Human:        PENDING
     public static EvaluatedProjectGraph Parse(
         string projectPath, string? requestedFramework, string json)
     {
@@ -248,9 +248,9 @@ public sealed class DesignTimeEvaluator
         };
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=8D22F7
-    // Broiler-Falsified-If: a user source whose absolute path has any ancestor directory named obj, such as a workspace under /home/u/obj/repo, is classified as generated
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=8D22F7
+    // Hairs-Falsified-If: a user source whose absolute path has any ancestor directory named obj, such as a workspace under /home/u/obj/repo, is classified as generated
+    // Hairs-Human:        PENDING
     private static bool IsUnderIntermediateOutput(string path)
     {
         string normalized = path.Replace('\\', '/');
@@ -258,18 +258,18 @@ public sealed class DesignTimeEvaluator
             normalized.StartsWith("obj/", StringComparison.OrdinalIgnoreCase);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=A7C384
-    // Broiler-Falsified-If: on a case-sensitive file system a project in a sibling directory whose name differs from the workspace root's only in letter case passes the containment check
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=A7C384
+    // Hairs-Falsified-If: on a case-sensitive file system a project in a sibling directory whose name differs from the workspace root's only in letter case passes the containment check
+    // Hairs-Human:        PENDING
     private bool IsInsideWorkspace(string candidate)
     {
         string prefix = _workspaceRoot.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         return candidate.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=EDB0B7
-    // Broiler-Falsified-If: an entry with no FullPath, or an empty one, is yielded as a path
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=EDB0B7
+    // Hairs-Falsified-If: an entry with no FullPath, or an empty one, is yielded as a path
+    // Hairs-Human:        PENDING
     private static IEnumerable<string> FullPaths(JsonElement items, string itemName)
     {
         if (!items.TryGetProperty(itemName, out JsonElement element))
@@ -285,21 +285,21 @@ public sealed class DesignTimeEvaluator
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=05E96E
-    // Broiler-Falsified-If: an absent property is returned as an empty string rather than null, so TargetFramework no longer falls back to the requested framework
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=05E96E
+    // Hairs-Falsified-If: an absent property is returned as an empty string rather than null, so TargetFramework no longer falls back to the requested framework
+    // Hairs-Human:        PENDING
     private static string? GetString(JsonElement element, string name) =>
         element.TryGetProperty(name, out JsonElement value) ? value.GetString() : null;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=19C51F
-    // Broiler-Falsified-If: a text longer than the limit keeps its first characters instead of its last
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=19C51F
+    // Hairs-Falsified-If: a text longer than the limit keeps its first characters instead of its last
+    // Hairs-Human:        PENDING
     private static string Tail(string text, int limit) =>
         text.Length <= limit ? text : text[^limit..];
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=C7D5EB
-    // Broiler-Falsified-If: a process tree that cannot be fully terminated makes Kill throw AggregateException or Win32Exception, which escapes TryKill and replaces the cancellation EvaluateAsync rethrows
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=C7D5EB
+    // Hairs-Falsified-If: a process tree that cannot be fully terminated makes Kill throw AggregateException or Win32Exception, which escapes TryKill and replaces the cancellation EvaluateAsync rethrows
+    // Hairs-Human:        PENDING
     private static void TryKill(Process process)
     {
         try

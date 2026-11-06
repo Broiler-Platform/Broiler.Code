@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   79
 // Annotated:        79/79
 // Exempt:           52
@@ -23,8 +23,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Broiler.Code.Core.Diagnostics;
 using Broiler.Code.Core.Review;
-using Broiler.Code.Review;
-using Broiler.Code.Review.Assurance;
+using Hairs;
+using Hairs.Assurance;
 using Broiler.Code.Core.Templates;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
@@ -51,8 +51,8 @@ namespace Broiler.Code.Core.Shell;
 /// references a Standard implementation and a head remains free to substitute
 /// its own — which is also what keeps the shell testable without a platform.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=1; Fingerprint=872587
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=1; Fingerprint=872587
+// Hairs-Human:        PENDING
 public sealed record CodeShellControls
 {
     public required UiPanel Root { get; init; }
@@ -180,9 +180,9 @@ public sealed record CodeShellControls
 /// <see cref="ProblemsModel"/>. This file is layout, command wiring, and the
 /// status text, and deliberately holds no logic those three already own.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=AC9F26
-// Broiler-Falsified-If: a tab switch or finished background load that moves the file status picker is read back as a new decision and recorded against the file now shown
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=AC9F26
+// Hairs-Falsified-If: a tab switch or finished background load that moves the file status picker is read back as a new decision and recorded against the file now shown
+// Hairs-Human:        PENDING
 public sealed class CodeShell : IDisposable
 {
     /// <summary>
@@ -190,8 +190,8 @@ public sealed class CodeShell : IDisposable
     /// toolbar that mirrors every command is a second menu that is harder to
     /// read.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=1; Fingerprint=650ACB
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=1; Fingerprint=650ACB
+    // Hairs-Human:        PENDING
     private static readonly string[] ToolbarCommands =
     [
         CodeCommandNames.New,
@@ -216,9 +216,9 @@ public sealed class CodeShell : IDisposable
     /// that asks for nothing — the order is roughly how much of somebody else's
     /// time each one claims.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=EFEFC3
-    // Broiler-Falsified-If: an entry's identifier is not a ReviewNoteKind name, so choosing it writes the note as a Question
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=EFEFC3
+    // Hairs-Falsified-If: an entry's identifier is not a ReviewNoteKind name, so choosing it writes the note as a Question
+    // Hairs-Human:        PENDING
     private static readonly UiComboBoxItem[] NoteKindItems =
     [
         new(nameof(ReviewNoteKind.Question), "Question"),
@@ -237,9 +237,9 @@ public sealed class CodeShell : IDisposable
     /// undoing a decision recorded on the wrong file is part of recording
     /// decisions, and it is the entry a reviewer reaches for in a hurry.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=42EA1B
-    // Broiler-Falsified-If: an entry runs a file decision command other than the one its label names, such as the in-review entry recording a different status
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=42EA1B
+    // Hairs-Falsified-If: an entry runs a file decision command other than the one its label names, such as the in-review entry recording a different status
+    // Hairs-Human:        PENDING
     private static readonly UiComboBoxItem[] ReviewStatusItems =
     [
         new(CodeCommandNames.ClearReview, "File: not reviewed"),
@@ -262,9 +262,9 @@ public sealed class CodeShell : IDisposable
     /// stacked in one pane that both say "reviewed" are two pickers a reviewer
     /// has to remember the order of.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=0F9BB4
-    // Broiler-Falsified-If: the entry labelled as needing review runs ApproveUnit, or the other entry runs WithdrawUnit
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=0F9BB4
+    // Hairs-Falsified-If: the entry labelled as needing review runs ApproveUnit, or the other entry runs WithdrawUnit
+    // Hairs-Human:        PENDING
     private static readonly UiComboBoxItem[] ReviewUnitItems =
     [
         new(CodeCommandNames.WithdrawUnit, "Declaration: needs human review"),
@@ -286,18 +286,18 @@ public sealed class CodeShell : IDisposable
     /// until the first frame is arranged, and a grip has to behave on the frame
     /// after that one.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=66930B
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=66930B
+    // Hairs-Human:        PENDING
     private const double SplitterDragExtent = 2400;
 
     /// <summary>The narrowest a pane may be dragged. Below this it is a strip nobody can read.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=94B087
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=94B087
+    // Hairs-Human:        PENDING
     private const double MinimumPaneWidth = 120;
 
     /// <summary>How much editor a pane has to leave behind it, however far its grip is dragged.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=DADE38
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=DADE38
+    // Hairs-Human:        PENDING
     private const double MinimumDocumentWidth = 240;
 
     private readonly CodeShellControls _controls;
@@ -324,9 +324,9 @@ public sealed class CodeShell : IDisposable
     private bool _syncingReviewStatus;
     private bool _disposed;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=5263C2
-    // Broiler-Falsified-If: a newly constructed shell with no workspace and no name set offers a review command as enabled
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=5263C2
+    // Hairs-Falsified-If: a newly constructed shell with no workspace and no name set offers a review command as enabled
+    // Hairs-Human:        PENDING
     public CodeShell(CodeShellControls controls)
     {
         _controls = controls ?? throw new ArgumentNullException(nameof(controls));
@@ -355,12 +355,12 @@ public sealed class CodeShell : IDisposable
     }
 
     /// <summary>Raised when a command runs, so a host can act on Open/New.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DE842C
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DE842C
+    // Hairs-Human:        PENDING
     public event EventHandler<CodeCommandEventArgs>? CommandInvoked;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=EB4E0C
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=EB4E0C
+    // Hairs-Human:        PENDING
     public UiElement RootElement => _controls.Root;
 
     public ProblemsModel Problems => _problems;
@@ -410,9 +410,9 @@ public sealed class CodeShell : IDisposable
     /// Binds a workspace. The explorer, the tabs, and the commands all follow
     /// from this; before it, the shell is present and inert rather than absent.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=F362A1
-    // Broiler-Falsified-If: after a tab click the review controller still targets the tab just left, so the next recorded decision is written against that file
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=F362A1
+    // Hairs-Falsified-If: after a tab click the review controller still targets the tab just left, so the next recorded decision is written against that file
+    // Hairs-Human:        PENDING
     public void AttachWorkspace(CodeWorkspace workspace, Workspaces.Recovery.RecoveryJournal? journal = null)
     {
         ThrowIfDisposed();
@@ -467,9 +467,9 @@ public sealed class CodeShell : IDisposable
     /// hung. Until it completes the explorer simply shows no badges, which is the
     /// same thing it shows for a file nobody has reviewed.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=A6634C
-    // Broiler-Falsified-If: a file in the newly attached workspace is badged with the review state recorded for the same relative path in the workspace attached before it
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=A6634C
+    // Hairs-Falsified-If: a file in the newly attached workspace is badged with the review state recorded for the same relative path in the workspace attached before it
+    // Hairs-Human:        PENDING
     private void AttachReview(CodeWorkspace workspace)
     {
         if (_controls.Review is null)
@@ -493,9 +493,9 @@ public sealed class CodeShell : IDisposable
         _ = LoadReviewAsync(_review, _reviewLoad.Token);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=3998B9
-    // Broiler-Falsified-If: with no dispatcher set, the records are read on a pool thread and published into the review maps while the UI thread is reading them
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=3998B9
+    // Hairs-Falsified-If: with no dispatcher set, the records are read on a pool thread and published into the review maps while the UI thread is reading them
+    // Hairs-Human:        PENDING
     private async Task LoadReviewAsync(ReviewController controller, CancellationToken cancellationToken)
     {
         try
@@ -554,9 +554,9 @@ public sealed class CodeShell : IDisposable
     /// disabled with that as the reason: a record saying a file was approved,
     /// with no name on it, is not evidence of a human review.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=BE4898
-    // Broiler-Falsified-If: after the name changes, the next file decision or unit signature is still written under the previous name
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=BE4898
+    // Hairs-Falsified-If: after the name changes, the next file decision or unit signature is still written under the previous name
+    // Hairs-Human:        PENDING
     public string Reviewer
     {
         get;
@@ -600,9 +600,9 @@ public sealed class CodeShell : IDisposable
     public UI.IUiDispatcher? Dispatcher { get; set; }
 
     /// <summary>Runs a named command. The single path the menu, toolbar, and keys share.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=61F5D1
-    // Broiler-Falsified-If: a command whose IsEnabled is false still runs its handler, for example a file decision written while no name is set
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=61F5D1
+    // Hairs-Falsified-If: a command whose IsEnabled is false still runs its handler, for example a file decision written while no name is set
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> InvokeAsync(string name, CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -658,9 +658,9 @@ public sealed class CodeShell : IDisposable
     /// asks for a location only when it is saved, so a user can start typing
     /// without first deciding where the file will live.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=E7C71E
-    // Broiler-Falsified-If: the new untitled document is shown while Save and Close stay disabled
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=E7C71E
+    // Hairs-Falsified-If: the new untitled document is shown while Save and Close stay disabled
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> NewDocumentAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -697,9 +697,9 @@ public sealed class CodeShell : IDisposable
     /// <c>Program.cs</c>. Nothing Broiler-specific is written, so the result
     /// builds with <c>dotnet build</c> and opens in any other tool.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=764E37
-    // Broiler-Falsified-If: a decision recorded in the newly created project carries the commit of the repository that was open before it
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=764E37
+    // Hairs-Falsified-If: a decision recorded in the newly created project carries the commit of the repository that was open before it
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> NewProjectAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -771,9 +771,9 @@ public sealed class CodeShell : IDisposable
     /// file is opened through the grant the dialog created, which is how a file
     /// outside the current root is reached without widening that root.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=BCBD0E
-    // Broiler-Falsified-If: a source file picked outside the current root is opened through the workspace's own storage instead of the grant the dialog returned
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=BCBD0E
+    // Hairs-Falsified-If: a source file picked outside the current root is opened through the workspace's own storage instead of the grant the dialog returned
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> OpenAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -836,9 +836,9 @@ public sealed class CodeShell : IDisposable
     /// workspace it replaces is closed first, so unsaved work is asked about
     /// before it goes and a declined prompt leaves everything as it was.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=671877
-    // Broiler-Falsified-If: a folder picked while the unsaved-changes prompt is declined still replaces the open workspace
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=671877
+    // Hairs-Falsified-If: a folder picked while the unsaved-changes prompt is declined still replaces the open workspace
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> OpenFolderAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -883,9 +883,9 @@ public sealed class CodeShell : IDisposable
     /// recorded in this one — and provenance is the field nobody would think to
     /// check, so it has to be right without being noticed.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=5E4E95
-    // Broiler-Falsified-If: after a second folder is granted with no factory set, a decision recorded there carries the commit of the root opened before it
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=5E4E95
+    // Hairs-Falsified-If: after a second folder is granted with no factory set, a decision recorded there carries the commit of the root opened before it
+    // Hairs-Human:        PENDING
     private void ApplyRevisionProviderFor(FileGrant grant)
     {
         // Assigned unconditionally, including when there is no factory. Skipping
@@ -903,9 +903,9 @@ public sealed class CodeShell : IDisposable
     /// there. The document keeps its ID, so its tab, buffer, and undo history
     /// come with it.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=28BA35
-    // Broiler-Falsified-If: the document is written to a path other than the one inside the grant the dialog returned, or its tab is renamed when the write failed
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=28BA35
+    // Hairs-Falsified-If: the document is written to a path other than the one inside the grant the dialog returned, or its tab is renamed when the write failed
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> SaveActiveAsAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -957,9 +957,9 @@ public sealed class CodeShell : IDisposable
     /// Asks the user for a file. Null on a host that cannot ask, which is what
     /// makes Open and Save As report Unavailable rather than doing nothing.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=BFB635
-    // Broiler-Falsified-If: replacing the service with null leaves Open and Save As reported as available
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=BFB635
+    // Hairs-Falsified-If: replacing the service with null leaves Open and Save As reported as available
+    // Hairs-Human:        PENDING
     public IFileDialogService? FileDialogs
     {
         get => _fileDialogs;
@@ -978,9 +978,9 @@ public sealed class CodeShell : IDisposable
     /// and an empty untitled buffer is a better first impression than a surface
     /// that silently ignores typing.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=327F56
-    // Broiler-Falsified-If: a shell that already shows a document gets a second, untitled one
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=327F56
+    // Hairs-Falsified-If: a shell that already shows a document gets a second, untitled one
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> EnsureDocumentAsync(CancellationToken cancellationToken = default)
     {
         ThrowIfDisposed();
@@ -997,9 +997,9 @@ public sealed class CodeShell : IDisposable
     /// route focus without knowing the shell's layout. Null leaves focus where
     /// it is — clicking the toolbar should not steal the caret from the editor.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=2B5E7E
-    // Broiler-Falsified-If: a pointer hit on a toolbar button returns a control, taking keyboard focus away from the editor
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=2B5E7E
+    // Hairs-Falsified-If: a pointer hit on a toolbar button returns a control, taking keyboard focus away from the editor
+    // Hairs-Human:        PENDING
     public UiElement? ResolveFocusTarget(UiElement? hit)
     {
         ThrowIfDisposed();
@@ -1036,9 +1036,9 @@ public sealed class CodeShell : IDisposable
     /// <summary>The editor, so a host can give it focus when the window opens.</summary>
     public UiCodeEditor Editor => _controls.Editor;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=216AB1
-    // Broiler-Falsified-If: a solution that fails to load, or whose unsaved-changes prompt is declined, still detaches the open workspace
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=216AB1
+    // Hairs-Falsified-If: a solution that fails to load, or whose unsaved-changes prompt is declined, still detaches the open workspace
+    // Hairs-Human:        PENDING
     private async ValueTask<bool> OpenSolutionAsync(FileGrant grant, CancellationToken cancellationToken)
     {
         StorageResult<CodeWorkspace> loaded = await WorkspaceLoader
@@ -1066,9 +1066,9 @@ public sealed class CodeShell : IDisposable
     }
 
     /// <summary>The file name without its extension, and without its folders.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=12890E
-    // Broiler-Falsified-If: 'src/MyApp.slnx' yields a stem other than 'MyApp', or '.gitignore' yields an empty stem
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=12890E
+    // Hairs-Falsified-If: 'src/MyApp.slnx' yields a stem other than 'MyApp', or '.gitignore' yields an empty stem
+    // Hairs-Human:        PENDING
     private static string StemOf(string relativePath)
     {
         int slash = relativePath.LastIndexOf('/');
@@ -1077,17 +1077,17 @@ public sealed class CodeShell : IDisposable
         return dot <= 0 ? name : name[..dot];
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=9D2C8E
-    // Broiler-Falsified-If: a picked 'App.SLNX' or 'App.sln' is opened as a text document instead of being loaded as a solution
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=9D2C8E
+    // Hairs-Falsified-If: a picked 'App.SLNX' or 'App.sln' is opened as a text document instead of being loaded as a solution
+    // Hairs-Human:        PENDING
     private static bool IsSolution(string relativePath) =>
         relativePath.EndsWith(".slnx", StringComparison.OrdinalIgnoreCase) ||
         relativePath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Opens a document and shows it, from the explorer or a host.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=0A1237
-    // Broiler-Falsified-If: an item id that names no document of the attached workspace opens a tab instead of reporting that the item could not be opened
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=0A1237
+    // Hairs-Falsified-If: an item id that names no document of the attached workspace opens a tab instead of reporting that the item could not be opened
+    // Hairs-Human:        PENDING
     public async ValueTask<bool> OpenDocumentAsync(
         WorkspaceItemId id, CancellationToken cancellationToken = default)
     {
@@ -1109,9 +1109,9 @@ public sealed class CodeShell : IDisposable
     }
 
     /// <summary>Publishes diagnostics for a document into the Problems pane.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=33D463
-    // Broiler-Falsified-If: publishing one document's diagnostics removes or replaces the rows of another document
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=33D463
+    // Hairs-Falsified-If: publishing one document's diagnostics removes or replaces the rows of another document
+    // Hairs-Human:        PENDING
     public void SetDocumentProblems(
         string documentPath, IEnumerable<MergedDiagnostic> diagnostics, ICodeTextSnapshot snapshot)
     {
@@ -1122,9 +1122,9 @@ public sealed class CodeShell : IDisposable
         RefreshStatusCounts();
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=70EA85
-    // Broiler-Falsified-If: after a mode change the editor and the Problems pane filter by different modes
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=70EA85
+    // Hairs-Falsified-If: after a mode change the editor and the Problems pane filter by different modes
+    // Hairs-Human:        PENDING
     public void SetAnalysisMode(CodeAnalysisMode mode)
     {
         ThrowIfDisposed();
@@ -1133,9 +1133,9 @@ public sealed class CodeShell : IDisposable
         RefreshStatusCounts();
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=A45D5F
-    // Broiler-Falsified-If: non-empty output text leaves the Output pane collapsed
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=A45D5F
+    // Hairs-Falsified-If: non-empty output text leaves the Output pane collapsed
+    // Hairs-Human:        PENDING
     public void SetOutput(string text)
     {
         ThrowIfDisposed();
@@ -1143,9 +1143,9 @@ public sealed class CodeShell : IDisposable
         RefreshBottomPanes();
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=497BE8
-    // Broiler-Falsified-If: after Dispose, a selection in the file status picker still runs a command
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=497BE8
+    // Hairs-Falsified-If: after Dispose, a selection in the file status picker still runs a command
+    // Hairs-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -1177,9 +1177,9 @@ public sealed class CodeShell : IDisposable
     /// The layout. Docked rather than absolutely positioned so the panes keep
     /// their relationship as the window resizes.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=F09352
-    // Broiler-Falsified-If: the Output pane is docked below the status line instead of above it
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=F09352
+    // Hairs-Falsified-If: the Output pane is docked below the status line instead of above it
+    // Hairs-Human:        PENDING
     private void Compose()
     {
         UiPanel root = _controls.Root;
@@ -1242,9 +1242,9 @@ public sealed class CodeShell : IDisposable
     /// worth: an arrow key moves a pane 24 units and a page key 120, rather than
     /// half a pane at a time.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=4D8ED4
-    // Broiler-Falsified-If: one arrow-key step on a grip moves its pane by other than 24 layout units
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=4D8ED4
+    // Hairs-Falsified-If: one arrow-key step on a grip moves its pane by other than 24 layout units
+    // Hairs-Human:        PENDING
     private static void ComposeSplitter(
         UiSplitter splitter, EventHandler<UiSplitterValueChangedEventArgs> moved)
     {
@@ -1263,9 +1263,9 @@ public sealed class CodeShell : IDisposable
     /// Does nothing when the head supplied no review tree, so a host that has
     /// not adopted the review workspace composes exactly the shell it did before.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=BF5654
-    // Broiler-Falsified-If: a head that supplies a review tree but no pane container gets no review tree docked at all
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=BF5654
+    // Hairs-Falsified-If: a head that supplies a review tree but no pane container gets no review tree docked at all
+    // Hairs-Human:        PENDING
     private void ComposeReview(UiPanel body)
     {
         if (_controls.Review is not { } review)
@@ -1353,9 +1353,9 @@ public sealed class CodeShell : IDisposable
         review.NodeActivated += OnReviewNodeActivated;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=684499
-    // Broiler-Falsified-If: dragging the explorer grip to the right narrows the explorer
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=684499
+    // Hairs-Falsified-If: dragging the explorer grip to the right narrows the explorer
+    // Hairs-Human:        PENDING
     private void OnExplorerSplitterMoved(object? sender, UiSplitterValueChangedEventArgs e) =>
         ResizeExplorer(GripTravel(e));
 
@@ -1364,22 +1364,22 @@ public sealed class CodeShell : IDisposable
     /// the explorer narrows it. One sign, and the two grips both feel like the
     /// edge of the pane they are drawn against.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=F56129
-    // Broiler-Falsified-If: dragging the review grip to the left narrows the review pane
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=F56129
+    // Hairs-Falsified-If: dragging the review grip to the left narrows the review pane
+    // Hairs-Human:        PENDING
     private void OnReviewSplitterMoved(object? sender, UiSplitterValueChangedEventArgs e) =>
         ResizeReview(-GripTravel(e));
 
     /// <summary>How far the grip moved, in layout units. See <see cref="SplitterDragExtent"/>.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1D34C9
-    // Broiler-Falsified-If: a value change of 0.01 is reported as a travel other than 24 layout units
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1D34C9
+    // Hairs-Falsified-If: a value change of 0.01 is reported as a travel other than 24 layout units
+    // Hairs-Human:        PENDING
     private static double GripTravel(UiSplitterValueChangedEventArgs e) =>
         (e.NewValue - e.OldValue) * SplitterDragExtent;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=D4DCB8
-    // Broiler-Falsified-If: a drag that would take the explorer below 120 layout units is applied without clamping
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=D4DCB8
+    // Hairs-Falsified-If: a drag that would take the explorer below 120 layout units is applied without clamping
+    // Hairs-Human:        PENDING
     private void ResizeExplorer(double travel)
     {
         UiTreeView explorer = _controls.Explorer;
@@ -1398,9 +1398,9 @@ public sealed class CodeShell : IDisposable
     /// itself would leave the pane standing at the note field's width and the
     /// grip would appear to do nothing.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=045656
-    // Broiler-Falsified-If: after a drag the review tree and the note field in the pane are left at different widths
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=045656
+    // Hairs-Falsified-If: after a drag the review tree and the note field in the pane are left at different widths
+    // Hairs-Human:        PENDING
     private void ResizeReview(double travel)
     {
         if (_controls.Review is not { IsDisposed: false } review || travel == 0)
@@ -1431,9 +1431,9 @@ public sealed class CodeShell : IDisposable
     /// applies — which costs nothing, because a grip cannot have been dragged
     /// before it was drawn.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=E668AB
-    // Broiler-Falsified-If: with the other panes arranged, the returned width leaves the editor under 240 layout units although a 120-unit pane would fit
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=E668AB
+    // Hairs-Falsified-If: with the other panes arranged, the returned width leaves the editor under 240 layout units although a 120-unit pane would fit
+    // Hairs-Human:        PENDING
     private double PaneWidth(double width, UiElement pane)
     {
         double body = _controls.Body.Bounds.Width;
@@ -1465,9 +1465,9 @@ public sealed class CodeShell : IDisposable
     /// bottom, maybe an output pane?". Collapsed rather than hidden, so the dock
     /// gives the space back instead of leaving a gap where the pane was.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=FCA04A
-    // Broiler-Falsified-If: the Problems pane is collapsed while it has visible rows
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=FCA04A
+    // Hairs-Falsified-If: the Problems pane is collapsed while it has visible rows
+    // Hairs-Human:        PENDING
     private void RefreshBottomPanes()
     {
         if (!_controls.Problems.IsDisposed)
@@ -1485,9 +1485,9 @@ public sealed class CodeShell : IDisposable
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=384BC6
-    // Broiler-Falsified-If: a menu entry is drawn enabled while the command it runs reports itself disabled
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=384BC6
+    // Hairs-Falsified-If: a menu entry is drawn enabled while the command it runs reports itself disabled
+    // Hairs-Human:        PENDING
     private void RefreshCommands()
     {
         SyncReviewState();
@@ -1558,9 +1558,9 @@ public sealed class CodeShell : IDisposable
     /// — a tab switch, a save, an edit, a recorded decision — already ends
     /// there. A second notification path would be one more thing to forget.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=84DE76
-    // Broiler-Falsified-If: after a tab switch the review or assurance controller still targets the document shown before it, so the next decision is recorded against that file
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=84DE76
+    // Hairs-Falsified-If: after a tab switch the review or assurance controller still targets the document shown before it, so the next decision is recorded against that file
+    // Hairs-Human:        PENDING
     private void SyncReviewState()
     {
         WorkspaceItemId active = _coordinator?.ActiveDocument ?? WorkspaceItemId.None;
@@ -1597,9 +1597,9 @@ public sealed class CodeShell : IDisposable
     /// them — and putting them in the list would offer them as decisions. What
     /// they are is on the State row above.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=DCC33D
-    // Broiler-Falsified-If: pointing the declaration picker at a different unit runs ApproveUnit or WithdrawUnit on it without anyone picking an entry
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=DCC33D
+    // Hairs-Falsified-If: pointing the declaration picker at a different unit runs ApproveUnit or WithdrawUnit on it without anyone picking an entry
+    // Hairs-Human:        PENDING
     private void SyncReviewUnitInput()
     {
         if (_controls.ReviewUnitInput is not { IsDisposed: false } picker)
@@ -1630,9 +1630,9 @@ public sealed class CodeShell : IDisposable
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=71DCEC
-    // Broiler-Falsified-If: a selection raised while a picker is being synced runs ApproveUnit or WithdrawUnit
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=71DCEC
+    // Hairs-Falsified-If: a selection raised while a picker is being synced runs ApproveUnit or WithdrawUnit
+    // Hairs-Human:        PENDING
     private void OnReviewUnitSelected(object? sender, UiComboBoxSelectionChangedEventArgs e)
     {
         if (_syncingReviewStatus)
@@ -1657,9 +1657,9 @@ public sealed class CodeShell : IDisposable
     /// different gesture from being told it has gone stale, which the row below
     /// already says.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=0BACA6
-    // Broiler-Falsified-If: matching the file picker to the record, for example on a tab switch, runs a file decision command against the file now shown
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=0BACA6
+    // Hairs-Falsified-If: matching the file picker to the record, for example on a tab switch, runs a file decision command against the file now shown
+    // Hairs-Human:        PENDING
     private void SyncReviewStatusInput()
     {
         if (_controls.ReviewStatusInput is not { IsDisposed: false } status)
@@ -1699,9 +1699,9 @@ public sealed class CodeShell : IDisposable
     /// <see cref="InvokeAsync(string, CancellationToken)"/> already does for a
     /// command that is disabled.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=C02D4C
-    // Broiler-Falsified-If: a selection raised while the picker is being synced to the record runs a file decision command
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=C02D4C
+    // Hairs-Falsified-If: a selection raised while the picker is being synced to the record runs a file decision command
+    // Hairs-Human:        PENDING
     private void OnReviewStatusSelected(object? sender, UiComboBoxSelectionChangedEventArgs e)
     {
         if (_syncingReviewStatus)
@@ -1720,9 +1720,9 @@ public sealed class CodeShell : IDisposable
     /// before it gets there — which is the case that matters, because that is
     /// exactly when the picker is showing something no record carries.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=F1B294
-    // Broiler-Falsified-If: after a refused decision the file picker keeps showing the refused status instead of the recorded one
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=F1B294
+    // Hairs-Falsified-If: after a refused decision the file picker keeps showing the refused status instead of the recorded one
+    // Hairs-Human:        PENDING
     private async ValueTask RecordPickedStatusAsync(string command)
     {
         await InvokeAsync(command).ConfigureAwait(true);
@@ -1738,9 +1738,9 @@ public sealed class CodeShell : IDisposable
     /// text. Hiding it would leave the user wondering whether the feature exists
     /// at all.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=531512
-    // Broiler-Falsified-If: an unavailable command's menu text does not say it is unavailable
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=531512
+    // Hairs-Falsified-If: an unavailable command's menu text does not say it is unavailable
+    // Hairs-Human:        PENDING
     private static string MenuText(CodeCommand command) =>
         command.Availability == CommandAvailability.Unavailable
             ? $"{command.Text} (unavailable)"
@@ -1751,9 +1751,9 @@ public sealed class CodeShell : IDisposable
     /// them on every command refresh would replace the element under the
     /// pointer mid-click and discard focus on every keystroke.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=AB7E18
-    // Broiler-Falsified-If: the toolbar carries a button for a command outside ToolbarCommands, or no separator before Build
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=AB7E18
+    // Hairs-Falsified-If: the toolbar carries a button for a command outside ToolbarCommands, or no separator before Build
+    // Hairs-Human:        PENDING
     private void ComposeToolbar()
     {
         _controls.Toolbar.Title = "Broiler Code";
@@ -1772,9 +1772,9 @@ public sealed class CodeShell : IDisposable
             _controls.Toolbar.SetSeparatorBefore(buildButton, true);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=4AB6F2
-    // Broiler-Falsified-If: a toolbar button stays enabled while its command reports itself disabled
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=4AB6F2
+    // Hairs-Falsified-If: a toolbar button stays enabled while its command reports itself disabled
+    // Hairs-Human:        PENDING
     private void RefreshToolbar()
     {
         foreach ((string name, UiButton button) in _toolbarButtons)
@@ -1795,27 +1795,27 @@ public sealed class CodeShell : IDisposable
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=4D168C
-    // Broiler-Falsified-If: clicking a toolbar button runs a command other than the one its CommandName names
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=4D168C
+    // Hairs-Falsified-If: clicking a toolbar button runs a command other than the one its CommandName names
+    // Hairs-Human:        PENDING
     private void OnToolbarButtonClicked(object? sender, UiButtonClickEventArgs e)
     {
         if (sender is UiButton { CommandName: { Length: > 0 } name })
             _ = InvokeAsync(name);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=75A984
-    // Broiler-Falsified-If: invoking a menu item runs a command other than the one its CommandName names, or a separator runs a command
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=75A984
+    // Hairs-Falsified-If: invoking a menu item runs a command other than the one its CommandName names, or a separator runs a command
+    // Hairs-Human:        PENDING
     private void OnMenuItemInvoked(object? sender, UiMenuItemInvokedEventArgs e)
     {
         if (e.Item?.CommandName is { Length: > 0 } name)
             _ = InvokeAsync(name);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=4021EE
-    // Broiler-Falsified-If: activating a folder or project row opens it as a document
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=4021EE
+    // Hairs-Falsified-If: activating a folder or project row opens it as a document
+    // Hairs-Human:        PENDING
     private void OnExplorerNodeActivated(object? sender, TreeNodeEventArgs e)
     {
         if (_explorerSource is null)
@@ -1826,9 +1826,9 @@ public sealed class CodeShell : IDisposable
             _ = OpenDocumentAsync(id);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=05BB87
-    // Broiler-Falsified-If: activating a project-level problem, or one whose document is not in the workspace, opens a document
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=05BB87
+    // Hairs-Falsified-If: activating a project-level problem, or one whose document is not in the workspace, opens a document
+    // Hairs-Human:        PENDING
     private void OnProblemActivated(object? sender, TreeNodeEventArgs e)
     {
         if (_problemsSource.EntryFor(e.Node) is not { } entry || entry.IsProjectLevel)
@@ -1845,9 +1845,9 @@ public sealed class CodeShell : IDisposable
     private void OnActiveDocumentChanged(object? sender, UiTabSelectionChangedEventArgs e) =>
         RefreshCommands();
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=15E73A
-    // Broiler-Falsified-If: after a file decision is cleared, the explorer keeps its earlier badge on that file until something else refreshes the tree
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=15E73A
+    // Hairs-Falsified-If: after a file decision is cleared, the explorer keeps its earlier badge on that file until something else refreshes the tree
+    // Hairs-Human:        PENDING
     private void OnReviewChanged(object? sender, EventArgs e)
     {
         // An unreadable record makes its file look unreviewed, so it is said out
@@ -1877,9 +1877,9 @@ public sealed class CodeShell : IDisposable
     /// does not. Rebuilding the menu that often would be work on the typing path
     /// for a result that is almost always the same.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=84E20B
-    // Broiler-Falsified-If: the line handed to the assurance controller is not the line holding the caret's focus, so a signature lands on a neighbouring declaration
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=84E20B
+    // Hairs-Falsified-If: the line handed to the assurance controller is not the line holding the caret's focus, so a signature lands on a neighbouring declaration
+    // Hairs-Human:        PENDING
     private void OnEditorSelectionChanged(object? sender, CodeSelectionChangedEventArgs e)
     {
         if (_assurance is null)
@@ -1900,9 +1900,9 @@ public sealed class CodeShell : IDisposable
     /// single greyed-out entry saying none of that is how a feature meant to be
     /// used daily stops being used.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=C81030
-    // Broiler-Falsified-If: a file with no annotations is reported as needing the caret inside an annotated declaration
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=C81030
+    // Hairs-Falsified-If: a file with no annotations is reported as needing the caret inside an annotated declaration
+    // Hairs-Human:        PENDING
     private string? AssuranceReason()
     {
         if (_assurance is not { } assurance)
@@ -1929,9 +1929,9 @@ public sealed class CodeShell : IDisposable
     /// which is what turns the Units section into a way through the file rather
     /// than a readout of it.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=E02BCD
-    // Broiler-Falsified-If: activating a file-level or orphaned note moves the caret
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=E02BCD
+    // Hairs-Falsified-If: activating a file-level or orphaned note moves the caret
+    // Hairs-Human:        PENDING
     private void OnReviewNodeActivated(object? sender, TreeNodeEventArgs e)
     {
         if (_reviewSource?.UnitFor(e.Node) is { } unit)
@@ -1950,9 +1950,9 @@ public sealed class CodeShell : IDisposable
     }
 
     /// <summary>Puts the caret at the start of a line and scrolls it into view.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=E2F74C
-    // Broiler-Falsified-If: a line at or past the snapshot's line count, or a negative one, throws instead of leaving the caret where it was
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=E2F74C
+    // Hairs-Falsified-If: a line at or past the snapshot's line count, or a negative one, throws instead of leaving the caret where it was
+    // Hairs-Human:        PENDING
     private void GoToLine(int line)
     {
         ICodeTextSnapshot snapshot = _controls.Editor.Snapshot;
@@ -1971,9 +1971,9 @@ public sealed class CodeShell : IDisposable
     /// already reading the line they are asking about, and a note-taking step
     /// that first asks where is a note-taking step people skip.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=978A10
-    // Broiler-Falsified-If: submitting the note field runs a command other than AddNote
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=978A10
+    // Hairs-Falsified-If: submitting the note field runs a command other than AddNote
+    // Hairs-Human:        PENDING
     private void OnReviewNoteSubmitted(object? sender, UiEditSubmittedEventArgs e) =>
         _ = InvokeAsync(CodeCommandNames.AddNote);
 
@@ -1996,9 +1996,9 @@ public sealed class CodeShell : IDisposable
     /// scanner does. It stays what it always was — display and search, never the
     /// thing that decides where a note goes, which is still the anchored text.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=8A5CB3
-    // Broiler-Falsified-If: the note is anchored to a line other than the one holding the caret when it is submitted
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=8A5CB3
+    // Hairs-Falsified-If: the note is anchored to a line other than the one holding the caret when it is submitted
+    // Hairs-Human:        PENDING
     private async ValueTask<bool> AddNoteFromInputAsync(CancellationToken cancellationToken)
     {
         if (_review is null || _controls.ReviewNoteInput is not { } input)
@@ -2038,9 +2038,9 @@ public sealed class CodeShell : IDisposable
     /// undoable and puts it in front of the reviewer before it is saved. Saving
     /// stays where it was.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=4B699E
-    // Broiler-Falsified-If: a unit signature is written under a name other than the shell's current one, such as a name set on the assurance controller before the change
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=5; Fingerprint=4B699E
+    // Hairs-Falsified-If: a unit signature is written under a name other than the shell's current one, such as a name set on the assurance controller before the change
+    // Hairs-Human:        PENDING
     private bool SignUnit(bool sign)
     {
         if (_assurance is not { } assurance)
@@ -2065,9 +2065,9 @@ public sealed class CodeShell : IDisposable
     /// tracked as the selection changes: one place decides, and there is no
     /// second copy of the answer to go stale.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=51C371
-    // Broiler-Falsified-If: a picker showing Concern writes the note as a Question
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=51C371
+    // Hairs-Falsified-If: a picker showing Concern writes the note as a Question
+    // Hairs-Human:        PENDING
     private ReviewNoteKind SelectedNoteKind()
     {
         if (_controls.ReviewNoteKindInput?.SelectedItem is not { } item)
@@ -2080,13 +2080,13 @@ public sealed class CodeShell : IDisposable
     /// The qualified name of the declaration the caret is in, or null when it is
     /// not in one — which is most of the time, and is why the field is optional.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F753B1
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F753B1
+    // Hairs-Human:        PENDING
     private string? SymbolAtCaret() => _assurance?.CurrentUnit?.Name;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=DE1B4F
-    // Broiler-Falsified-If: a decision the controller refused, such as one on a document with unsaved changes, is reported as recorded
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=DE1B4F
+    // Hairs-Falsified-If: a decision the controller refused, such as one on a document with unsaved changes, is reported as recorded
+    // Hairs-Human:        PENDING
     private async ValueTask<bool> RecordReviewAsync(ReviewStatus status, CancellationToken cancellationToken)
     {
         if (_review is null)
@@ -2109,9 +2109,9 @@ public sealed class CodeShell : IDisposable
     /// workspace rather than the whole platform: this is the shell's answer, and
     /// the CI tool's is the one that covers every component.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=C2B69F
-    // Broiler-Falsified-If: the Output line prints one coverage total in another's place, such as the count of files modified since their decision as the up-to-date count
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=C2B69F
+    // Hairs-Falsified-If: the Output line prints one coverage total in another's place, such as the count of files modified since their decision as the up-to-date count
+    // Hairs-Human:        PENDING
     private bool ShowReviewCoverage()
     {
         if (_review is null)
@@ -2136,9 +2136,9 @@ public sealed class CodeShell : IDisposable
         return true;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=74A038
-    // Broiler-Falsified-If: a problem whose line is past the end of the reopened document places the caret outside it or throws
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=74A038
+    // Hairs-Falsified-If: a problem whose line is past the end of the reopened document places the caret outside it or throws
+    // Hairs-Human:        PENDING
     private async ValueTask NavigateAsync(WorkspaceItemId id, ProblemEntry entry)
     {
         if (!await OpenDocumentAsync(id).ConfigureAwait(false))
@@ -2154,9 +2154,9 @@ public sealed class CodeShell : IDisposable
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=9D092A
-    // Broiler-Falsified-If: a save refused because the file changed on disk since it was opened is reported as saved
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=9D092A
+    // Hairs-Falsified-If: a save refused because the file changed on disk since it was opened is reported as saved
+    // Hairs-Human:        PENDING
     private async ValueTask<bool> SaveActiveAsync(CancellationToken cancellationToken)
     {
         if (_workspace is null || _coordinator is null)
@@ -2182,9 +2182,9 @@ public sealed class CodeShell : IDisposable
         return outcome.Succeeded;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=2C007B
-    // Broiler-Falsified-If: a document that failed to save is missing from the status line's list of unsaved files
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=2C007B
+    // Hairs-Falsified-If: a document that failed to save is missing from the status line's list of unsaved files
+    // Hairs-Human:        PENDING
     private async ValueTask<bool> SaveAllAsync(CancellationToken cancellationToken)
     {
         if (_coordinator is null)
@@ -2227,9 +2227,9 @@ public sealed class CodeShell : IDisposable
         return unsaved.Count == 0;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=E6C064
-    // Broiler-Falsified-If: a workspace diagnostic with no relative path is dropped instead of being listed under 'workspace'
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=E6C064
+    // Hairs-Falsified-If: a workspace diagnostic with no relative path is dropped instead of being listed under 'workspace'
+    // Hairs-Human:        PENDING
     private void ShowWorkspaceDiagnostics()
     {
         if (_workspace is null)
@@ -2243,9 +2243,9 @@ public sealed class CodeShell : IDisposable
         RefreshStatusCounts();
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=52A3C3
-    // Broiler-Falsified-If: after the problem rows change, the Problems pane keeps the visibility it had before
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=4; Fingerprint=52A3C3
+    // Hairs-Falsified-If: after the problem rows change, the Problems pane keeps the visibility it had before
+    // Hairs-Human:        PENDING
     private void RefreshStatusCounts()
     {
         SetStatus(_problems.Counts.Describe(_problems.Mode));
@@ -2256,18 +2256,18 @@ public sealed class CodeShell : IDisposable
         RefreshBottomPanes();
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=C3339C
-    // Broiler-Falsified-If: setting a status after the host disposed the label throws
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=C3339C
+    // Hairs-Falsified-If: setting a status after the host disposed the label throws
+    // Hairs-Human:        PENDING
     private void SetStatus(string text)
     {
         if (!_controls.Status.IsDisposed)
             _controls.Status.Text = text;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=9CE6B8
-    // Broiler-Falsified-If: a review load still running when the workspace is detached goes on to publish its records into a controller that the pane or explorer still reads
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=9CE6B8
+    // Hairs-Falsified-If: a review load still running when the workspace is detached goes on to publish its records into a controller that the pane or explorer still reads
+    // Hairs-Human:        PENDING
     private void DetachWorkspace()
     {
         _coordinator?.Dispose();
@@ -2306,13 +2306,13 @@ public sealed class CodeShell : IDisposable
         _workspace = null;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0A45A6
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0A45A6
+    // Hairs-Human:        PENDING
     private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E2F8F3
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E2F8F3
+// Hairs-Human:        PENDING
 public sealed class CodeCommandEventArgs(string name, bool handled) : EventArgs
 {
     public string Name { get; } = name;

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   18
 // Annotated:        18/18
 // Exempt:           13
@@ -29,18 +29,18 @@ namespace Broiler.Code.Core;
 /// buffer never references a UI package. Both sides can change independently as
 /// long as this file keeps translating between them.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7C50A7
-// Broiler-Falsified-If: after a buffer change, Snapshot still returns an adapter over a TextSnapshot older than the buffer's Current
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7C50A7
+// Hairs-Falsified-If: after a buffer change, Snapshot still returns an adapter over a TextSnapshot older than the buffer's Current
+// Hairs-Human:        PENDING
 public sealed class SourceBufferDocument : ICodeDocument, IDisposable
 {
     private readonly SourceBuffer _buffer;
     private SnapshotAdapter _snapshot;
     private bool _disposed;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=991026
-    // Broiler-Falsified-If: a document built over a buffer keeps its first snapshot when that buffer later accepts an edit
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=991026
+    // Hairs-Falsified-If: a document built over a buffer keeps its first snapshot when that buffer later accepts an edit
+    // Hairs-Human:        PENDING
     public SourceBufferDocument(SourceBuffer buffer)
     {
         _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
@@ -48,16 +48,16 @@ public sealed class SourceBufferDocument : ICodeDocument, IDisposable
         _buffer.Changed += OnBufferChanged;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0A1E8E
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=0A1E8E
+    // Hairs-Human:        PENDING
     public event Action<ICodeTextSnapshot>? SnapshotChanged;
 
     /// <summary>
     /// Raised with the change that produced the new snapshot, so a classifier
     /// can reuse work instead of reclassifying the document.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7D1B2C
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7D1B2C
+    // Hairs-Human:        PENDING
     public event Action<ICodeTextSnapshot, CodeTextChange>? SnapshotChangedWithDelta;
 
     public ICodeTextSnapshot Snapshot => _snapshot;
@@ -73,9 +73,9 @@ public sealed class SourceBufferDocument : ICodeDocument, IDisposable
     /// <summary>The underlying buffer, for hosts that own saving and recovery.</summary>
     public SourceBuffer Buffer => _buffer;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=977416
-    // Broiler-Falsified-If: an intent whose Start plus Length overflows int escapes Submit as an exception instead of returning an OutOfRange rejection
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=977416
+    // Hairs-Falsified-If: an intent whose Start plus Length overflows int escapes Submit as an exception instead of returning an OutOfRange rejection
+    // Hairs-Human:        PENDING
     public CodeEditOutcome Submit(CodeEditIntent intent)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -99,21 +99,21 @@ public sealed class SourceBufferDocument : ICodeDocument, IDisposable
             });
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=C88CB3
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=C88CB3
+    // Hairs-Human:        PENDING
     public bool Undo() => _buffer.Undo();
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=FAD26B
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=FAD26B
+    // Hairs-Human:        PENDING
     public bool Redo() => _buffer.Redo();
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=479336
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=479336
+    // Hairs-Human:        PENDING
     public void BreakUndoGroup() => _buffer.BreakUndoGroup();
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=68D3E0
-    // Broiler-Falsified-If: a buffer change after Dispose still replaces Snapshot or raises SnapshotChanged
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=68D3E0
+    // Hairs-Falsified-If: a buffer change after Dispose still replaces Snapshot or raises SnapshotChanged
+    // Hairs-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -122,9 +122,9 @@ public sealed class SourceBufferDocument : ICodeDocument, IDisposable
         _buffer.Changed -= OnBufferChanged;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=2FECFC
-    // Broiler-Falsified-If: SnapshotChangedWithDelta carries an old or new length other than those of the buffer change it reports
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=2FECFC
+    // Hairs-Falsified-If: SnapshotChangedWithDelta carries an old or new length other than those of the buffer change it reports
+    // Hairs-Human:        PENDING
     private void OnBufferChanged(TextSnapshot snapshot, TextChange change)
     {
         _snapshot = new SnapshotAdapter(snapshot);
@@ -138,9 +138,9 @@ public sealed class SourceBufferDocument : ICodeDocument, IDisposable
     /// control's reference comparison against the current snapshot means what
     /// it looks like it means.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=F23A03
-    // Broiler-Falsified-If: an adapter returns characters of a later snapshot after the buffer has accepted another edit
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=F23A03
+    // Hairs-Falsified-If: an adapter returns characters of a later snapshot after the buffer has accepted another edit
+    // Hairs-Human:        PENDING
     private sealed class SnapshotAdapter(TextSnapshot snapshot) : ICodeTextSnapshot
     {
         public TextSnapshot Inner { get; } = snapshot;
@@ -151,33 +151,33 @@ public sealed class SourceBufferDocument : ICodeDocument, IDisposable
 
         public int LineCount => Inner.LineCount;
 
-        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=14A5E0
-        // Broiler-Human:        PENDING
+        // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=14A5E0
+        // Hairs-Human:        PENDING
         public int GetLineStart(int line) => Inner.GetLineStart(line);
 
-        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=E1CF98
-        // Broiler-Human:        PENDING
+        // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=E1CF98
+        // Hairs-Human:        PENDING
         public int GetLineLength(int line) => Inner.GetLineLength(line);
 
-        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=1E5400
-        // Broiler-Human:        PENDING
+        // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=1E5400
+        // Hairs-Human:        PENDING
         public int GetLineFromPosition(int position) => Inner.GetLineFromPosition(position);
 
-        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=01135D
-        // Broiler-Human:        PENDING
+        // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=01135D
+        // Hairs-Human:        PENDING
         public string GetText(int start, int length) => Inner.GetText(start, length);
 
-        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=5C2778
-        // Broiler-Human:        PENDING
+        // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=3; Fingerprint=5C2778
+        // Hairs-Human:        PENDING
         public void CopyTo(int start, int length, Span<char> destination) =>
             Inner.CopyTo(start, length, destination);
 
-        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=A00A93
-        // Broiler-Human:        PENDING
+        // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=A00A93
+        // Hairs-Human:        PENDING
         public int GetNextCaretPosition(int position) => Inner.GetNextCaretPosition(position);
 
-        // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=831A3D
-        // Broiler-Human:        PENDING
+        // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=831A3D
+        // Hairs-Human:        PENDING
         public int GetPreviousCaretPosition(int position) => Inner.GetPreviousCaretPosition(position);
     }
 }

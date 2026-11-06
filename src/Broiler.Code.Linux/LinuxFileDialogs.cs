@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   15
 // Annotated:        15/15
 // Exempt:           5
@@ -40,23 +40,23 @@ namespace Broiler.Code.Linux;
 /// <see cref="IsAvailable"/> is false so the head reports Open, Open Folder and
 /// Save As as unavailable rather than opening nothing.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=D8426B
-// Broiler-Falsified-If: a grant from an open, save or folder request roots storage at a directory other than the chosen folder or the directory that contains the chosen file
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=D8426B
+// Hairs-Falsified-If: a grant from an open, save or folder request roots storage at a directory other than the chosen folder or the directory that contains the chosen file
+// Hairs-Human:        PENDING
 internal sealed class LinuxFileDialogs : IFileDialogService
 {
     private readonly string? _helper;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=BEF9D7
-    // Broiler-Falsified-If: IsAvailable is true while neither zenity nor kdialog is present on PATH
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=2; Fingerprint=BEF9D7
+    // Hairs-Falsified-If: IsAvailable is true while neither zenity nor kdialog is present on PATH
+    // Hairs-Human:        PENDING
     public LinuxFileDialogs() => _helper = FindHelper();
 
     /// <summary>Which helper was found, for the support claim.</summary>
     public string? Helper => _helper;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1B90A3
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1B90A3
+    // Hairs-Human:        PENDING
     public bool IsAvailable => _helper is not null;
 
     /// <summary>
@@ -64,13 +64,13 @@ internal sealed class LinuxFileDialogs : IFileDialogService
     /// zenity, one verb on kdialog — so this is exactly the claim that a helper
     /// was found at all.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4F5825
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4F5825
+    // Hairs-Human:        PENDING
     public bool CanRequestFolder => IsAvailable;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=33ED51
-    // Broiler-Falsified-If: a chooser the user cancelled (helper exits non-zero) yields a grant instead of null
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=33ED51
+    // Hairs-Falsified-If: a chooser the user cancelled (helper exits non-zero) yields a grant instead of null
+    // Hairs-Human:        PENDING
     public async ValueTask<FileGrant?> RequestOpenAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default)
     {
@@ -78,9 +78,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         return Grant(await RunAsync(request, DialogMode.Open, cancellationToken).ConfigureAwait(false));
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=105FBA
-    // Broiler-Falsified-If: the grant for a chosen save path lets storage write outside the directory that contains that path
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=105FBA
+    // Hairs-Falsified-If: the grant for a chosen save path lets storage write outside the directory that contains that path
+    // Hairs-Human:        PENDING
     public async ValueTask<FileGrant?> RequestSaveAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default)
     {
@@ -88,9 +88,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         return Grant(await RunAsync(request, DialogMode.Save, cancellationToken).ConfigureAwait(false));
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=F9F393
-    // Broiler-Falsified-If: the grant for a chosen folder is rooted at its parent directory rather than at the folder itself
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=F9F393
+    // Hairs-Falsified-If: the grant for a chosen folder is rooted at its parent directory rather than at the folder itself
+    // Hairs-Human:        PENDING
     public async ValueTask<FileGrant?> RequestFolderAsync(
         FileDialogRequest request, CancellationToken cancellationToken = default)
     {
@@ -99,9 +99,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
             await RunAsync(request, DialogMode.Folder, cancellationToken).ConfigureAwait(false));
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=3C076F
-    // Broiler-Falsified-If: a helper that writes more than a pipe buffer of warnings to standard error never exits, because standard error is redirected and never read, and the dialog never returns
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=3C076F
+    // Hairs-Falsified-If: a helper that writes more than a pipe buffer of warnings to standard error never exits, because standard error is redirected and never read, and the dialog never returns
+    // Hairs-Human:        PENDING
     private async ValueTask<string?> RunAsync(
         FileDialogRequest request, DialogMode mode, CancellationToken cancellationToken)
     {
@@ -134,9 +134,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         return path.Length == 0 ? null : path;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=EF8CCD
-    // Broiler-Falsified-If: a suggested name beginning with a dash is passed to kdialog as a bare argument, where it is parsed as an option instead of a start path
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=EF8CCD
+    // Hairs-Falsified-If: a suggested name beginning with a dash is passed to kdialog as a bare argument, where it is parsed as an option instead of a start path
+    // Hairs-Human:        PENDING
     private static IEnumerable<string> Arguments(
         string helper, FileDialogRequest request, DialogMode mode)
     {
@@ -191,8 +191,8 @@ internal sealed class LinuxFileDialogs : IFileDialogService
             yield return "--file-filter=" + ZenityFilter(filter);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=059831
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=059831
+    // Hairs-Human:        PENDING
     private static string ZenityFilter(FileDialogFilter filter)
     {
         var patterns = new List<string>(filter.Extensions.Count);
@@ -202,8 +202,8 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         return filter.Label + " | " + string.Join(' ', patterns);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=705305
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=705305
+    // Hairs-Human:        PENDING
     private static string KdialogFilter(IReadOnlyList<FileDialogFilter> filters)
     {
         var groups = new List<string>(filters.Count);
@@ -223,9 +223,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
     /// A directory the user picked. The directory itself is the grant, so
     /// storage is rooted at it and nothing was chosen inside it.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=1C003D
-    // Broiler-Falsified-If: the storage for a chosen folder is rooted anywhere other than that folder
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=1C003D
+    // Hairs-Falsified-If: the storage for a chosen folder is rooted anywhere other than that folder
+    // Hairs-Human:        PENDING
     private static FileGrant? FolderGrant(string? absolutePath)
     {
         if (absolutePath is null)
@@ -235,9 +235,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         return new FileGrant(new FileSystemWorkspaceStorage(full), string.Empty, full);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=F14BCF
-    // Broiler-Falsified-If: the storage for a chosen file is rooted anywhere other than that file's own directory, or the returned name carries a directory part
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=F14BCF
+    // Hairs-Falsified-If: the storage for a chosen file is rooted anywhere other than that file's own directory, or the returned name carries a directory part
+    // Hairs-Human:        PENDING
     private static FileGrant? Grant(string? absolutePath)
     {
         if (absolutePath is null)
@@ -254,9 +254,9 @@ internal sealed class LinuxFileDialogs : IFileDialogService
             new FileSystemWorkspaceStorage(directory), Path.GetFileName(full), full);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=8CB137
-    // Broiler-Falsified-If: a zenity file without execute permission earlier on PATH is chosen over an executable helper later on PATH, and the dialog then fails to start
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=8CB137
+    // Hairs-Falsified-If: a zenity file without execute permission earlier on PATH is chosen over an executable helper later on PATH, and the dialog then fails to start
+    // Hairs-Human:        PENDING
     private static string? FindHelper()
     {
         if (!OperatingSystem.IsLinux())
@@ -284,8 +284,8 @@ internal sealed class LinuxFileDialogs : IFileDialogService
         return null;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CD7675
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CD7675
+    // Hairs-Human:        PENDING
     private enum DialogMode
     {
         Open,

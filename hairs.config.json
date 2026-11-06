@@ -4,12 +4,9 @@
   "component": "Broiler.Code",
   "projects": [
     "src/Broiler.Code.Core/Broiler.Code.Core.csproj",
-    "src/Broiler.Code.Language.CSharp.Assurance/Broiler.Code.Language.CSharp.Assurance.csproj",
     "src/Broiler.Code.Language.CSharp.Roslyn/Broiler.Code.Language.CSharp.Roslyn.csproj",
     "src/Broiler.Code.Language.CSharp.Syntax/Broiler.Code.Language.CSharp.Syntax.csproj",
     "src/Broiler.Code.Linux/Broiler.Code.Linux.csproj",
-    "src/Broiler.Code.Review/Broiler.Code.Review.csproj",
-    "src/Broiler.Code.Review.Cli/Broiler.Code.Review.Cli.csproj",
     "src/Broiler.Code.Windows/Broiler.Code.Windows.csproj",
     "src/Broiler.Code.Workspaces/Broiler.Code.Workspaces.csproj"
   ],
@@ -23,9 +20,9 @@
   "artefacts": {
     "report": "CODE-ASSURANCE.md",
     "humanReview": "HUMAN_REVIEW.md",
-    "manifest": "assurance.manifest.json"
+    "manifest": "hairs.manifest.json"
   },
   "forbidDirectives": false,
   "forgeryVocabulary": "narrow",
-  "regenerateCommand": "dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance generate --root Broiler.Code"
+  "regenerateCommand": "dotnet tool run hairs -- assurance generate --root ."
 }

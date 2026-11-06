@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   7
 // Annotated:        7/7
 // Exempt:           0
@@ -26,14 +26,14 @@ namespace Broiler.Code.Language.CSharp.Syntax;
 /// never used as ordinary identifiers, so the fallback classifier does not
 /// miscolor a local named <c>value</c>, <c>from</c>, or <c>where</c>.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=E21412
-// Broiler-Falsified-If: a reserved keyword such as stackalloc or as is classified as None
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=E21412
+// Hairs-Falsified-If: a reserved keyword such as stackalloc or as is classified as None
+// Hairs-Human:        PENDING
 internal static class KeywordTable
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=2D59FB
-    // Broiler-Falsified-If: a control-flow keyword such as goto or yield is missing, so it is coloured as a plain keyword
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=2D59FB
+    // Hairs-Falsified-If: a control-flow keyword such as goto or yield is missing, so it is coloured as a plain keyword
+    // Hairs-Human:        PENDING
     private static readonly string[] ControlKeywords =
     [
         "await", "break", "case", "catch", "continue", "default", "do", "else",
@@ -41,9 +41,9 @@ internal static class KeywordTable
         "try", "while", "yield",
     ];
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=D549FF
-    // Broiler-Falsified-If: a reserved C# keyword such as volatile or sizeof is missing from the list
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=D549FF
+    // Hairs-Falsified-If: a reserved C# keyword such as volatile or sizeof is missing from the list
+    // Hairs-Human:        PENDING
     private static readonly string[] Keywords =
     [
         "abstract", "as", "base", "bool", "byte", "char", "checked", "class",
@@ -58,15 +58,15 @@ internal static class KeywordTable
         "volatile",
     ];
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=751E50
-    // Broiler-Falsified-If: the set compares case-insensitively, so an identifier spelled If is coloured as a keyword
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=751E50
+    // Hairs-Falsified-If: the set compares case-insensitively, so an identifier spelled If is coloured as a keyword
+    // Hairs-Human:        PENDING
     private static readonly HashSet<string> ControlSet =
         new(ControlKeywords, StringComparer.Ordinal);
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=7F7557
-    // Broiler-Falsified-If: the set compares case-insensitively, so an identifier spelled Class is coloured as a keyword
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=7F7557
+    // Hairs-Falsified-If: the set compares case-insensitively, so an identifier spelled Class is coloured as a keyword
+    // Hairs-Human:        PENDING
     private static readonly HashSet<string> KeywordSet =
         new(Keywords, StringComparer.Ordinal);
 
@@ -74,14 +74,14 @@ internal static class KeywordTable
     /// <c>async</c> is contextual but is a keyword wherever it can legally
     /// appear, so it is treated as one.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=537ECC
-    // Broiler-Falsified-If: the word async is classified as None
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=537ECC
+    // Hairs-Falsified-If: the word async is classified as None
+    // Hairs-Human:        PENDING
     static KeywordTable() => KeywordSet.Add("async");
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=B1A3BA
-    // Broiler-Falsified-If: a ten-character reserved keyword such as stackalloc is returned as None because the length guard rejects it
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=B1A3BA
+    // Hairs-Falsified-If: a ten-character reserved keyword such as stackalloc is returned as None because the length guard rejects it
+    // Hairs-Human:        PENDING
     public static CodeClassificationKind Lookup(ReadOnlySpan<char> word)
     {
         // Every keyword is ASCII lower-case and at most 10 characters, so a

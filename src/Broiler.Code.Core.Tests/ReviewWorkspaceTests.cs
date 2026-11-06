@@ -1,6 +1,6 @@
 using Broiler.Code.Core.Review;
 using Broiler.Code.Core.Shell;
-using Broiler.Code.Review;
+using Hairs;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
 using Broiler.Code.Workspaces.Storage;
@@ -115,7 +115,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
         Assert.True(await shell.InvokeAsync(CodeCommandNames.MarkReviewed));
 
         // On disk, committable, and describing the exact content.
-        string record = Path.Combine(_root, ".broiler-review", "src", "Alpha.cs.review.json");
+        string record = Path.Combine(_root, ".hairs-review", "src", "Alpha.cs.review.json");
         Assert.True(File.Exists(record));
         Assert.Contains("\"status\": \"reviewed\"", await File.ReadAllTextAsync(record), StringComparison.Ordinal);
 
@@ -175,7 +175,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
         Assert.Contains("Save the file first", command.Reason!, StringComparison.Ordinal);
 
         Assert.False(await shell.InvokeAsync(CodeCommandNames.MarkReviewed));
-        Assert.False(File.Exists(Path.Combine(_root, ".broiler-review", "src", "Alpha.cs.review.json")));
+        Assert.False(File.Exists(Path.Combine(_root, ".hairs-review", "src", "Alpha.cs.review.json")));
         shell.Dispose();
     }
 
@@ -214,7 +214,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
             CommandAvailability.Enabled,
             shell.Commands.Find(CodeCommandNames.ClearReview)!.Availability);
         Assert.True(await shell.InvokeAsync(CodeCommandNames.ClearReview));
-        Assert.False(File.Exists(Path.Combine(_root, ".broiler-review", "src", "Alpha.cs.review.json")));
+        Assert.False(File.Exists(Path.Combine(_root, ".hairs-review", "src", "Alpha.cs.review.json")));
         shell.Dispose();
     }
 
@@ -328,7 +328,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
     [Fact(Timeout = 600000)]
     public async Task An_Unreadable_Record_Is_Reported_Rather_Than_Skipped()
     {
-        string broken = Path.Combine(_root, ".broiler-review", "src", "Beta.cs.review.json");
+        string broken = Path.Combine(_root, ".hairs-review", "src", "Beta.cs.review.json");
         Directory.CreateDirectory(Path.GetDirectoryName(broken)!);
         await File.WriteAllTextAsync(broken, "not a review record");
 
@@ -363,7 +363,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
         Assert.Contains(
             "\"status\": \"reviewed\"",
             await File.ReadAllTextAsync(
-                Path.Combine(_root, ".broiler-review", "src", "Alpha.cs.review.json")),
+                Path.Combine(_root, ".hairs-review", "src", "Alpha.cs.review.json")),
             StringComparison.Ordinal);
 
         shell.Dispose();
@@ -409,7 +409,7 @@ public sealed class ReviewWorkspaceTests : IDisposable
         picker.SelectIndex(IndexOf(picker, CodeCommandNames.MarkReviewed));
 
         await WaitFor(() => picker.SelectedItem!.Id == CodeCommandNames.ClearReview);
-        Assert.False(File.Exists(Path.Combine(_root, ".broiler-review", "src", "Alpha.cs.review.json")));
+        Assert.False(File.Exists(Path.Combine(_root, ".hairs-review", "src", "Alpha.cs.review.json")));
 
         shell.Dispose();
     }

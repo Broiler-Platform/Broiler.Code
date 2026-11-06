@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   25
 // Annotated:        25/25
 // Exempt:           18
@@ -17,7 +17,7 @@
 
 using System;
 using System.Collections.Generic;
-using Broiler.Code.Review.Assurance;
+using Hairs.Assurance;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
 using Broiler.Code.Workspaces.Storage;
@@ -26,8 +26,8 @@ using Broiler.Code.Workspaces.Text;
 namespace Broiler.Code.Core.Review;
 
 /// <summary>Why a unit-level review action could not be carried out.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E818E1
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E818E1
+// Hairs-Human:        PENDING
 public enum AssuranceActionOutcome
 {
     Applied = 0,
@@ -43,14 +43,14 @@ public enum AssuranceActionOutcome
 }
 
 /// <summary>The result of a unit-level action, with a sentence for the status line.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CF8E0D
-// Broiler-Falsified-If: a result whose outcome is Refused, NoTarget or EditRejected reports Succeeded as true
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CF8E0D
+// Hairs-Falsified-If: a result whose outcome is Refused, NoTarget or EditRejected reports Succeeded as true
+// Hairs-Human:        PENDING
 public readonly record struct AssuranceActionResult(AssuranceActionOutcome Outcome, string Message)
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4CC1D0
-    // Broiler-Falsified-If: a result whose outcome is Refused, NoTarget or EditRejected reports Succeeded as true
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4CC1D0
+    // Hairs-Falsified-If: a result whose outcome is Refused, NoTarget or EditRejected reports Succeeded as true
+    // Hairs-Human:        PENDING
     public bool Succeeded => Outcome == AssuranceActionOutcome.Applied;
 }
 
@@ -62,7 +62,7 @@ public readonly record struct AssuranceActionResult(AssuranceActionOutcome Outco
 /// the two record different claims about different things, and folding them
 /// together would blur the distinction the whole review workspace rests on. A
 /// file review says <em>a person read this file's content, and here is the hash
-/// of what they read</em>; it lives in <c>.broiler-review/</c> and belongs to
+/// of what they read</em>; it lives in <c>.hairs-review/</c> and belongs to
 /// this repository. A unit's assurance line says <em>a person stands behind this
 /// declaration</em>; it lives in the source file and belongs to the component
 /// that owns the format. Neither is a substitute for the other, and a pane that
@@ -73,9 +73,9 @@ public readonly record struct AssuranceActionResult(AssuranceActionOutcome Outco
 /// committed, and what leaves saving where it already is — this controller never
 /// writes a file.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=844676
-// Broiler-Falsified-If: a signature is written into the open buffer from a document model read at an earlier buffer version, so edits made since that version are reverted
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=844676
+// Hairs-Falsified-If: a signature is written into the open buffer from a document model read at an earlier buffer version, so edits made since that version are reverted
+// Hairs-Human:        PENDING
 public sealed class AssuranceController : IDisposable
 {
     private readonly CodeWorkspace _workspace;
@@ -103,9 +103,9 @@ public sealed class AssuranceController : IDisposable
     /// a file is opened from. Its answer replaces <paramref name="scanner"/> for
     /// that root's files, and null leaves <paramref name="scanner"/> in place.
     /// </param>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=869278
-    // Broiler-Falsified-If: a null workspace is accepted and the first document switch throws NullReferenceException instead of the constructor throwing ArgumentNullException
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=869278
+    // Hairs-Falsified-If: a null workspace is accepted and the first document switch throws NullReferenceException instead of the constructor throwing ArgumentNullException
+    // Hairs-Human:        PENDING
     public AssuranceController(
         CodeWorkspace workspace,
         IAssuranceUnitScanner? scanner = null,
@@ -117,8 +117,8 @@ public sealed class AssuranceController : IDisposable
     }
 
     /// <summary>Raised when the unit under the caret, or what it records, changed.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=8C487F
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=8C487F
+    // Hairs-Human:        PENDING
     public event EventHandler? Changed;
 
     /// <summary>
@@ -128,8 +128,8 @@ public sealed class AssuranceController : IDisposable
     public string Reviewer { get; set; } = string.Empty;
 
     /// <summary>True when a language service supplied the units.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A2AD24
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A2AD24
+    // Hairs-Human:        PENDING
     public bool HasUnitScanner => _scanner is not null || _scannerFor is not null;
 
     /// <summary>The current file's assurance model, or null when nothing is open.</summary>
@@ -139,22 +139,22 @@ public sealed class AssuranceController : IDisposable
     public AssuranceUnit? CurrentUnit { get; private set; }
 
     /// <summary>Every unit of the current file, for a pane listing them.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F9CFD5
-    // Broiler-Falsified-If: with no document open the property returns null instead of an empty list
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F9CFD5
+    // Hairs-Falsified-If: with no document open the property returns null instead of an empty list
+    // Hairs-Human:        PENDING
     public IReadOnlyList<AssuranceUnit> Units => _document?.Units ?? [];
 
     /// <summary>True when the file on screen carries assurance annotations at all.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E68ED9
-    // Broiler-Falsified-If: a file with neither annotation blocks nor a generated header reports true
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E68ED9
+    // Hairs-Falsified-If: a file with neither annotation blocks nor a generated header reports true
+    // Hairs-Human:        PENDING
     public bool IsAnnotatedFile => _document is { IsAnnotated: true };
 
 
     /// <summary>Points the pane at a document and re-reads it.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=85AAF2
-    // Broiler-Falsified-If: after a switch to another document, the unit picked before the editor reports a caret comes from the previous document's caret line rather than line 0
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=85AAF2
+    // Hairs-Falsified-If: after a switch to another document, the unit picked before the editor reports a caret comes from the previous document's caret line rather than line 0
+    // Hairs-Human:        PENDING
     public void SetCurrentDocument(WorkspaceItemId id)
     {
         if (_current == id)
@@ -182,9 +182,9 @@ public sealed class AssuranceController : IDisposable
     /// gesture that has to feel instant. The model is rebuilt only when the
     /// buffer's version has actually moved.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=A74D32
-    // Broiler-Falsified-If: moving the caret to a line inside a different declaration, with the buffer version unchanged, leaves CurrentUnit on the previous declaration
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=A74D32
+    // Hairs-Falsified-If: moving the caret to a line inside a different declaration, with the buffer version unchanged, leaves CurrentUnit on the previous declaration
+    // Hairs-Human:        PENDING
     public void SetCaretLine(int line)
     {
         int clamped = Math.Max(0, line);
@@ -196,9 +196,9 @@ public sealed class AssuranceController : IDisposable
     }
 
     /// <summary>Re-reads the current document and re-picks the unit.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=C349F7
-    // Broiler-Falsified-If: CurrentUnit after a refresh comes from a document model read at a buffer version older than the buffer's current one
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=C349F7
+    // Hairs-Falsified-If: CurrentUnit after a refresh comes from a document model read at a buffer version older than the buffer's current one
+    // Hairs-Human:        PENDING
     public void Refresh()
     {
         string before = Signature();
@@ -218,9 +218,9 @@ public sealed class AssuranceController : IDisposable
     /// subscription has to come off, or every superseded controller goes on
     /// re-reading a file for a pane nobody is showing.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=F365D4
-    // Broiler-Falsified-If: an edit to the watched buffer after Dispose still re-reads the document and raises Changed
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=F365D4
+    // Hairs-Falsified-If: an edit to the watched buffer after Dispose still re-reads the document and raises Changed
+    // Hairs-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -241,9 +241,9 @@ public sealed class AssuranceController : IDisposable
     /// the menu. What actually matters is which declaration is selected and what
     /// its line now says.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=D0B45C
-    // Broiler-Falsified-If: a change to the current unit's human line text, with the same unit and state, leaves the returned string unchanged
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=D0B45C
+    // Hairs-Falsified-If: a change to the current unit's human line text, with the same unit and state, leaves the returned string unchanged
+    // Hairs-Human:        PENDING
     private string Signature() =>
         CurrentUnit is not { } unit
             ? string.Empty
@@ -261,9 +261,9 @@ public sealed class AssuranceController : IDisposable
     /// listened to the caret would go on showing an approval the file no longer
     /// carries.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=BFABF1
-    // Broiler-Falsified-If: after a switch of documents, an undo in the newly current buffer does not update the pane until the caret moves
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=BFABF1
+    // Hairs-Falsified-If: after a switch of documents, an undo in the newly current buffer does not update the pane until the caret moves
+    // Hairs-Human:        PENDING
     private void Watch()
     {
         Unwatch();
@@ -275,9 +275,9 @@ public sealed class AssuranceController : IDisposable
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=BA021F
-    // Broiler-Falsified-If: after Unwatch, an edit to the previously watched buffer still reaches OnBufferChanged
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=BA021F
+    // Hairs-Falsified-If: after Unwatch, an edit to the previously watched buffer still reaches OnBufferChanged
+    // Hairs-Human:        PENDING
     private void Unwatch()
     {
         if (_watched is not null)
@@ -286,9 +286,9 @@ public sealed class AssuranceController : IDisposable
         _watched = null;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=B616D0
-    // Broiler-Falsified-If: an edit that rewrites a human line in the watched buffer leaves CurrentUnit reporting the line as it was before the edit
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=B616D0
+    // Hairs-Falsified-If: an edit that rewrites a human line in the watched buffer leaves CurrentUnit reporting the line as it was before the edit
+    // Hairs-Human:        PENDING
     private void OnBufferChanged(TextSnapshot snapshot, TextChange change)
     {
         if (_disposed)
@@ -313,22 +313,22 @@ public sealed class AssuranceController : IDisposable
     /// reviewer working down a file would otherwise have to save between every
     /// declaration.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=1CA5CD
-    // Broiler-Falsified-If: signing while the configured name is empty or whitespace changes the open buffer
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=1CA5CD
+    // Hairs-Falsified-If: signing while the configured name is empty or whitespace changes the open buffer
+    // Hairs-Human:        PENDING
     public AssuranceActionResult Approve() =>
         Act(static (document, unit, reviewer) => document.Approve(unit, reviewer));
 
     /// <summary>Puts the unit the caret is in back to pending.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=4CEFEA
-    // Broiler-Falsified-If: withdrawing changes a line of the buffer other than the human line of the unit that contains the caret
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=6; Fingerprint=4CEFEA
+    // Hairs-Falsified-If: withdrawing changes a line of the buffer other than the human line of the unit that contains the caret
+    // Hairs-Human:        PENDING
     public AssuranceActionResult Withdraw() =>
         Act(static (document, unit, _) => document.Withdraw(unit));
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=826F83
-    // Broiler-Falsified-If: after the buffer refuses one decision, the next accepted decision writes the refused line change into the buffer as well as its own
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=826F83
+    // Hairs-Falsified-If: after the buffer refuses one decision, the next accepted decision writes the refused line change into the buffer as well as its own
+    // Hairs-Human:        PENDING
     private AssuranceActionResult Act(
         Func<AssuranceDocument, AssuranceUnit, string, AssuranceEditResult> decide)
     {
@@ -384,9 +384,9 @@ public sealed class AssuranceController : IDisposable
     /// it; what a reviewer did was change one line, and the undo history should
     /// say so.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=89F717
-    // Broiler-Falsified-If: a buffer that moved to a new version between reading the snapshot and submitting the edit accepts the replacement instead of rejecting it as stale
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=89F717
+    // Hairs-Falsified-If: a buffer that moved to a new version between reading the snapshot and submitting the edit accepts the replacement instead of rejecting it as stale
+    // Hairs-Human:        PENDING
     private string? Apply(string text)
     {
         if (_workspace.FindOpenDocument(_current) is not { } open)
@@ -416,9 +416,9 @@ public sealed class AssuranceController : IDisposable
     /// The one span in which two texts differ: the common prefix and the common
     /// suffix are trimmed away, and what is left is the replacement.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=722C27
-    // Broiler-Falsified-If: applying the returned span to the current text yields a string other than the updated text, for example when the change sits inside a run of repeated characters
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=722C27
+    // Hairs-Falsified-If: applying the returned span to the current text yields a string other than the updated text, for example when the change sits inside a run of repeated characters
+    // Hairs-Human:        PENDING
     private static (int Start, int OldLength, string Replacement) Narrow(string current, string updated)
     {
         int prefix = 0;
@@ -437,15 +437,15 @@ public sealed class AssuranceController : IDisposable
         return (prefix, oldLength, updated[prefix..(updated.Length - suffix)]);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=8E344F
-    // Broiler-Falsified-If: an edit to the open buffer that leaves the caret on the same line is reported as no version change
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=8E344F
+    // Hairs-Falsified-If: an edit to the open buffer that leaves the caret on the same line is reported as no version change
+    // Hairs-Human:        PENDING
     private bool VersionMoved() =>
         _workspace.FindOpenDocument(_current) is { } open && open.Buffer.Current.Version != _documentVersion;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=1DA4B2
-    // Broiler-Falsified-If: the document model is kept after the open buffer's version or the item's path changed, so the next decision is computed from text the buffer no longer holds
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=1DA4B2
+    // Hairs-Falsified-If: the document model is kept after the open buffer's version or the item's path changed, so the next decision is computed from text the buffer no longer holds
+    // Hairs-Human:        PENDING
     private void Rebuild()
     {
         if (_current.IsNone ||
@@ -496,9 +496,9 @@ public sealed class AssuranceController : IDisposable
     /// opened from, so that its relative path is read against that root and a
     /// file granted from another folder is scanned as its own component says.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=4C462F
-    // Broiler-Falsified-If: a document granted from another folder is scanned with the scanner made for the workspace's own storage, so its relative path is read against the wrong root
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=4C462F
+    // Hairs-Falsified-If: a document granted from another folder is scanned with the scanner made for the workspace's own storage, so its relative path is read against the wrong root
+    // Hairs-Human:        PENDING
     private IAssuranceUnitScanner? ScannerFor(WorkspaceItemId id)
     {
         if (_scannerFor is null)

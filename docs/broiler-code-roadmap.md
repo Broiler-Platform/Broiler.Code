@@ -46,11 +46,11 @@ What shipped:
 
 | Outcome | Where |
 | --- | --- |
-| A review record per source file — status, reviewer, date, reviewed content hash, provenance revision, and notes — committed beside the source in `.broiler-review/` | `Broiler.Code.Review` |
+| A review record per source file — status, reviewer, date, reviewed content hash, provenance revision, and notes — committed beside the source in `.hairs-review/` | `Hairs` |
 | Staleness decided by content, so a rebase does not expire a review and a revert restores one | `ReviewContentHash`, `ReviewStateEvaluator` |
 | Notes anchored to the code they were written against, following it through edits and admitting when they cannot | `NoteAnchoring` |
 | A third pane beside the editor, a review badge on every explorer row, and a Review menu | `Broiler.Code.Core/Review`, `CodeShell` |
-| A coverage number that excludes stale approvals, published beside the test262 and WPT rates | `ReviewCoverage`, `Broiler.Code.Review.Cli` |
+| A coverage number that excludes stale approvals, published beside the test262 and WPT rates | `ReviewCoverage`, `Hairs.Cli` |
 | A pull-request check that annotates the reviews a change invalidated | `.github/workflows/human-review.yml` |
 
 The decisions behind it, and the list of what MVP-0 deliberately does not do,
@@ -70,7 +70,7 @@ comment at a column that component's parser insists on.
 
 | Outcome | Where |
 | --- | --- |
-| The annotation grammar, the review state machine, and the rewrite that records a decision | `Broiler.Code.Review/Assurance` |
+| The annotation grammar, the review state machine, and the rewrite that records a decision | `Hairs/Assurance` |
 | Code units, the eight-case exemption predicate, and fingerprints that reproduce the owning component's published values | `Broiler.Code.Language.CSharp.Roslyn` |
 | The caret choosing a declaration, the pane sections, and the two commands | `Broiler.Code.Core/Review`, `CodeShell` |
 | A note-kind picker and symbol anchors, closing two of MVP-0's stated gaps | `CodeShell`, both heads |

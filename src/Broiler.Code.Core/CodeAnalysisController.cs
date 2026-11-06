@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   11
 // Annotated:        11/11
 // Exempt:           15
@@ -24,25 +24,25 @@ using Broiler.UI.CodeEditor;
 namespace Broiler.Code.Core;
 
 /// <summary>Runs analysis work off the UI thread.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=9AB2B9
-// Broiler-Falsified-If: an implementation runs the work synchronously on the calling UI thread, so a document above the synchronous line limit blocks the editor while it is classified
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=9AB2B9
+// Hairs-Falsified-If: an implementation runs the work synchronously on the calling UI thread, so a document above the synchronous line limit blocks the editor while it is classified
+// Hairs-Human:        PENDING
 public interface IAnalysisScheduler
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=D5C603
-    // Broiler-Falsified-If: an implementation ignores a token cancelled before the work starts and runs the superseded classification anyway
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=D5C603
+    // Hairs-Falsified-If: an implementation ignores a token cancelled before the work starts and runs the superseded classification anyway
+    // Hairs-Human:        PENDING
     Task<T> Schedule<T>(Func<T> work, CancellationToken cancellationToken);
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=A533A6
-// Broiler-Falsified-If: Schedule runs the work on the calling thread instead of a thread-pool thread
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=A533A6
+// Hairs-Falsified-If: Schedule runs the work on the calling thread instead of a thread-pool thread
+// Hairs-Human:        PENDING
 public sealed class ThreadPoolAnalysisScheduler : IAnalysisScheduler
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=95A519
-    // Broiler-Falsified-If: work whose token is already cancelled still runs, because the token does not reach Task.Run
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=4; Fingerprint=95A519
+    // Hairs-Falsified-If: work whose token is already cancelled still runs, because the token does not reach Task.Run
+    // Hairs-Human:        PENDING
     public Task<T> Schedule<T>(Func<T> work, CancellationToken cancellationToken) =>
         Task.Run(work, cancellationToken);
 }
@@ -60,9 +60,9 @@ public sealed class ThreadPoolAnalysisScheduler : IAnalysisScheduler
 /// worker thread, so an immediate cross-thread dispatcher would deliver its
 /// result wherever it happened to finish.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=23AD15
-// Broiler-Falsified-If: a classification computed for an older snapshot is applied to the editor after a newer edit has started a run
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=23AD15
+// Hairs-Falsified-If: a classification computed for an older snapshot is applied to the editor after a newer edit has started a run
+// Hairs-Human:        PENDING
 public sealed class CodeAnalysisController : IDisposable
 {
     private readonly UiCodeEditor _editor;
@@ -76,9 +76,9 @@ public sealed class CodeAnalysisController : IDisposable
     private long _generation;
     private bool _disposed;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=6C2E25
-    // Broiler-Falsified-If: an edit raised after construction does not start a classification run because the handler is not subscribed to SnapshotChangedWithDelta
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=6C2E25
+    // Hairs-Falsified-If: an edit raised after construction does not start a classification run because the handler is not subscribed to SnapshotChangedWithDelta
+    // Hairs-Human:        PENDING
     public CodeAnalysisController(
         UiCodeEditor editor,
         SourceBufferDocument document,
@@ -108,9 +108,9 @@ public sealed class CodeAnalysisController : IDisposable
     /// <summary>The run in flight, for tests that need to await it.</summary>
     public Task? CurrentWork { get; private set; }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=484938
-    // Broiler-Falsified-If: an edit made after Dispose still starts a classification run
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=484938
+    // Hairs-Falsified-If: an edit made after Dispose still starts a classification run
+    // Hairs-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -123,17 +123,17 @@ public sealed class CodeAnalysisController : IDisposable
     }
 
     /// <summary>Reclassifies from scratch, for a language or option change.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=1E7D4D
-    // Broiler-Falsified-If: Refresh hands the classifier a non-null change, so it reuses the previous result instead of classifying from scratch
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=1E7D4D
+    // Hairs-Falsified-If: Refresh hands the classifier a non-null change, so it reuses the previous result instead of classifying from scratch
+    // Hairs-Human:        PENDING
     public void Refresh() => Start(_document.Snapshot, change: null);
 
     private void OnSnapshotChanged(ICodeTextSnapshot snapshot, CodeTextChange change) =>
         Start(snapshot, change);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=AD314B
-    // Broiler-Falsified-If: a newer Start leaves the previous run's token uncancelled, so a superseded background classification runs to completion
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=AD314B
+    // Hairs-Falsified-If: a newer Start leaves the previous run's token uncancelled, so a superseded background classification runs to completion
+    // Hairs-Human:        PENDING
     private void Start(ICodeTextSnapshot snapshot, CodeTextChange? change)
     {
         if (_disposed)
@@ -175,9 +175,9 @@ public sealed class CodeAnalysisController : IDisposable
         CurrentWork = RunInBackground(generation, previous, snapshot, change, cancellation.Token);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=2F0F28
-    // Broiler-Falsified-If: a completed background run calls Publish on the worker thread instead of through the dispatcher
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=2F0F28
+    // Hairs-Falsified-If: a completed background run calls Publish on the worker thread instead of through the dispatcher
+    // Hairs-Human:        PENDING
     private async Task RunInBackground(
         long generation,
         CodeClassificationResult? previous,
@@ -200,9 +200,9 @@ public sealed class CodeAnalysisController : IDisposable
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=832F7D
-    // Broiler-Falsified-If: a result whose generation is older than the latest Start is applied to the editor
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=832F7D
+    // Hairs-Falsified-If: a result whose generation is older than the latest Start is applied to the editor
+    // Hairs-Human:        PENDING
     private void Publish(long generation, CodeClassificationResult result)
     {
         if (_disposed)

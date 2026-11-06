@@ -1,7 +1,7 @@
 # Broiler.SDK
 
 Broiler.SDK packages the existing Broiler development tools as a .NET tool. It
-provides the `broiler-review` command, including human-review coverage and
+provides the `hairs` command, including human-review coverage and
 staleness checks plus the C# assurance scanner, annotation tools and reports.
 The package bundles the supporting Broiler assemblies and Roslyn dependencies;
 using it requires no Broiler.Code checkout or desktop editor.
@@ -11,14 +11,14 @@ using it requires no Broiler.Code checkout or desktop editor.
 With the .NET 10 SDK installed, run from a Broiler.Code checkout:
 
 ```sh
-dotnet pack src/Broiler.Code.Review.Cli -c Release
+dotnet pack src/Hairs.Cli -c Release
 ```
 
 This creates `artifacts/packages/Broiler.SDK.<version>.nupkg`. Its version follows
 `BroilerCodeVersion` in `Directory.Build.props`. To set a release version:
 
 ```sh
-dotnet pack src/Broiler.Code.Review.Cli -c Release -p:BroilerCodeVersion=0.1.0-preview.2
+dotnet pack src/Hairs.Cli -c Release -p:BroilerCodeVersion=0.1.0-preview.2
 ```
 
 ## Install and use
@@ -27,7 +27,7 @@ Install the latest published preview from nuget.org:
 
 ```sh
 dotnet tool install --global Broiler.SDK --prerelease --source https://api.nuget.org/v3/index.json
-broiler-review --help
+hairs --help
 ```
 
 Use `--version <version>` instead of `--prerelease` to pin a published release.
@@ -39,11 +39,11 @@ the `dotnet tool` commands.
 
 ```sh
 dotnet tool install --global Broiler.SDK --version 0.1.0-preview.1 --source ./artifacts/packages
-broiler-review --help
-broiler-review coverage --root .
-broiler-review check --root . --fail-on-stale
-broiler-review assurance --help
-broiler-review assurance list --root . --json units.json
+hairs --help
+hairs coverage --root .
+hairs check --root . --fail-on-stale
+hairs assurance --help
+hairs assurance list --root . --json units.json
 ```
 
 For a repository-local tool, create a manifest once and install into it:
@@ -51,7 +51,7 @@ For a repository-local tool, create a manifest once and install into it:
 ```sh
 dotnet new tool-manifest
 dotnet tool install --local Broiler.SDK --version 0.1.0-preview.1 --source ./artifacts/packages
-dotnet tool run broiler-review coverage --root .
+dotnet tool run hairs coverage --root .
 ```
 
 Commit `.config/dotnet-tools.json`; other contributors can then run
@@ -61,9 +61,9 @@ and maps `Broiler.SDK` to it if package source mapping is enabled. Use
 version. The install examples use `--source` to override the checkout's
 nuget.org-only source mapping for this command.
 
-Human-review commands read `.broiler-review/` records. Assurance commands include
+Human-review commands read `.hairs-review/` records. Assurance commands include
 `list`, `insert`, `generate`, `check`, `status` and `prune`; annotation writes
-require an `assurance.config.json` that opts the target repository in. See the
+require an `hairs.config.json` that opts the target repository in. See the
 [assurance command reference](https://github.com/Broiler-Platform/Broiler.Code/blob/main/docs/architecture/broiler-code-assurance-cli.md).
 
 ## Release and validation

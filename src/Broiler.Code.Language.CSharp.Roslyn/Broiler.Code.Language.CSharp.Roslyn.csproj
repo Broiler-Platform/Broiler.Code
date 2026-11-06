@@ -33,14 +33,6 @@
     payload measurements produced.
   -->
   <ItemGroup>
-
-    <!--
-      The assurance scanner, which reaches the review model it implements. It
-      lives in its own assembly so the review CLI can use it without this
-      project's UI package closure; the reference stays so that a head
-      composing this project still gets the scanner.
-    -->
-    <ProjectReference Include="..\Broiler.Code.Language.CSharp.Assurance\Broiler.Code.Language.CSharp.Assurance.csproj" />
     <ProjectReference Include="..\Broiler.Code.Workspaces\Broiler.Code.Workspaces.csproj" />
   </ItemGroup>
 

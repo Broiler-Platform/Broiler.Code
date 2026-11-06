@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   6
 // Annotated:        6/6
 // Exempt:           0
@@ -35,14 +35,14 @@ namespace Broiler.Code.Workspaces;
 /// needs evaluation is marked as such until the user makes a scoped trust
 /// decision.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=8D9C1E
-// Broiler-Falsified-If: a project path in the solution that climbs above the granted root with '..' is read through storage instead of being reported as a BRW0200 diagnostic
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=8D9C1E
+// Hairs-Falsified-If: a project path in the solution that climbs above the granted root with '..' is read through storage instead of being reported as a BRW0200 diagnostic
+// Hairs-Human:        PENDING
 public static class WorkspaceLoader
 {
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=C660AC
-    // Broiler-Falsified-If: a solution file that is not well-formed XML escapes the call as an exception instead of returning a failed StorageResult
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=C660AC
+    // Hairs-Falsified-If: a solution file that is not well-formed XML escapes the call as an exception instead of returning a failed StorageResult
+    // Hairs-Human:        PENDING
     public static async ValueTask<StorageResult<CodeWorkspace>> LoadSolutionAsync(
         IWorkspaceStorage storage,
         string solutionRelativePath,
@@ -97,9 +97,9 @@ public static class WorkspaceLoader
         return StorageResult<CodeWorkspace>.Ok(workspace);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=C68D04
-    // Broiler-Falsified-If: a Compile Include that climbs above the granted root with '..' becomes a workspace item with a real id instead of a BRW0001 diagnostic
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=C68D04
+    // Hairs-Falsified-If: a Compile Include that climbs above the granted root with '..' becomes a workspace item with a real id instead of a BRW0001 diagnostic
+    // Hairs-Human:        PENDING
     private static async ValueTask<WorkspaceItemId> LoadProjectAsync(
         CodeWorkspace workspace,
         IWorkspaceStorage storage,
@@ -171,18 +171,18 @@ public static class WorkspaceLoader
         return projectItem.Id;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=BAAE81
-    // Broiler-Falsified-If: a project path in a subdirectory resolves its compile items against the storage root instead of its own directory
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=BAAE81
+    // Hairs-Falsified-If: a project path in a subdirectory resolves its compile items against the storage root instead of its own directory
+    // Hairs-Human:        PENDING
     private static string DirectoryOf(string relativePath)
     {
         int slash = relativePath.LastIndexOf('/');
         return slash < 0 ? string.Empty : relativePath[..slash];
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=0F7D4D
-    // Broiler-Falsified-If: an include of '../../outside.cs' from a project one level below the root comes back as a path inside the root instead of the un-normalized escape
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=0F7D4D
+    // Hairs-Falsified-If: an include of '../../outside.cs' from a project one level below the root comes back as a path inside the root instead of the un-normalized escape
+    // Hairs-Human:        PENDING
     private static string Combine(string directory, string relative)
     {
         string normalizedRelative = relative.Replace('\\', '/');
@@ -195,8 +195,8 @@ public static class WorkspaceLoader
         return WorkspacePath.Normalize(combined) ?? combined;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=78D7EB
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=78D7EB
+    // Hairs-Human:        PENDING
     private static string NameWithoutExtension(string relativePath)
     {
         int slash = relativePath.LastIndexOf('/');

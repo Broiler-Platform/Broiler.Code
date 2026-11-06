@@ -1,25 +1,26 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
-// Relevant units:   25
-// Annotated:        25/25
-// Exempt:           19
-// Human-reviewed:   0/25
+// HAIRS Code Assurance
+// --------------------
+// Relevant units:   35
+// Annotated:        35/35
+// Exempt:           20
+// Human-reviewed:   0/35
 // IP risk:          Low
 // Security risk:    High
-// Criteria:         21/12
+// Criteria:         28/19
 // Resource impact:  7/10 max
-// Unverified:       25
+// Unverified:       35
 //
 // GENERATED - DO NOT EDIT MANUALLY
 
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
-using Broiler.Code.Review;
+using Hairs;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
 using Broiler.Code.Workspaces.Storage;
@@ -28,8 +29,8 @@ using Broiler.UI;
 namespace Broiler.Code.Core.Review;
 
 /// <summary>Why a review action could not be carried out.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=FD1BF3
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=FD1BF3
+// Hairs-Human:        PENDING
 public enum ReviewActionOutcome
 {
     Applied = 0,
@@ -51,14 +52,14 @@ public enum ReviewActionOutcome
 }
 
 /// <summary>The result of a review action, with a sentence the status line can show.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E2CAF9
-// Broiler-Falsified-If: a result whose outcome is DocumentIsDirty, StorageFailed or NoTarget reports Succeeded as true
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E2CAF9
+// Hairs-Falsified-If: a result whose outcome is DocumentIsDirty, StorageFailed or NoTarget reports Succeeded as true
+// Hairs-Human:        PENDING
 public readonly record struct ReviewActionResult(ReviewActionOutcome Outcome, string Message)
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F63AD5
-    // Broiler-Falsified-If: a result whose outcome is DocumentIsDirty, StorageFailed or NoTarget reports Succeeded as true
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=F63AD5
+    // Hairs-Falsified-If: a result whose outcome is DocumentIsDirty, StorageFailed or NoTarget reports Succeeded as true
+    // Hairs-Human:        PENDING
     public bool Succeeded => Outcome == ReviewActionOutcome.Applied;
 }
 
@@ -68,7 +69,7 @@ public readonly record struct ReviewActionResult(ReviewActionOutcome Outcome, st
 ///
 /// It sits in Core for the same reason the rest of the shell coordination does —
 /// Core is the one assembly that knows both about a workspace and about what is
-/// on screen. <see cref="Broiler.Code.Review"/> below it knows neither, which is
+/// on screen. <see cref="Hairs"/> below it knows neither, which is
 /// what lets the CI tool compute the same numbers with no display attached.
 ///
 /// The whole-workspace map is kept in memory and refreshed as a unit. The
@@ -76,9 +77,9 @@ public readonly record struct ReviewActionResult(ReviewActionOutcome Outcome, st
 /// per-row storage read would put a file read on that path; the map makes it a
 /// dictionary lookup.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=655D40
-// Broiler-Falsified-If: a decision other than clearing, taken on a document with unsaved changes, is written to the store with a hash of the unsaved buffer text
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=655D40
+// Hairs-Falsified-If: a decision other than clearing, taken on a document with unsaved changes, is written to the store with a hash of the unsaved buffer text
+// Hairs-Human:        PENDING
 public sealed class ReviewController : IDisposable
 {
     private readonly CodeWorkspace _workspace;
@@ -114,9 +115,9 @@ public sealed class ReviewController : IDisposable
     /// passes none must drive this controller from one thread only — which the
     /// tests do, and a real host does not.
     /// </param>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=7173D9
-    // Broiler-Falsified-If: a controller built without a revision provider fails when a decision is recorded instead of recording no revision
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=43A04B
+    // Hairs-Falsified-If: a controller built without a revision provider fails when a decision is recorded instead of recording no revision
+    // Hairs-Human:        PENDING
     public ReviewController(
         CodeWorkspace workspace,
         IRevisionProvider? revisions = null,
@@ -124,15 +125,15 @@ public sealed class ReviewController : IDisposable
         IUiDispatcher? dispatcher = null)
     {
         _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
-        _store = new ReviewStore(workspace.Storage);
+        _store = new ReviewStore(new WorkspaceHairsStorage(workspace.Storage));
         _revisions = revisions ?? NoRevisionProvider.Instance;
         _dispatcher = dispatcher;
         Reviewer = reviewer;
     }
 
     /// <summary>Raised when a record changed, so the panes and the explorer redraw.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=8C487F
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=8C487F
+    // Hairs-Human:        PENDING
     public event EventHandler? Changed;
 
     /// <summary>
@@ -143,8 +144,8 @@ public sealed class ReviewController : IDisposable
     public string Reviewer { get; set; }
 
     /// <summary>The file the review pane is showing, or None.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=C46AA6
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=C46AA6
+    // Hairs-Human:        PENDING
     public WorkspaceItemId CurrentDocument => _current;
 
     /// <summary>The record for the current file. Never null once a file is selected.</summary>
@@ -189,9 +190,9 @@ public sealed class ReviewController : IDisposable
     /// supplied one, because everything that reads the maps — the explorer, the
     /// pane, the commands — runs on the UI thread.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=324755
-    // Broiler-Falsified-If: a decision committed while LoadAsync is still reading records is missing from StateFor after the load publishes
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=709745
+    // Hairs-Falsified-If: a decision committed while LoadAsync is still reading records is missing from StateFor after the load publishes
+    // Hairs-Human:        PENDING
     public async ValueTask LoadAsync(CancellationToken cancellationToken = default)
     {
         // Read before the records are, so anything committed from here on counts as
@@ -215,7 +216,7 @@ public sealed class ReviewController : IDisposable
                 review, await ContentOfAsync(path, cancellationToken).ConfigureAwait(false));
         }
 
-        Publish(records, states, all.Unreadable, startedAt);
+        Publish(records, states, [.. all.Unreadable.Select(static failure => new StorageFailure((StorageFailureKind)(int)failure.Kind, failure.Message))], startedAt);
     }
 
     /// <summary>
@@ -227,9 +228,9 @@ public sealed class ReviewController : IDisposable
     /// <see cref="CodeAnalysisController"/> uses for a completed classification,
     /// and for the same reason.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=0748C6
-    // Broiler-Falsified-If: a review cleared after the load began has its old state back in StateFor once the load's snapshot is swapped in
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=0748C6
+    // Hairs-Falsified-If: a review cleared after the load began has its old state back in StateFor once the load's snapshot is swapped in
+    // Hairs-Human:        PENDING
     private void Publish(
         Dictionary<string, FileReview> records,
         Dictionary<string, ReviewState> states,
@@ -309,9 +310,9 @@ public sealed class ReviewController : IDisposable
     /// read either sees the old snapshot or the new one, never a torn one, and
     /// either answer is a state this file legitimately had.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=B107F6
-    // Broiler-Falsified-If: a document opened or closed on the UI thread while a background load evaluates records makes this lookup throw or miss the open buffer
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=B107F6
+    // Hairs-Falsified-If: a document opened or closed on the UI thread while a background load evaluates records makes this lookup throw or miss the open buffer
+    // Hairs-Human:        PENDING
     private async ValueTask<string?> ContentOfAsync(
         string relativePath, CancellationToken cancellationToken)
     {
@@ -328,9 +329,9 @@ public sealed class ReviewController : IDisposable
     }
 
     /// <summary>Points the review pane at a document.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=AE7E48
-    // Broiler-Falsified-If: after a document is selected, the next decision is written to the record of the previously selected file
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=AE7E48
+    // Hairs-Falsified-If: after a document is selected, the next decision is written to the record of the previously selected file
+    // Hairs-Human:        PENDING
     public void SetCurrentDocument(WorkspaceItemId id)
     {
         _current = id;
@@ -343,16 +344,16 @@ public sealed class ReviewController : IDisposable
     /// report <see cref="ReviewState.None"/>, which is the honest answer for the
     /// overwhelming majority of a codebase before this tool is used on it.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=06A3F4
-    // Broiler-Falsified-If: a path that differs only in case from a path with a recorded state is reported with that state
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=06A3F4
+    // Hairs-Falsified-If: a path that differs only in case from a path with a recorded state is reported with that state
+    // Hairs-Human:        PENDING
     public ReviewState StateFor(string relativePath) =>
         _states.TryGetValue(relativePath, out ReviewState state) ? state : ReviewState.None;
 
     /// <summary>The record for a path, or an empty one.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=26B92D
-    // Broiler-Falsified-If: a path with no record of its own returns the record of another path instead of an empty record for itself
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=1; Fingerprint=26B92D
+    // Hairs-Falsified-If: a path with no record of its own returns the record of another path instead of an empty record for itself
+    // Hairs-Human:        PENDING
     public FileReview ReviewFor(string relativePath) =>
         _records.TryGetValue(relativePath, out FileReview? review) ? review : FileReview.Empty(relativePath);
 
@@ -371,9 +372,9 @@ public sealed class ReviewController : IDisposable
     /// and an untitled buffer has never been anywhere a second person could read
     /// it, so neither is counted.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=C538FF
-    // Broiler-Falsified-If: an untitled buffer or a folder appears in the returned list and so in the coverage denominator
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=C538FF
+    // Hairs-Falsified-If: an untitled buffer or a folder appears in the returned list and so in the coverage denominator
+    // Hairs-Human:        PENDING
     public IReadOnlyList<ReviewedFile> Snapshot()
     {
         var files = new List<ReviewedFile>();
@@ -403,9 +404,9 @@ public sealed class ReviewController : IDisposable
     /// by the same reviewer tomorrow. Saving first costs a keystroke; an approval
     /// nobody can check costs the claim.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=5B26D5
-    // Broiler-Falsified-If: a decision other than clearing, taken on a document with unsaved changes, is written to the store
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=5B26D5
+    // Hairs-Falsified-If: a decision other than clearing, taken on a document with unsaved changes, is written to the store
+    // Hairs-Human:        PENDING
     public async ValueTask<ReviewActionResult> RecordDecisionAsync(
         ReviewStatus status, CancellationToken cancellationToken = default)
     {
@@ -448,9 +449,9 @@ public sealed class ReviewController : IDisposable
     /// a reviewer who has to save before writing down what confuses them will
     /// stop writing it down.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=5AFDA7
-    // Broiler-Falsified-If: a note is written with an empty or whitespace author when no name is configured
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=5AFDA7
+    // Hairs-Falsified-If: a note is written with an empty or whitespace author when no name is configured
+    // Hairs-Human:        PENDING
     public async ValueTask<ReviewActionResult> AddNoteAsync(
         ReviewNoteKind kind,
         string text,
@@ -500,9 +501,9 @@ public sealed class ReviewController : IDisposable
     /// clicked a button, which is precisely the "pretty tick-box system" this
     /// tool exists instead of.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=975B40
-    // Broiler-Falsified-If: a note id that is not in the record is reported as resolved and the record is rewritten
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=975B40
+    // Hairs-Falsified-If: a note id that is not in the record is reported as resolved and the record is rewritten
+    // Hairs-Human:        PENDING
     public async ValueTask<ReviewActionResult> ResolveNoteAsync(
         string noteId, string answer, CancellationToken cancellationToken = default)
     {
@@ -533,9 +534,9 @@ public sealed class ReviewController : IDisposable
     }
 
     /// <summary>Removes a note outright, for one written by mistake.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=80DA0A
-    // Broiler-Falsified-If: a note id that is not in the record is reported as removed and the record is rewritten
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=80DA0A
+    // Hairs-Falsified-If: a note id that is not in the record is reported as removed and the record is rewritten
+    // Hairs-Human:        PENDING
     public async ValueTask<ReviewActionResult> RemoveNoteAsync(
         string noteId, CancellationToken cancellationToken = default)
     {
@@ -551,9 +552,9 @@ public sealed class ReviewController : IDisposable
     /// <see cref="Publish"/> refusing to apply its result, which is why
     /// <c>_disposed</c> is checked there rather than only set here.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=556019
-    // Broiler-Falsified-If: a background load that completes after Dispose repopulates StateFor
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=556019
+    // Hairs-Falsified-If: a background load that completes after Dispose repopulates StateFor
+    // Hairs-Human:        PENDING
     public void Dispose()
     {
         if (_disposed)
@@ -565,13 +566,13 @@ public sealed class ReviewController : IDisposable
         Unreadable = [];
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=16B141
-    // Broiler-Falsified-If: the review maps are written and Changed is raised on a thread-pool thread when a decision is recorded with a revision lookup that completes asynchronously
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=656A69
+    // Hairs-Falsified-If: the review maps are written and Changed is raised on a thread-pool thread when a decision is recorded with a revision lookup that completes asynchronously
+    // Hairs-Human:        PENDING
     private async ValueTask<ReviewActionResult> CommitAsync(
         FileReview updated, string message, CancellationToken cancellationToken)
     {
-        StorageResult<bool> written = await _store.WriteAsync(updated, cancellationToken).ConfigureAwait(false);
+        Hairs.Storage.StorageResult<bool> written = await _store.WriteAsync(updated, cancellationToken).ConfigureAwait(false);
         if (!written.Succeeded)
         {
             return new ReviewActionResult(
@@ -607,9 +608,9 @@ public sealed class ReviewController : IDisposable
         return new ReviewActionResult(ReviewActionOutcome.Applied, message);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=923801
-    // Broiler-Falsified-If: a file edited after its record was written keeps its earlier state in StateFor after RefreshCurrent evaluates it as stale
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=923801
+    // Hairs-Falsified-If: a file edited after its record was written keeps its earlier state in StateFor after RefreshCurrent evaluates it as stale
+    // Hairs-Human:        PENDING
     private void RefreshCurrent()
     {
         if (_current.IsNone || _workspace.FindItem(_current) is not { } item)
@@ -645,18 +646,18 @@ public sealed class ReviewController : IDisposable
     /// exactly the cost the state map exists to avoid; its record is shown with
     /// <see cref="ReviewFreshness.Unknown"/> until it is opened.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=D9C0BE
-    // Broiler-Falsified-If: the text of an open document is returned for a path that names a different file
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=D9C0BE
+    // Hairs-Falsified-If: the text of an open document is returned for a path that names a different file
+    // Hairs-Human:        PENDING
     private string? TextOf(string relativePath) =>
         _workspace.FindItem(relativePath) is { } item &&
         _workspace.FindOpenDocument(item.Id) is { } document
             ? document.Buffer.Current.ToString()
             : null;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=77FAB9
-    // Broiler-Falsified-If: a target is returned for a selected item that has no open document
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=4; Fingerprint=77FAB9
+    // Hairs-Falsified-If: a target is returned for a selected item that has no open document
+    // Hairs-Human:        PENDING
     private ReviewTarget? Target()
     {
         if (_current.IsNone ||
@@ -669,9 +670,9 @@ public sealed class ReviewController : IDisposable
         return new ReviewTarget(item, document, document.Buffer.Current.ToString());
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=991041
-    // Broiler-Falsified-If: a Question decision is described with the message for a cleared review
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=991041
+    // Hairs-Falsified-If: a Question decision is described with the message for a cleared review
+    // Hairs-Human:        PENDING
     private static string Describe(ReviewStatus status, string path) => status switch
     {
         ReviewStatus.Reviewed => $"{path} marked reviewed.",
@@ -681,7 +682,130 @@ public sealed class ReviewController : IDisposable
         _ => $"Review of {path} cleared.",
     };
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DF1751
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=DF1751
+    // Hairs-Human:        PENDING
     private readonly record struct ReviewTarget(WorkspaceItem Item, SourceDocument Document, string Text);
+
+    // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=5; Fingerprint=AF689C
+    // Hairs-Falsified-If: a storage operation forwarded through this adapter drops a failure kind or message returned by the underlying workspace storage
+    // Hairs-Human:        PENDING
+    private sealed class WorkspaceHairsStorage(IWorkspaceStorage inner) : Hairs.Storage.IHairsStorage
+    {
+        // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=39D3CD
+        // Hairs-Human:        PENDING
+        public Hairs.Storage.StorageCapabilities Capabilities =>
+            (Hairs.Storage.StorageCapabilities)(int)inner.Capabilities;
+
+        public IReadOnlyList<string> GrantedRoots => inner.GrantedRoots;
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=5; Fingerprint=E23C97
+        // Hairs-Falsified-If: a failed read from the workspace storage is returned as Succeeded or with a different failure kind
+        // Hairs-Human:        PENDING
+        public async ValueTask<Hairs.Storage.StorageResult<Hairs.Storage.StorageTextContent>> ReadTextAsync(
+            string relativePath, CancellationToken cancellationToken = default)
+        {
+            StorageResult<StorageTextContent> result = await inner
+                .ReadTextAsync(relativePath, cancellationToken).ConfigureAwait(false);
+            if (!result.Succeeded)
+                return Fail<Hairs.Storage.StorageTextContent>(result.Failure!);
+
+            StorageTextContent value = result.Value!;
+            return Hairs.Storage.StorageResult<Hairs.Storage.StorageTextContent>.Ok(
+                new Hairs.Storage.StorageTextContent(
+                    value.Text,
+                    new Hairs.Storage.TextEncodingInfo(value.Encoding.WebName, value.Encoding.HasByteOrderMark),
+                    value.ExternalRevision,
+                    value.DurableFileId));
+        }
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=572E2F
+        // Hairs-Falsified-If: a write passes an encoding or expected revision different from the caller's, or reports a failed workspace write as Succeeded
+        // Hairs-Human:        PENDING
+        public async ValueTask<Hairs.Storage.StorageResult<string>> WriteTextAsync(
+            string relativePath,
+            string text,
+            Hairs.Storage.TextEncodingInfo encoding,
+            string? expectedRevision,
+            CancellationToken cancellationToken = default)
+        {
+            StorageResult<string> result = await inner
+                .WriteTextAsync(
+                    relativePath,
+                    text,
+                    new TextEncodingInfo(encoding.WebName, encoding.HasByteOrderMark),
+                    expectedRevision,
+                    cancellationToken)
+                .ConfigureAwait(false);
+            return result.Succeeded
+                ? Hairs.Storage.StorageResult<string>.Ok(result.Value!)
+                : Fail<string>(result.Failure!);
+        }
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=4; Fingerprint=6EF31E
+        // Hairs-Falsified-If: an entry returned by the workspace storage is omitted or has its IsDirectory flag inverted
+        // Hairs-Human:        PENDING
+        public async ValueTask<Hairs.Storage.StorageResult<IReadOnlyList<Hairs.Storage.StorageEntry>>> ListAsync(
+            string relativeDirectory, CancellationToken cancellationToken = default)
+        {
+            StorageResult<IReadOnlyList<StorageEntry>> result = await inner
+                .ListAsync(relativeDirectory, cancellationToken).ConfigureAwait(false);
+            if (!result.Succeeded)
+                return Fail<IReadOnlyList<Hairs.Storage.StorageEntry>>(result.Failure!);
+
+            var entries = new Hairs.Storage.StorageEntry[result.Value!.Count];
+            for (int index = 0; index < entries.Length; index++)
+                entries[index] = Entry(result.Value[index]);
+            return Hairs.Storage.StorageResult<IReadOnlyList<Hairs.Storage.StorageEntry>>.Ok(entries);
+        }
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=22E3A2
+        // Hairs-Falsified-If: a failed stat from the workspace storage is returned as Succeeded
+        // Hairs-Human:        PENDING
+        public async ValueTask<Hairs.Storage.StorageResult<Hairs.Storage.StorageEntry>> StatAsync(
+            string relativePath, CancellationToken cancellationToken = default)
+        {
+            StorageResult<StorageEntry> result = await inner
+                .StatAsync(relativePath, cancellationToken).ConfigureAwait(false);
+            return result.Succeeded
+                ? Hairs.Storage.StorageResult<Hairs.Storage.StorageEntry>.Ok(Entry(result.Value!))
+                : Fail<Hairs.Storage.StorageEntry>(result.Failure!);
+        }
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=5; Fingerprint=2E064A
+        // Hairs-Falsified-If: a failed delete from the workspace storage is returned as Succeeded
+        // Hairs-Human:        PENDING
+        public async ValueTask<Hairs.Storage.StorageResult<bool>> DeleteAsync(
+            string relativePath, CancellationToken cancellationToken = default)
+        {
+            StorageResult<bool> result = await inner
+                .DeleteAsync(relativePath, cancellationToken).ConfigureAwait(false);
+            return result.Succeeded
+                ? Hairs.Storage.StorageResult<bool>.Ok(result.Value)
+                : Fail<bool>(result.Failure!);
+        }
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=High; Resources=3; Fingerprint=E52CB6
+        // Hairs-Falsified-If: a failed rename from the workspace storage is returned as Succeeded
+        // Hairs-Human:        PENDING
+        public async ValueTask<Hairs.Storage.StorageResult<Hairs.Storage.StorageEntry>> RenameAsync(
+            string fromRelativePath, string toRelativePath, CancellationToken cancellationToken = default)
+        {
+            StorageResult<StorageEntry> result = await inner
+                .RenameAsync(fromRelativePath, toRelativePath, cancellationToken).ConfigureAwait(false);
+            return result.Succeeded
+                ? Hairs.Storage.StorageResult<Hairs.Storage.StorageEntry>.Ok(Entry(result.Value!))
+                : Fail<Hairs.Storage.StorageEntry>(result.Failure!);
+        }
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4E8A1D
+        // Hairs-Human:        PENDING
+        private static Hairs.Storage.StorageEntry Entry(StorageEntry entry) =>
+            new(entry.RelativePath, entry.IsDirectory, entry.SizeBytes, entry.ExternalRevision, entry.DurableFileId);
+
+        // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=2DD8F4
+        // Hairs-Human:        PENDING
+        private static Hairs.Storage.StorageResult<T> Fail<T>(StorageFailure failure) =>
+            Hairs.Storage.StorageResult<T>.Fail(
+                (Hairs.Storage.StorageFailureKind)(int)failure.Kind, failure.Message);
+    }
 }

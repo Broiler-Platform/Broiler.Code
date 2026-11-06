@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   18
 // Annotated:        18/18
 // Exempt:           15
@@ -41,13 +41,13 @@ namespace Broiler.Code.Linux;
 /// and renders, in that order, and everything the analysis layers post is
 /// executed by it rather than on the thread that produced it.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=27C58D
-// Broiler-Falsified-If: without --ignore-focus, keys typed after the window lost focus keep reaching the editor on later frames because the evdev devices stay active
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=27C58D
+// Hairs-Falsified-If: without --ignore-focus, keys typed after the window lost focus keep reaching the editor on later frames because the evdev devices stay active
+// Hairs-Human:        PENDING
 internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=92070B
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=92070B
+    // Hairs-Human:        PENDING
     private static readonly BRenderOptions RenderOptions =
         new(Antialias: true, VSync: true, SubpixelText: true);
 
@@ -71,9 +71,9 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
     private bool _invalidated = true;
     private bool _disposed;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=E750A2
-    // Broiler-Falsified-If: a pollMilliseconds of zero or less reaches PeriodicTimer as a period below one millisecond
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=E750A2
+    // Hairs-Falsified-If: a pollMilliseconds of zero or less reaches PeriodicTimer as a period below one millisecond
+    // Hairs-Human:        PENDING
     public CodeWindow(BSize size, Action<string> log, bool ignoreFocus = false, int pollMilliseconds = 16)
     {
         ArgumentNullException.ThrowIfNull(log);
@@ -93,12 +93,12 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
         _ignoreFocus = ignoreFocus;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3B37C9
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3B37C9
+    // Hairs-Human:        PENDING
     public BSize ViewportSize => _surface.Size;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=537D40
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=537D40
+    // Hairs-Human:        PENDING
     public double Scale => _surface.DpiScale;
 
     public UiThreadDispatcher Dispatcher => _dispatcher;
@@ -106,18 +106,18 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
     public LinuxInputCoordinator Input => _input;
 
     /// <summary>Whether this host has a real clipboard to offer.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E985CC
-    // Broiler-Falsified-If: HasClipboard is true while the X11 clipboard failed to open
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=E985CC
+    // Hairs-Falsified-If: HasClipboard is true while the X11 clipboard failed to open
+    // Hairs-Human:        PENDING
     public bool HasClipboard => _clipboard is not null;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=516BFD
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=516BFD
+    // Hairs-Human:        PENDING
     public BRenderList CreateRenderList(int capacity = 0) => new(capacity);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=B03E24
-    // Broiler-Falsified-If: with no X11 clipboard open, TryGetText returns true or a text other than the empty string
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=B03E24
+    // Hairs-Falsified-If: with no X11 clipboard open, TryGetText returns true or a text other than the empty string
+    // Hairs-Human:        PENDING
     public bool TryGetText(out string text)
     {
         if (_clipboard is not null)
@@ -127,27 +127,27 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
         return false;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=B5EF0D
-    // Broiler-Falsified-If: on a host with no X11 clipboard, SetText throws instead of dropping the text
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=B5EF0D
+    // Hairs-Falsified-If: on a host with no X11 clipboard, SetText throws instead of dropping the text
+    // Hairs-Human:        PENDING
     public void SetText(string text) => _clipboard?.SetText(text);
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7938F2
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=7938F2
+    // Hairs-Human:        PENDING
     public void Invalidate(UiInvalidation invalidation) => _invalidated = true;
 
     /// <summary>
     /// Presentation belongs to the loop, which renders as part of its own frame.
     /// Submitting here as well would draw the same frame twice.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=F7DD0A
-    // Broiler-Falsified-If: Present hands the render list to the renderer, so a frame is drawn twice
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=F7DD0A
+    // Hairs-Falsified-If: Present hands the render list to the renderer, so a frame is drawn twice
+    // Hairs-Human:        PENDING
     public void Present(BRenderList renderList) => ArgumentNullException.ThrowIfNull(renderList);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=82DB69
-    // Broiler-Falsified-If: a null session or shell is accepted, and RunAsync later fails with NullReferenceException
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=82DB69
+    // Hairs-Falsified-If: a null session or shell is accepted, and RunAsync later fails with NullReferenceException
+    // Hairs-Human:        PENDING
     public void Attach(UiSession session, CodeShell shell)
     {
         ArgumentNullException.ThrowIfNull(session);
@@ -159,18 +159,18 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
     }
 
     /// <summary>Gives the editor keyboard focus, for the first frame.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=05D25C
-    // Broiler-Falsified-If: after FocusEditor the session's focused element is not the shell's editor
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=05D25C
+    // Hairs-Falsified-If: after FocusEditor the session's focused element is not the shell's editor
+    // Hairs-Human:        PENDING
     public void FocusEditor()
     {
         if (_editor is not null)
             SetFocus(_editor);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=BC8B25
-    // Broiler-Falsified-If: after WaitForNextTickAsync resumes on a thread-pool thread, the next Drain runs off the thread that constructed the dispatcher and throws InvalidOperationException
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=8; Fingerprint=BC8B25
+    // Hairs-Falsified-If: after WaitForNextTickAsync resumes on a thread-pool thread, the next Drain runs off the thread that constructed the dispatcher and throws InvalidOperationException
+    // Hairs-Human:        PENDING
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
         if (_session is null)
@@ -219,9 +219,9 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
         return 0;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=3A89A2
-    // Broiler-Falsified-If: a second DisposeAsync disposes the X11 surface or the clipboard connection again
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=3A89A2
+    // Hairs-Falsified-If: a second DisposeAsync disposes the X11 surface or the clipboard connection again
+    // Hairs-Human:        PENDING
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -238,9 +238,9 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
         _renderer.Dispose();
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=8; Fingerprint=19E6AD
-    // Broiler-Falsified-If: a pointer press moves focus after the session has dispatched it, so the click is handled by the control that had focus before
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=8; Fingerprint=19E6AD
+    // Hairs-Falsified-If: a pointer press moves focus after the session has dispatched it, so the click is handled by the control that had focus before
+    // Hairs-Human:        PENDING
     private void DispatchInput(UiInputEvent input)
     {
         // Focus follows the press, before the event is dispatched, so the click
@@ -261,9 +261,9 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
     /// decides where keys go; the control only draws the caret, so both have to
     /// be told or the caret and the keystrokes disagree.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=ACF630
-    // Broiler-Falsified-If: moving focus to a control other than the editor leaves the editor's HasFocus true, so its caret still draws
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=ACF630
+    // Hairs-Falsified-If: moving focus to a control other than the editor leaves the editor's HasFocus true, so its caret still draws
+    // Hairs-Human:        PENDING
     private void SetFocus(UiElement target)
     {
         if (_session is null || ReferenceEquals(_session.FocusedElement, target))
@@ -274,9 +274,9 @@ internal sealed class CodeWindow : IUiHost, IUiClipboardHost, IAsyncDisposable
             _shell.Editor.HasFocus = ReferenceEquals(target, _shell.Editor);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=C748F5
-    // Broiler-Falsified-If: RenderFrame clears the invalidation flag without having rendered, so a pending change is not painted
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=7; Fingerprint=C748F5
+    // Hairs-Falsified-If: RenderFrame clears the invalidation flag without having rendered, so a pending change is not painted
+    // Hairs-Human:        PENDING
     private void RenderFrame()
     {
         if (_session is null)

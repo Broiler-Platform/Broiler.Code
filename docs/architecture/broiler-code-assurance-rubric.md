@@ -1,4 +1,4 @@
-# Choosing the values on a `// Broiler-AI:` line
+# Choosing the values on a `// Hairs-AI:` line
 
 - **Status:** Adopted for the platform rollout
 - **Owner:** Broiler Code, with the platform assurance owner consulted
@@ -13,16 +13,16 @@ component annotated, that inconsistency would make the totals in each
 assessment written for the rollout follows it, and so should every new one.
 
 An assessment is what a machine read. It is never a review. Nothing on the
-`// Broiler-AI:` line or the `// Broiler-Falsified-If:` line may say or imply
+`// Hairs-AI:` line or the `// Hairs-Falsified-If:` line may say or imply
 that a person has read, checked, approved or signed off the code.
 
 ## The block
 
 ```csharp
 /// <summary>…the declaration's own documentation stays where it is…</summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=TBF
-// Broiler-Falsified-If: a length prefix larger than the remaining input is read past the end of the buffer
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=TBF
+// Hairs-Falsified-If: a length prefix larger than the remaining input is read past the end of the buffer
+// Hairs-Human:        PENDING
 [SomeAttribute]
 public int ReadLengthPrefixed(ReadOnlySpan<byte> input) …
 ```
@@ -79,7 +79,7 @@ what goes wrong if the code is wrong.
 | `High` | It **parses or decodes untrusted input**: HTML, CSS, JS source, fonts, images, PDF or other documents, archives, network protocols, cookies, URLs or regular expressions. The same applies if it **enforces a boundary** (origin, permission, sandbox, CSP, credential or cookie scope), touches the **file system, processes or native interop** (P/Invoke, COM), or runs **concurrency** that guards shared state. |
 | `Critical` | It is **memory-unsafe** (`unsafe`, pointers, `Marshal`, `stackalloc` or native buffers sized from input), **generates or executes code** (JIT, executable memory), is the **core of an interpreter, verifier or validator** that runs untrusted script or bytecode, or is the **bridge that exposes host objects or capabilities to page script**. |
 
-`High` and `Critical` require a `// Broiler-Falsified-If:` line, and `None`,
+`High` and `Critical` require a `// Hairs-Falsified-If:` line, and `None`,
 `Low` and `Medium` carry none. Do not downgrade a unit to avoid writing one. If
 a unit meets any `High` condition, it is `High`.
 
@@ -205,7 +205,7 @@ The criterion is required for `High` and `Critical` and is not written for
 `None`, `Low` or `Medium`. Below `High`, the observation that would prove a unit
 wrong is rarely more than its own name restated (`EGL_NONE is not 0x3038`), and a
 line that restates is noise beside the ones that do not. `insert` refuses one
-below `High`, and a component whose `assurance.config.json` sets
+below `High`, and a component whose `hairs.config.json` sets
 `"criteriaBelowHigh": "refused"` has `check` report any it still carries.
 It is **one line of prose** that names one observation that would prove the unit
 wrong. It is a test that someone could run or look for, not a description of
@@ -261,7 +261,7 @@ rates it: a binding is native interop.
 
 ## Named values are watched, not assessed
 
-A component whose `assurance.config.json` sets `"namedValues": "watched"` does
+A component whose `hairs.config.json` sets `"namedValues": "watched"` does
 not assess its named values: every `const` field, every enum declaration, and
 every `static readonly` `Guid`, `IntPtr`, `UIntPtr`, `nint` or `nuint` whose
 initializer is literals alone (`new Guid("...")`, `IntPtr.Zero`, `(IntPtr)(-1)`).
@@ -274,7 +274,7 @@ else: an IP risk of a fact, a security value borrowed from whatever calls it,
 and a criterion that restates the line. Several hundred such blocks bury the
 few in the same component that say something. What the scheme still needs from
 a named value is to notice when it changes, and that it keeps: each one is a
-unit with a fingerprint in `assurance.manifest.json`, exactly as a storage field
+unit with a fingerprint in `hairs.manifest.json`, exactly as a storage field
 and an enum member are, so an edited value moves a fingerprint the check
 compares and appears in the diff of the generated record.
 
@@ -285,7 +285,7 @@ members, delegates for native procedures and struct layouts, where widths and
 layouts have been found wrong. A component that does not set the option assesses
 its named values like any other declaration, as Broiler.VM does.
 
-When a component switches to watching its named values, `broiler-review
+When a component switches to watching its named values, `hairs
 assurance prune` removes the blocks above them (and every criterion below
 `High`), leaving any block whose human line names a reviewer or reads `STALE`
 for a person to decide; `generate` then rewrites the headers and the report,

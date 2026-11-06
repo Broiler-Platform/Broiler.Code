@@ -141,7 +141,7 @@ The two are different kinds of statement and the tool keeps them apart.
 | | Answers | Lives in | Lifetime |
 | --- | --- | --- | --- |
 | Code comment | *Why does this work this way?* | The source file | As long as the code |
-| Review note | *What does a human still have to check here?* | `.broiler-review/` | Until it is answered |
+| Review note | *What does a human still have to check here?* | `.hairs-review/` | Until it is answered |
 
 ```csharp
 // ECMA-262 requires ToPrimitive before numeric conversion.
@@ -158,7 +158,7 @@ long after it is answered, and makes every review action a source diff.
 
 ### Records are committed, one file per source file
 
-Records live at `.broiler-review/<source path>.review.json`. They are **not**
+Records live at `.hairs-review/<source path>.review.json`. They are **not**
 gitignored, deliberately — a review record that is not committed proves nothing
 to anyone but its author. Once they are in the history, human review becomes part
 of the project's history:
@@ -208,7 +208,7 @@ reviewed without a human reading it. So:
   check is that the content it was handed is really the file's — that is the
   caller's to get right, and why the controller takes it from the buffer and
   refuses a dirty document.
-- **There is no `broiler-review mark` command.** Recording a review from a script
+- **There is no `hairs mark` command.** Recording a review from a script
   is precisely the hole the rest of this list closes.
 - **A resolution requires an answer.** "Resolved" with no text records that
   somebody clicked a button, not that anybody found out.
@@ -257,12 +257,12 @@ attributed to `Broiler.Browser` and `Broiler.DOM` would vanish from the report.
 
 | Concern | Owner | Boundary |
 | --- | --- | --- |
-| Review record, staleness, note anchoring, coverage arithmetic | `Broiler.Code.Review` | References `Broiler.Code.Workspaces` and nothing else. No Broiler.UI, no Roslyn, no git, no platform. |
+| Review record, staleness, note anchoring, coverage arithmetic | `Hairs` | References `Broiler.Code.Workspaces` and nothing else. No Broiler.UI, no Roslyn, no git, no platform. |
 | Pane, explorer badges, commands, revision provider | `Broiler.Code.Core` | The seam that knows about both a workspace and a screen |
-| Coverage reporting and the CI check | `Broiler.Code.Review.Cli` | No display; shares the model with the editor |
+| Coverage reporting and the CI check | `Hairs.Cli` | No display; shares the model with the editor |
 | Composing the pane | `Broiler.Code.Windows`, `.Linux` | The review controls are optional, so a head that supplies none is unaffected |
 
-`Broiler.Code.Review`'s isolation is asserted, not described:
+`Hairs`'s isolation is asserted, not described:
 `CodeEditorArchitectureTests.The_Review_Model_Depends_Only_On_The_Workspace`
 fails if a reference is added. The two most tempting additions are the two that
 would break it — a UI reference, so a pane could render a status directly, which
@@ -276,15 +276,15 @@ second implementation.
 
 ## The command line
 
-`broiler-review` runs the same evaluation where there is no display, so the
+`hairs` runs the same evaluation where there is no display, so the
 record is checkable by somebody other than the person who wrote it.
 
 ```bash
-dotnet run --project src/Broiler.Code.Review.Cli -- coverage --root . --markdown coverage.md --json coverage.json
+dotnet tool run hairs -- coverage --root . --markdown coverage.md --json coverage.json
 ```
 
 ```bash
-dotnet run --project src/Broiler.Code.Review.Cli -- check --root . --changed changed.txt
+dotnet tool run hairs -- check --root . --changed changed.txt
 ```
 
 `check` restricts itself to the files a pull request touched when `--changed` is

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   4
 // Annotated:        4/4
 // Exempt:           0
@@ -21,7 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Broiler.Code.Core.Review;
 using Broiler.Code.Core.Shell;
-using Broiler.Code.Language.CSharp.Assurance;
+using Hairs.Language.CSharp;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Storage;
 using Broiler.Graphics;
@@ -47,14 +47,14 @@ namespace Broiler.Code.Linux;
 /// shell is written against abstractions, so the only thing a head decides is
 /// which concrete controls back them. Everything below this line is shared.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=DE99B6
-// Broiler-Falsified-If: a workspace path that does not name an existing directory is granted as the workspace root
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=DE99B6
+// Hairs-Falsified-If: a workspace path that does not name an existing directory is granted as the workspace root
+// Hairs-Human:        PENDING
 internal static class CodeShellFactory
 {
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=31A916
-    // Broiler-Falsified-If: the editor returned beside the shell is not the control the shell holds as its Editor
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=31A916
+    // Hairs-Falsified-If: the editor returned beside the shell is not the control the shell holds as its Editor
+    // Hairs-Human:        PENDING
     public static (CodeShell Shell, StandardCodeEditor Editor) Create(BSize size)
     {
         var editor = new StandardCodeEditor { PreferredSize = size };
@@ -112,9 +112,9 @@ internal static class CodeShellFactory
     /// <see cref="WorkspaceBootstrap"/>'s, in Core; this only decides which
     /// directory is granted.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=3D41E0
-    // Broiler-Falsified-If: a path argument naming a file or a missing directory is granted as the workspace root instead of the scratch root
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=3D41E0
+    // Hairs-Falsified-If: a path argument naming a file or a missing directory is granted as the workspace root instead of the scratch root
+    // Hairs-Human:        PENDING
     public static async ValueTask<CodeWorkspace> OpenWorkspaceAsync(
         CodeShell shell, string? path, CancellationToken cancellationToken = default)
     {
@@ -132,7 +132,7 @@ internal static class CodeShellFactory
         // reads the annotation blocks alone and declines to recount a file's
         // generated header; with one it knows the file's units, which of them are
         // exempt, and what each one's fingerprint is now. Which ones are exempt
-        // is the component's to say, in the assurance.config.json above a file,
+        // is the component's to say, in the hairs.config.json above a file,
         // so a granted root gets a scanner that reads it there.
         shell.AssuranceScanner = new CSharpAssuranceScanner();
         shell.AssuranceScannerFactory = static granted => granted.GrantedRoots.Count == 0
@@ -161,9 +161,9 @@ internal static class CodeShellFactory
     /// otherwise — not /tmp, because a recovery journal a cleaner can delete is
     /// not a recovery journal.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=893B77
-    // Broiler-Falsified-If: a relative XDG_DATA_HOME is used as given, so the scratch workspace is created under the process's current directory
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=893B77
+    // Hairs-Falsified-If: a relative XDG_DATA_HOME is used as given, so the scratch workspace is created under the process's current directory
+    // Hairs-Human:        PENDING
     private static string ScratchRoot()
     {
         string? dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");

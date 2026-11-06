@@ -71,7 +71,6 @@ public sealed class CodeEditorArchitectureTests
             // The review model sits below Core on the same side of the seam as
             // the workspace: no UI, no Roslyn, no platform. Its own rule is
             // asserted by The_Review_Model_Depends_Only_On_The_Workspace below.
-            "../Broiler.Code.Review/Broiler.Code.Review.csproj",
             "../Broiler.Code.Workspaces/Broiler.Code.Workspaces.csproj",
         ],
             references);
@@ -84,31 +83,9 @@ public sealed class CodeEditorArchitectureTests
         [
             "Broiler.UI.Button", "Broiler.UI.CodeEditor", "Broiler.UI.ComboBox",
             "Broiler.UI.Edit", "Broiler.UI.Label", "Broiler.UI.Menu", "Broiler.UI.Panel",
-            "Broiler.UI.Splitter", "Broiler.UI.TabView", "Broiler.UI.Toolbar", "Broiler.UI.TreeView",
+            "Broiler.UI.Splitter", "Broiler.UI.TabView", "Broiler.UI.Toolbar", "Broiler.UI.TreeView", "Hairs",
         ], packages);
     }
-
-    /// <summary>
-    /// The review model is evidence about the source, so it is held to the same
-    /// rule as the text layer: it may know about a workspace and nothing else.
-    ///
-    /// Asserted rather than described because the two things most likely to be
-    /// added to it are the two that would break it — a UI reference, so a pane
-    /// can render a status directly, and a git package, so staleness can be
-    /// decided from a commit. The first would stop CI computing coverage with no
-    /// display; the second would make a review expire on a rebase.
-    /// </summary>
-    [Fact(Timeout = 600000)]
-    public void The_Review_Model_Depends_Only_On_The_Workspace()
-    {
-        XDocument project = Load("src", "Broiler.Code.Review", "Broiler.Code.Review.csproj");
-
-        Assert.Empty(project.Descendants("PackageReference"));
-        Assert.Equal(
-            ["../Broiler.Code.Workspaces/Broiler.Code.Workspaces.csproj"],
-            References(project));
-    }
-
     private static string[] References(params string[] parts) => References(Load(parts));
 
     private static string[] References(XDocument project) => [.. project

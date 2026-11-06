@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   5
 // Annotated:        5/5
 // Exempt:           0
@@ -28,9 +28,9 @@ namespace Broiler.Code.Workspaces.Storage;
 /// "../../../../etc/passwd" and "src/../../outside" are inputs to handle, not
 /// hypotheticals.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=813AEB
-// Broiler-Falsified-If: a relative path whose .. segments climb above its start, such as src/../../outside, is returned as a usable path instead of null
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=813AEB
+// Hairs-Falsified-If: a relative path whose .. segments climb above its start, such as src/../../outside, is returned as a usable path instead of null
+// Hairs-Human:        PENDING
 public static class WorkspacePath
 {
     /// <summary>
@@ -38,9 +38,9 @@ public static class WorkspacePath
     /// segments. Returns null when the path escapes the root, rather than
     /// returning something that looks usable.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=A4BCB6
-    // Broiler-Falsified-If: a relative path whose .. segments climb above its start, such as src/../../outside, is returned as a usable path instead of null
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=A4BCB6
+    // Hairs-Falsified-If: a relative path whose .. segments climb above its start, such as src/../../outside, is returned as a usable path instead of null
+    // Hairs-Human:        PENDING
     public static string? Normalize(string relativePath)
     {
         ArgumentNullException.ThrowIfNull(relativePath);
@@ -85,9 +85,9 @@ public static class WorkspacePath
     /// <paramref name="root"/>. The separator matters: without it, "src2"
     /// passes a prefix test against "src".
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=6C5A15
-    // Broiler-Falsified-If: a candidate that only shares a name prefix with the root, such as src2/a against root src, is reported as contained
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=6C5A15
+    // Hairs-Falsified-If: a candidate that only shares a name prefix with the root, such as src2/a against root src, is reported as contained
+    // Hairs-Human:        PENDING
     public static bool IsContained(string candidate, string root)
     {
         if (root.Length == 0)
@@ -103,15 +103,15 @@ public static class WorkspacePath
     /// elsewhere, so the workspace has to know which rule its provider follows
     /// before it creates the second one.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=D6F413
-    // Broiler-Falsified-If: for a case-insensitive provider the returned comparer treats a.cs and A.cs as different paths
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=D6F413
+    // Hairs-Falsified-If: for a case-insensitive provider the returned comparer treats a.cs and A.cs as different paths
+    // Hairs-Human:        PENDING
     public static StringComparer GetComparer(bool caseInsensitive) =>
         caseInsensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=6786A8
-    // Broiler-Falsified-If: a segment of COM or LPT followed by a superscript digit U+00B9, U+00B2 or U+00B3, which Windows also reserves as a device name, is not recognized as reserved
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=6786A8
+    // Hairs-Falsified-If: a segment of COM or LPT followed by a superscript digit U+00B9, U+00B2 or U+00B3, which Windows also reserves as a device name, is not recognized as reserved
+    // Hairs-Human:        PENDING
     private static bool IsReservedDeviceName(string segment)
     {
         int dot = segment.IndexOf('.');

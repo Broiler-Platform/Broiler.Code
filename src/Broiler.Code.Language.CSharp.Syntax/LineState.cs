@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   3
 // Annotated:        3/3
 // Exempt:           5
@@ -25,19 +25,19 @@ namespace Broiler.Code.Language.CSharp.Syntax;
 /// reconverges after an edit. Without it, opening a block comment near the top
 /// of a file would have no way to know where its effect ends.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=866494
-// Broiler-Falsified-If: two raw-string states that differ only in QuoteCount compare equal, so incremental classification stops early and keeps stale colours
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=866494
+// Hairs-Falsified-If: two raw-string states that differ only in QuoteCount compare equal, so incremental classification stops early and keeps stale colours
+// Hairs-Human:        PENDING
 internal readonly record struct LineState(LineStateKind Kind, byte QuoteCount, byte DollarCount)
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=E8329F
-    // Broiler-Falsified-If: Default has a kind other than LineStateKind.Default or a nonzero count, so a document's first line starts inside a comment or string
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=E8329F
+    // Hairs-Falsified-If: Default has a kind other than LineStateKind.Default or a nonzero count, so a document's first line starts inside a comment or string
+    // Hairs-Human:        PENDING
     public static readonly LineState Default = new(LineStateKind.Default, 0, 0);
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=EDA14E
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=EDA14E
+// Hairs-Human:        PENDING
 internal enum LineStateKind : byte
 {
     Default = 0,

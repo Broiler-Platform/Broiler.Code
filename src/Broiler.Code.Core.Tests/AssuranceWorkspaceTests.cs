@@ -1,7 +1,7 @@
 using Broiler.Code.Core.Review;
 using Broiler.Code.Core.Shell;
-using Broiler.Code.Review;
-using Broiler.Code.Review.Assurance;
+using Hairs;
+using Hairs.Assurance;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Model;
 using Broiler.Code.Workspaces.Storage;
@@ -48,14 +48,14 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         "namespace Sample;\n" +
         "\n" +
         "/// <summary>A thing.</summary>\n" +
-        "// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=AAAAAA\n" +
-        "// Broiler-Human:        PENDING\n" +
+        "// Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=AAAAAA\n" +
+        "// Hairs-Human:        PENDING\n" +
         "public sealed class Thing\n" +
         "{\n" +
         "    /// <summary>Does the work.</summary>\n" +
-        "    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=BBBBBB\n" +
-        "    // Broiler-Falsified-If: the caller can observe a partially applied change\n" +
-        "    // Broiler-Human:        PENDING\n" +
+        "    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=2; Fingerprint=BBBBBB\n" +
+        "    // Hairs-Falsified-If: the caller can observe a partially applied change\n" +
+        "    // Hairs-Human:        PENDING\n" +
         "    public int Work(int value)\n" +
         "    {\n" +
         "        return value + 1;\n" +
@@ -71,8 +71,8 @@ public sealed class AssuranceWorkspaceTests : IDisposable
     private const string ExemptSource =
         "namespace Sample;\n" +
         "\n" +
-        "// Broiler-AI:           Origin=Original; EXEMPT=hand-written table checked against the spec\n" +
-        "// Broiler-Human:        PENDING\n" +
+        "// Hairs-AI:           Origin=Original; EXEMPT=hand-written table checked against the spec\n" +
+        "// Hairs-Human:        PENDING\n" +
         "public sealed class Table { }\n";
 
     /// <summary>
@@ -84,8 +84,8 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         "\n" +
         "public sealed class Other\n" +
         "{\n" +
-        "    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CCCCCC\n" +
-        "    // Broiler-Human:        PENDING\n" +
+        "    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CCCCCC\n" +
+        "    // Hairs-Human:        PENDING\n" +
         "    public int Value => 1;\n" +
         "}\n";
 
@@ -178,10 +178,10 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         Assert.True(await shell.InvokeAsync(CodeCommandNames.ApproveUnit));
 
         string text = document.Buffer.Current.ToString();
-        Assert.Contains("    // Broiler-Human:        Enrico\n", text, StringComparison.Ordinal);
+        Assert.Contains("    // Hairs-Human:        Enrico\n", text, StringComparison.Ordinal);
 
         // The other declaration is untouched: one signature, one line.
-        Assert.Contains("// Broiler-Human:        PENDING\n", text, StringComparison.Ordinal);
+        Assert.Contains("// Hairs-Human:        PENDING\n", text, StringComparison.Ordinal);
 
         // And the pane says so. Signing is not verifying — the fingerprint that
         // verifies is the owning component's to write — so the reviewed count
@@ -217,7 +217,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
 
         string human = document.Buffer.Current.ToString()
             .Split('\n')
-            .Single(line => line.Contains("Broiler-Human:        Enrico", StringComparison.Ordinal));
+            .Single(line => line.Contains("Hairs-Human:        Enrico", StringComparison.Ordinal));
 
         Assert.DoesNotContain("Fingerprint", human, StringComparison.Ordinal);
         Assert.DoesNotContain("VERIFIED", human, StringComparison.Ordinal);
@@ -364,7 +364,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         // ...and the unit command does not.
         Assert.True(await shell.InvokeAsync(CodeCommandNames.ApproveUnit));
         Assert.Contains(
-            "// Broiler-Human:        Enrico",
+            "// Hairs-Human:        Enrico",
             document.Buffer.Current.ToString(),
             StringComparison.Ordinal);
 
@@ -514,7 +514,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
 
         Assert.True(await shell.InvokeAsync(CodeCommandNames.ApproveUnit));
         Assert.Contains(
-            "// Broiler-Human:        Enrico",
+            "// Hairs-Human:        Enrico",
             document.Buffer.Current.ToString(),
             StringComparison.Ordinal);
 
@@ -658,7 +658,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
             1,
             document.Buffer.Current.ToString()
                 .Split('\n')
-                .Count(line => line.Contains("Broiler-Human:        Enrico", StringComparison.Ordinal)));
+                .Count(line => line.Contains("Hairs-Human:        Enrico", StringComparison.Ordinal)));
 
         shell.Dispose();
     }
@@ -707,7 +707,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         picker.SelectIndex(IndexOf(picker, CodeCommandNames.ApproveUnit));
 
         Assert.Contains(
-            "    // Broiler-Human:        Enrico\n",
+            "    // Hairs-Human:        Enrico\n",
             document.Buffer.Current.ToString(),
             StringComparison.Ordinal);
         Assert.Equal("Declaration: reviewed", picker.SelectedItem!.Text);
@@ -715,7 +715,7 @@ public sealed class AssuranceWorkspaceTests : IDisposable
         picker.SelectIndex(IndexOf(picker, CodeCommandNames.WithdrawUnit));
 
         Assert.Contains(
-            "    // Broiler-Human:        PENDING\n",
+            "    // Hairs-Human:        PENDING\n",
             document.Buffer.Current.ToString(),
             StringComparison.Ordinal);
 

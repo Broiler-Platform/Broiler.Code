@@ -1,4 +1,4 @@
-# The assurance commands of `broiler-review`
+# The assurance commands of `hairs`
 
 - **Status:** `list`, `insert`, `generate`, `check`, `status` and `prune` delivered
 - **Owner:** Broiler Code
@@ -10,18 +10,18 @@ records a reviewer's name on it. This record describes the command-line half,
 which brings the same annotation to the other component repositories:
 
 ```text
-broiler-review assurance list     --root <dir> [--files <list>] [--strict] [--json <out>|-] [--all-units]
-broiler-review assurance insert   --root <dir> --assessments <file.json> [--dry-run] [--json <out>|-]
-broiler-review assurance generate --root <dir> [--dry-run] [--adopt]
-broiler-review assurance check    --root <dir> [--config <file>] [--release] [--sources-only] [--json <out>|-]
+hairs assurance list     --root <dir> [--files <list>] [--strict] [--json <out>|-] [--all-units]
+hairs assurance insert   --root <dir> --assessments <file.json> [--dry-run] [--json <out>|-]
+hairs assurance generate --root <dir> [--dry-run] [--adopt]
+hairs assurance check    --root <dir> [--config <file>] [--release] [--sources-only] [--json <out>|-]
                                   [--annotation-prefix <path>] [--annotation-limit <n>]
-broiler-review assurance status   --root <dir> [--config <file>]
-broiler-review assurance prune    --root <dir> [--dry-run] [--json <out>|-]
+hairs assurance status   --root <dir> [--config <file>]
+hairs assurance prune    --root <dir> [--dry-run] [--json <out>|-]
 ```
 
-`broiler-review` is installed by the [Broiler.SDK NuGet tool package](../broiler-sdk.md).
+`hairs` is installed by the [Broiler.SDK NuGet tool package](../broiler-sdk.md).
 A source checkout can also run it as
-`dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance ...`.
+`dotnet tool run hairs -- assurance ...`.
 A component states its chosen invocation in `regenerateCommand` (below) so that
 the commands its messages and generated prose name are ones a reader can paste.
 
@@ -33,18 +33,18 @@ written after the command's own writes; `2` a usage or configuration error,
 reported before anything is written. Output, JSON included, is UTF-8 whatever the
 console's code page.
 
-A component adopts the scheme in four steps: commit `assurance.config.json`;
+A component adopts the scheme in four steps: commit `hairs.config.json`;
 `list` the units that need a block; `insert` machine assessments for them; and
 `generate`, which fills every `Fingerprint=TBF`, writes a header into every
 covered file and writes the three component-level artefacts. From then on
 `check` in CI holds the tree to what `generate` would write, and a reviewer's
-only edit is the `// Broiler-Human:` line. When the rubric asks for less than a
+only edit is the `// Hairs-Human:` line. When the rubric asks for less than a
 tree carries (a component that starts watching its named values, or criteria
 written below `High`), `prune` and then `generate` take the surplus out.
 
-## Opting in: `assurance.config.json`
+## Opting in: `hairs.config.json`
 
-A component opts in by committing `assurance.config.json` at its root. `list`
+A component opts in by committing `hairs.config.json` at its root. `list`
 works without it and guesses the product projects, and says so. `insert` and
 `generate` refuse to run without it, so pointing the tool at a component cannot
 change that component's sources. `check` and `status` read it from the root or
@@ -64,16 +64,16 @@ and trailing commas are allowed.
 | `excludeBuildOutputAtAnyDepth` | bool | `true` | Also leave out `bin` and `obj` directories below a project's root (their files are listed as not covered). `false` is the owning component's and the SDK's rule: only the project's own `bin` and `obj`. |
 | `exemptionPredicate` | `"strict"` \| `"owning-component"` | `"strict"` | Which exemption predicate decides that a unit needs no review (see "What a unit is"). |
 | `namedValues` | `"reviewed"` \| `"watched"` | `"reviewed"` | `watched`: a named value (a `const` field, an enum declaration, a `static readonly` `Guid` or handle stated by literals) is exempt as `NamedValue` and carries no block; its fingerprint stays in the manifest. For a component of values transcribed from elsewhere, such as an SDK's defines (see "What a unit is"). Applies under either predicate. |
-| `criteriaBelowHigh` | `"permitted"` \| `"refused"` | `"permitted"` | `refused`: `check` reports a `// Broiler-Falsified-If:` line on a block assessed `None`, `Low` or `Medium` (J10), because the rubric writes one only for `High` and `Critical`. Set it once `prune` has removed the criteria an earlier rubric wrote below `High`. `insert` refuses such a criterion whatever this says. |
+| `criteriaBelowHigh` | `"permitted"` \| `"refused"` | `"permitted"` | `refused`: `check` reports a `// Hairs-Falsified-If:` line on a block assessed `None`, `Low` or `Medium` (J10), because the rubric writes one only for `High` and `Critical`. Set it once `prune` has removed the criteria an earlier rubric wrote below `High`. `insert` refuses such a criterion whatever this says. |
 | `spdx` | `{copyright: string[], license: string}` | none; **required** by `generate`, `check` and `status` | SPDX lines of the generated header: one or more `SPDX-FileCopyrightText` values (without the prefix) and one licence expression, e.g. `Apache-2.0 AND BSD-3-Clause`. |
 | `spdxOverrides` | `{glob, copyright[], license}`[] | `[]` | SPDX lines for particular files, such as third-party-derived code. The first matching glob wins. |
-| `artefacts` | `{report, humanReview, manifest}` | `CODE-ASSURANCE.md`, `HUMAN_REVIEW.md`, `assurance.manifest.json` | Where the component-level artefacts go, so that a hand-written `HUMAN_REVIEW.md` can stay where it is. A path inside a `.git` directory is refused here; one through a link or into a nested checkout is refused when the tool runs. |
+| `artefacts` | `{report, humanReview, manifest}` | `CODE-ASSURANCE.md`, `HUMAN_REVIEW.md`, `hairs.manifest.json` | Where the component-level artefacts go, so that a hand-written `HUMAN_REVIEW.md` can stay where it is. A path inside a `.git` directory is refused here; one through a link or into a nested checkout is refused when the tool runs. |
 | `preprocessorSymbols` | string[] | the owning component's net10.0 set | Symbols the scanner parses under. A declaration under an undefined symbol is disabled text and no unit of its own; its text is still fingerprinted (see "What a unit is"). |
 | `forbidDirectives` | bool | `false` | Whether any preprocessor directive in a covered file is a violation (rule J6). |
 | `forgeryVocabulary` | `"narrow"` \| `"strict"` | `"narrow"` | Which words mark a comment as a forged summary (see J5). `strict` adds the owning component's full list. |
 | `closedToEscapeHatch` | string[] | `[]` | Assemblies where `EXEMPT=` may not be written. Each must be the assembly of a configured project; a name none builds is refused. |
 | `adrDirectory` | string | `docs/adr` | Where `Spec=ADR-nnnn` citations are resolved. |
-| `regenerateCommand` | string | `broiler-review assurance generate` | The command generated prose and messages tell a reader to run. The `check`, `list` and `insert` commands named beside it are the same text with the word `generate` replaced, when it occurs once. Set it to the `dotnet run --project ... -- assurance generate --root <component>` form the component's workflow uses. |
+| `regenerateCommand` | string | `hairs assurance generate` | The command generated prose and messages tell a reader to run. The `check`, `list` and `insert` commands named beside it are the same text with the word `generate` replaced, when it occurs once. Set it to the `dotnet run --project ... -- assurance generate --root <component>` form the component's workflow uses. |
 | `manifestComment` | string[] | the tool's own | The manifest's `$comment` lines, verbatim; an empty string is a blank line. For a component whose manifest prose is fixed by its own tests. The review-claim rule still reads it. |
 
 Globs are matched against root-relative paths, case-sensitively: `*` and `?`
@@ -215,7 +215,7 @@ exit `1`: a run that did not read everything has not listed everything.
 ```
 
 There is no field for the human line, and an entry carrying any undefined field
-is refused. Every block records `Fingerprint=TBF` and `// Broiler-Human: PENDING`
+is refused. Every block records `Fingerprint=TBF` and `// Hairs-Human: PENDING`
 in the owning component's padded format. `unit` is the name `list` printed, which
 identifies one unit of the file; `fingerprint` is the value `list` printed for the
 version assessed, and an entry whose fingerprint the unit no longer computes is
@@ -408,7 +408,7 @@ for, and nothing else:
   exemption predicate exempts, such as a named value once the component sets
   `"namedValues": "watched"`. A block whose `EXEMPT=` is what exempts its unit
   is not one of these, because removing it would make the unit relevant again;
-- the `// Broiler-Falsified-If:` line of a block whose AI line says
+- the `// Hairs-Falsified-If:` line of a block whose AI line says
   `Security=None`, `Low` or `Medium`.
 
 Only a block whose human line reads exactly `PENDING` is touched. A human line
@@ -425,7 +425,7 @@ criterion), every removed line was an assurance comment opening its own line,
 and putting the removed lines back gives the original text exactly. Each
 written file is then read back from disk and scanned once more; if it does not
 scan as the file did before, its original bytes are written back. Like `insert`
-and `generate`, `prune` refuses without `assurance.config.json` and in
+and `generate`, `prune` refuses without `hairs.config.json` and in
 `"mode": "external"`, and it never writes a human line.
 
 The report lists, per file, each block lines were removed from (or, with
@@ -515,9 +515,9 @@ collapsing every block's padding: one run gives back VM's bytes.
 
 | Concern | Assembly |
 | --- | --- |
-| Block grammar, alias rule, human-line transitions, header strip and insert, summary, manifest, report, human-review record, review-claim rule, generator plan, checks, configuration, classification, insertion, pruning | `Broiler.Code.Review` (`Assurance/`), BCL only, text in and text out |
-| Units, names, fingerprints, both exemption predicates and the named-value case, trivia, comments, directives (`CSharpAssuranceScanner`, `CSharpAssuranceFileScanner`) | `Broiler.Code.Language.CSharp.Assurance`, Roslyn from nuget.org only |
-| Discovery (walk, `<Compile Include>`, links, checkouts, assembly names), path normalization, file I/O, byte-order marks, line endings of artefacts, JSON, commands | `Broiler.Code.Review.Cli` (`Assurance/`) |
+| Block grammar, alias rule, human-line transitions, header strip and insert, summary, manifest, report, human-review record, review-claim rule, generator plan, checks, configuration, classification, insertion, pruning | `Hairs` (`Assurance/`), BCL only, text in and text out |
+| Units, names, fingerprints, both exemption predicates and the named-value case, trivia, comments, directives (`CSharpAssuranceScanner`, `CSharpAssuranceFileScanner`) | `Hairs.Language.CSharp`, Roslyn from nuget.org only |
+| Discovery (walk, `<Compile Include>`, links, checkouts, assembly names), path normalization, file I/O, byte-order marks, line endings of artefacts, JSON, commands | `Hairs.Cli` (`Assurance/`) |
 
 The CLI never references `Broiler.Code.Language.CSharp.Roslyn`, whose UI package
 closure comes from an authenticated feed that the review workflow does not have.

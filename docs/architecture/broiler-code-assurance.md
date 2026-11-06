@@ -13,8 +13,8 @@ at a time.
 two comment lines: what a machine assessed, and what a human has said.
 
 ```csharp
-// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=4A3BFD
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=4A3BFD
+// Hairs-Human:        PENDING
 public bool IsWellFormed => …
 ```
 
@@ -31,8 +31,8 @@ A third section in the existing review pane, above the file's own record:
 ┌──────────────────────┬──────────────────────────────────┬──────────────────────────────┐
 │ Solution Explorer    │ VmArtifactDescriptor.cs          │ Assurance   IsWellFormed     │
 │                      │                                  │  State      needs human rev… │
-│ ▼ Broiler.VM         │   // Broiler-AI:  Origin=AI; …   │  Origin     AI               │
-│   VmArtifactDesc…    │   // Broiler-Human:   PENDING    │  IP risk    Low              │
+│ ▼ Broiler.VM         │   // Hairs-AI:  Origin=AI; …   │  Origin     AI               │
+│   VmArtifactDesc…    │   // Hairs-Human:   PENDING    │  IP risk    Low              │
 │     needs review     │   public bool IsWellFormed =>    │  Security   Low              │
 │                      │  ▏    !ProfileId.IsEmpty &&      │  Fingerprint 4A3BFD          │
 │                      │       FormatVersion >= 1 &&      │  Human line PENDING          │
@@ -74,7 +74,7 @@ the correct outcome, not a missing step. An editor that wrote the fingerprint
 too could turn one keystroke into a completed approval of code nobody read.
 
 It is the same rule as `FileReview.WithDecision` hashing its own content, and the
-same rule as there being no `broiler-review mark` command: the one way to make
+same rule as there being no `hairs mark` command: the one way to make
 this record worthless is to let something approve code without a human reading
 it, so the tool is built unable to.
 
@@ -121,13 +121,13 @@ a human writes — on any host, in any language the format is ever applied to.
 Finding *every* unit, deciding which are exempt, and computing a fingerprint
 needs a real C# parser. `IAssuranceUnitScanner` is that seam and
 `CSharpAssuranceScanner` is its one implementation, in
-`Broiler.Code.Language.CSharp.Assurance`, which needs Roslyn and nothing else so
+`Hairs.Language.CSharp`, which needs Roslyn and nothing else so
 that the [command-line tool](broiler-code-assurance-cli.md) can use it too. The
 desktop heads compose it; `Broiler.Code.Core` does not reference it, which is the
 constraint Phase 0's payload probes produced and which
 `CodeEditorArchitectureTests` still asserts. The heads compose it with the owning
 component's predicate and preprocessor symbols; they do not read a component's
-`assurance.config.json`. In a component configured with the command-line tool's
+`hairs.config.json`. In a component configured with the command-line tool's
 stricter predicate the pane can therefore count a unit exempt that the tool
 counts relevant, and the header guard above is what keeps that from being
 written anywhere.
@@ -193,8 +193,8 @@ true:
 
 | Concern | Owner | Boundary |
 | --- | --- | --- |
-| Annotation grammar, the state machine, the header's arithmetic, the rewrite | `Broiler.Code.Review` | References `Broiler.Code.Workspaces` and nothing else. No UI, no parser, no platform. |
-| Units, the exemption predicate, fingerprints | `Broiler.Code.Language.CSharp.Assurance` | The one place a C# parser is needed, behind `IAssuranceUnitScanner` and `IAssuranceFileScanner`. Roslyn from nuget.org and no UI package, so the command-line tool can use it |
+| Annotation grammar, the state machine, the header's arithmetic, the rewrite | `Hairs` | References `Broiler.Code.Workspaces` and nothing else. No UI, no parser, no platform. |
+| Units, the exemption predicate, fingerprints | `Hairs.Language.CSharp` | The one place a C# parser is needed, behind `IAssuranceUnitScanner` and `IAssuranceFileScanner`. Roslyn from nuget.org and no UI package, so the command-line tool can use it |
 | The caret, the pane sections, the commands, the buffer edit | `Broiler.Code.Core` | The seam that knows about both a workspace and a screen |
 | Composing a scanner | `Broiler.Code.Windows`, `.Linux` | Optional, so a head that composes none still gets the annotation-text reading |
 
@@ -204,7 +204,7 @@ true:
 another repository's test assembly, which cannot be referenced from here. So
 agreement is asserted against evidence that component already published: a file
 from it is kept verbatim as a fixture, and the tests assert the four fingerprints
-its generator wrote into that file, the nine more its `assurance.manifest.json`
+its generator wrote into that file, the nine more its `hairs.manifest.json`
 records, the file's own fingerprint, the thirteen-unit split its header states,
 and the exemption case each of the nine falls under.
 
@@ -226,10 +226,10 @@ value is written out as a literal rather than computed.
   approval lapsed is told that it did and not why.
 - **It does not touch the component-level artefacts.** `CODE-ASSURANCE.md`, the
   manifest and the human-review summary are the generator's
-  (`broiler-review assurance generate`, or the owning component's own); only the
+  (`hairs assurance generate`, or the owning component's own); only the
   per-file header is recounted here.
 - **It does not create an annotation.** A relevant declaration carrying none is
   reported as such and cannot be signed. Writing the machine's assessment line is
-  an assessment, not a review; `broiler-review assurance insert` does that, and
+  an assessment, not a review; `hairs assurance insert` does that, and
   writes `PENDING` on the human line. See
   [the assurance commands](broiler-code-assurance-cli.md).

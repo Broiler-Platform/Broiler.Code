@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   33
 // Annotated:        33/33
 // Exempt:           13
@@ -26,42 +26,42 @@ namespace Broiler.Code.Core.Shell;
 /// menu, the toolbar, and a keyboard shortcut all drive the same thing and
 /// report the same enabled state.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=3D8A5D
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=3D8A5D
+// Hairs-Human:        PENDING
 public static class CodeCommandNames
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=A2BC07
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=A2BC07
+    // Hairs-Human:        PENDING
     public const string New = "code.new";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=C2C47E
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=C2C47E
+    // Hairs-Human:        PENDING
     public const string NewProject = "code.newProject";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=184DDC
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=184DDC
+    // Hairs-Human:        PENDING
     public const string Open = "code.open";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=3F1DA9
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=3F1DA9
+    // Hairs-Human:        PENDING
     public const string OpenFolder = "code.openFolder";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=D78DD6
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=D78DD6
+    // Hairs-Human:        PENDING
     public const string Save = "code.save";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E5D33D
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E5D33D
+    // Hairs-Human:        PENDING
     public const string SaveAs = "code.saveAs";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E3190A
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=E3190A
+    // Hairs-Human:        PENDING
     public const string SaveAll = "code.saveAll";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=46542F
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=46542F
+    // Hairs-Human:        PENDING
     public const string Close = "code.close";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=97BFED
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=97BFED
+    // Hairs-Human:        PENDING
     public const string Build = "code.build";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=2319D7
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=2319D7
+    // Hairs-Human:        PENDING
     public const string Rebuild = "code.rebuild";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=A1433A
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=A1433A
+    // Hairs-Human:        PENDING
     public const string Cancel = "code.cancel";
 
     // Human Review. Named commands like every other action, so the menu, a
@@ -69,44 +69,44 @@ public static class CodeCommandNames
     // report one enabled state — which for these matters more than usual,
     // because "why is Mark Reviewed greyed out?" has a specific answer the
     // command set is what produces.
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=DF2035
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=DF2035
+    // Hairs-Human:        PENDING
     public const string MarkReviewed = "code.review.reviewed";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=8FA29B
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=8FA29B
+    // Hairs-Human:        PENDING
     public const string MarkInReview = "code.review.inReview";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=7D0CE4
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=7D0CE4
+    // Hairs-Human:        PENDING
     public const string MarkQuestion = "code.review.question";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=39AE9B
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=39AE9B
+    // Hairs-Human:        PENDING
     public const string MarkNeedsChange = "code.review.needsChange";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=DE9D90
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=DE9D90
+    // Hairs-Human:        PENDING
     public const string ClearReview = "code.review.clear";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=22E995
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=22E995
+    // Hairs-Human:        PENDING
     public const string AddNote = "code.review.addNote";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=666A88
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=666A88
+    // Hairs-Human:        PENDING
     public const string ReviewCoverage = "code.review.coverage";
 
     // Per-unit assurance. Separate commands from the four file-level decisions
     // above, because they record a different claim in a different place: a file
-    // review says a person read this content and lives in .broiler-review/, and
+    // review says a person read this content and lives in .hairs-review/, and
     // a unit signature says a person stands behind this declaration and lives in
     // the source file the component that owns the format reads. One menu entry
     // doing both would be one entry making two claims.
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=14198E
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=14198E
+    // Hairs-Human:        PENDING
     public const string ApproveUnit = "code.review.unit.approve";
-    // Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=AD2D9D
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=AD2D9D
+    // Hairs-Human:        PENDING
     public const string WithdrawUnit = "code.review.unit.withdraw";
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=43E2DF
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=43E2DF
+// Hairs-Human:        PENDING
 public enum CommandAvailability
 {
     /// <summary>Runnable now.</summary>
@@ -123,9 +123,9 @@ public enum CommandAvailability
     Unavailable,
 }
 
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=D3BCE3
-// Broiler-Falsified-If: a command built as Disabled or Unavailable reports IsEnabled true, so InvokeAsync runs it
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=D3BCE3
+// Hairs-Falsified-If: a command built as Disabled or Unavailable reports IsEnabled true, so InvokeAsync runs it
+// Hairs-Human:        PENDING
 public sealed record CodeCommand(
     string Name,
     string Text,
@@ -133,9 +133,9 @@ public sealed record CodeCommand(
     string? Reason = null,
     char? AccessKey = null)
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=8DFD0A
-    // Broiler-Falsified-If: IsEnabled is true for an Availability other than Enabled
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=8DFD0A
+    // Hairs-Falsified-If: IsEnabled is true for an Availability other than Enabled
+    // Hairs-Human:        PENDING
     public bool IsEnabled => Availability == CommandAvailability.Enabled;
 }
 
@@ -144,17 +144,17 @@ public sealed record CodeCommand(
 /// tracked by hand — a flag that has to be updated in five places is a flag
 /// that will be wrong in one of them.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=93934F
-// Broiler-Falsified-If: Mark Reviewed is Enabled while the active document has unsaved edits or no name is set for the person recording it
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=93934F
+// Hairs-Falsified-If: Mark Reviewed is Enabled while the active document has unsaved edits or no name is set for the person recording it
+// Hairs-Human:        PENDING
 public sealed class CodeCommandSet
 {
     private readonly Func<Workspaces.CodeWorkspace?> _workspace;
     private readonly Func<Workspaces.Model.WorkspaceItemId> _activeDocument;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=C01844
-    // Broiler-Falsified-If: a null delegate is accepted and GetCommands later throws NullReferenceException
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=0; Fingerprint=C01844
+    // Hairs-Falsified-If: a null delegate is accepted and GetCommands later throws NullReferenceException
+    // Hairs-Human:        PENDING
     public CodeCommandSet(
         Func<Workspaces.CodeWorkspace?> workspace,
         Func<Workspaces.Model.WorkspaceItemId> activeDocument)
@@ -207,9 +207,9 @@ public sealed class CodeCommandSet
     /// </summary>
     public string? AssuranceUnitReason { get; set; }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=B29067
-    // Broiler-Falsified-If: a keystroke that dirties the active document leaves the four decision commands Enabled until something else refreshes the set
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=B29067
+    // Hairs-Falsified-If: a keystroke that dirties the active document leaves the four decision commands Enabled until something else refreshes the set
+    // Hairs-Human:        PENDING
     public IReadOnlyList<CodeCommand> GetCommands()
     {
         Workspaces.CodeWorkspace? workspace = _workspace();
@@ -329,15 +329,15 @@ public sealed class CodeCommandSet
         ];
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=3E9EBA
-    // Broiler-Falsified-If: a name that matches no command exactly returns a command instead of null
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=3E9EBA
+    // Hairs-Falsified-If: a name that matches no command exactly returns a command instead of null
+    // Hairs-Human:        PENDING
     public CodeCommand? Find(string name) =>
         GetCommands().FirstOrDefault(command => command.Name == name);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=76EF24
-    // Broiler-Falsified-If: a host without file dialogs gets an Enabled Open or New Project entry
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=76EF24
+    // Hairs-Falsified-If: a host without file dialogs gets an Enabled Open or New Project entry
+    // Hairs-Human:        PENDING
     private CodeCommand Picker(string name, string text, char accessKey) => HasFileDialogs
         ? new CodeCommand(name, text, CommandAvailability.Enabled, AccessKey: accessKey)
         : new CodeCommand(
@@ -352,9 +352,9 @@ public sealed class CodeCommandSet
     /// or save it. A single greyed-out entry saying none of that is how a feature
     /// meant to be used daily stops being used.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=A2E32B
-    // Broiler-Falsified-If: a decision command is Enabled when no name is set for the person recording or the active document is dirty
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=A2E32B
+    // Hairs-Falsified-If: a decision command is Enabled when no name is set for the person recording or the active document is dirty
+    // Hairs-Human:        PENDING
     private CodeCommand Review(
         string name, string text, bool hasDocument, bool activeIsDirty, char accessKey)
     {
@@ -388,9 +388,9 @@ public sealed class CodeCommandSet
     /// and a reviewer who signed the wrong declaration should not need a name
     /// recorded to take it back — but it does need a unit, so both share this.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=BBAD01
-    // Broiler-Falsified-If: Sign Unit as Reviewed is Enabled when no name is set for the person signing
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=BBAD01
+    // Hairs-Falsified-If: Sign Unit as Reviewed is Enabled when no name is set for the person signing
+    // Hairs-Human:        PENDING
     private CodeCommand Unit(string name, string text, char accessKey)
     {
         if (!HasReview)
@@ -414,16 +414,16 @@ public sealed class CodeCommandSet
         return new CodeCommand(name, text, CommandAvailability.Enabled, AccessKey: accessKey);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=AA43AB
-    // Broiler-Falsified-If: a host without a composed review pane gets a review command whose availability is anything but Unavailable
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=AA43AB
+    // Hairs-Falsified-If: a host without a composed review pane gets a review command whose availability is anything but Unavailable
+    // Hairs-Human:        PENDING
     private static CodeCommand NoReview(string name, string text, char accessKey) =>
         new(name, text, CommandAvailability.Unavailable,
             "This host does not compose the Human Review pane.", accessKey);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=7BE37A
-    // Broiler-Falsified-If: Build is Enabled while a build is already running
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=7BE37A
+    // Hairs-Falsified-If: Build is Enabled while a build is already running
+    // Hairs-Human:        PENDING
     private CodeCommand Build(string name, string text, bool hasWorkspace, char accessKey)
     {
         if (!HasBuildService)

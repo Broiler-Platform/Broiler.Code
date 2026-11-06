@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   19
 // Annotated:        19/19
 // Exempt:           9
@@ -35,9 +35,9 @@ namespace Broiler.Code.Workspaces.Text;
 /// Leaves slice rather than copy, so splitting a document in half allocates two
 /// small nodes and no characters.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=6DE482
-// Broiler-Falsified-If: at the position between a CR ending one leaf and an LF starting the next, LineBreaksBefore counts the CR as a break although the same text held in one leaf does not
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=6DE482
+// Hairs-Falsified-If: at the position between a CR ending one leaf and an LF starting the next, LineBreaksBefore counts the CR as a break although the same text held in one leaf does not
+// Hairs-Human:        PENDING
 internal sealed class RopeNode
 {
     /// <summary>
@@ -45,17 +45,17 @@ internal sealed class RopeNode
     /// concatenation. Small enough that copying one on a merge is cheap, large
     /// enough that a big document does not become millions of nodes.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=089BCF
-    // Broiler-Falsified-If: Create, Split or Concat produces a leaf longer than this many characters, so a merge copies more than the documented bound
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=089BCF
+    // Hairs-Falsified-If: Create, Split or Concat produces a leaf longer than this many characters, so a merge copies more than the documented bound
+    // Hairs-Human:        PENDING
     internal const int MaxLeafLength = 1024;
 
     private readonly string? _text;
     private readonly int _start;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=7093D1
-    // Broiler-Falsified-If: a leaf is built with a Height other than 1, so Concat rebalances at the wrong depth
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=0; Fingerprint=7093D1
+    // Hairs-Falsified-If: a leaf is built with a Height other than 1, so Concat rebalances at the wrong depth
+    // Hairs-Human:        PENDING
     private RopeNode(string text, int start, int length, int lineBreaks, bool startsWithLf, bool endsWithCr)
     {
         _text = text;
@@ -67,9 +67,9 @@ internal sealed class RopeNode
         Height = 1;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=DD3B1A
-    // Broiler-Falsified-If: a branch whose left side ends with CR and whose right side starts with LF counts that pair as two line breaks
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=DD3B1A
+    // Hairs-Falsified-If: a branch whose left side ends with CR and whose right side starts with LF counts that pair as two line breaks
+    // Hairs-Human:        PENDING
     private RopeNode(RopeNode left, RopeNode right)
     {
         Left = left;
@@ -105,14 +105,14 @@ internal sealed class RopeNode
 
     public RopeNode? Right { get; }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=DF7A44
-    // Broiler-Falsified-If: a branch reports itself as a leaf, or a leaf over an empty slice reports itself as a branch
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=DF7A44
+    // Hairs-Falsified-If: a branch reports itself as a leaf, or a leaf over an empty slice reports itself as a branch
+    // Hairs-Human:        PENDING
     public bool IsLeaf => _text is not null;
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=CB3865
-    // Broiler-Falsified-If: the span of a leaf includes characters of the backing string outside that leaf's slice
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=CB3865
+    // Hairs-Falsified-If: the span of a leaf includes characters of the backing string outside that leaf's slice
+    // Hairs-Human:        PENDING
     public ReadOnlySpan<char> Span
     {
         get
@@ -122,24 +122,24 @@ internal sealed class RopeNode
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=61F056
-    // Broiler-Falsified-If: a left node ending in CR followed by a right node starting with LF is not reported as spanning a CRLF
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=61F056
+    // Hairs-Falsified-If: a left node ending in CR followed by a right node starting with LF is not reported as spanning a CRLF
+    // Hairs-Human:        PENDING
     public static bool SpansCrLf(RopeNode left, RopeNode right) =>
         left.EndsWithCr && right.StartsWithLf;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=883506
-    // Broiler-Falsified-If: an empty string yields a node instead of null, or a non-empty string yields a tree whose Length differs from the string's
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=883506
+    // Hairs-Falsified-If: an empty string yields a node instead of null, or a non-empty string yields a tree whose Length differs from the string's
+    // Hairs-Human:        PENDING
     public static RopeNode? Create(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
         return text.Length == 0 ? null : Build(text, 0, text.Length);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=F63F86
-    // Broiler-Falsified-If: a slice that starts with LF or ends with CR does not set StartsWithLf or EndsWithCr
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=F63F86
+    // Hairs-Falsified-If: a slice that starts with LF or ends with CR does not set StartsWithLf or EndsWithCr
+    // Hairs-Human:        PENDING
     public static RopeNode Leaf(string text, int start, int length)
     {
         ReadOnlySpan<char> span = text.AsSpan(start, length);
@@ -153,9 +153,9 @@ internal sealed class RopeNode
     }
 
     /// <summary>Concatenates two subtrees, rebalancing and merging small leaves.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=77B3FC
-    // Broiler-Falsified-If: repeated one-character appends produce a tree whose height grows with the number of appends rather than with its logarithm
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=77B3FC
+    // Hairs-Falsified-If: repeated one-character appends produce a tree whose height grows with the number of appends rather than with its logarithm
+    // Hairs-Human:        PENDING
     public static RopeNode? Concat(RopeNode? left, RopeNode? right)
     {
         if (left is null)
@@ -183,9 +183,9 @@ internal sealed class RopeNode
     /// Splits at <paramref name="index"/>. Leaves are sliced, so neither side
     /// copies characters.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=F42147
-    // Broiler-Falsified-If: the two halves of a split do not concatenate back to the original text, or a split inside a leaf copies its characters
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=F42147
+    // Hairs-Falsified-If: the two halves of a split do not concatenate back to the original text, or a split inside a leaf copies its characters
+    // Hairs-Human:        PENDING
     public static (RopeNode? Left, RopeNode? Right) Split(RopeNode? node, int index)
     {
         if (node is null)
@@ -218,9 +218,9 @@ internal sealed class RopeNode
         return (node.Left, node.Right);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=782A8E
-    // Broiler-Falsified-If: copying a range that crosses a branch boundary writes the right side's characters at the wrong offset of the destination
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=782A8E
+    // Hairs-Falsified-If: copying a range that crosses a branch boundary writes the right side's characters at the wrong offset of the destination
+    // Hairs-Human:        PENDING
     public void CopyTo(int start, Span<char> destination)
     {
         if (destination.Length == 0)
@@ -245,9 +245,9 @@ internal sealed class RopeNode
         Right!.CopyTo(start - leftLength, destination);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=B0E4F9
-    // Broiler-Falsified-If: an index equal to a left child's length returns the left child's last character instead of the right child's first
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=B0E4F9
+    // Hairs-Falsified-If: an index equal to a left child's length returns the left child's last character instead of the right child's first
+    // Hairs-Human:        PENDING
     public char CharAt(int index)
     {
         RopeNode node = this;
@@ -269,9 +269,9 @@ internal sealed class RopeNode
     }
 
     /// <summary>Line breaks strictly before <paramref name="position"/>.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=976696
-    // Broiler-Falsified-If: at the position between a CR ending one leaf and an LF starting the next, it counts the CR as a break although the same text held in one leaf does not
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=976696
+    // Hairs-Falsified-If: at the position between a CR ending one leaf and an LF starting the next, it counts the CR as a break although the same text held in one leaf does not
+    // Hairs-Human:        PENDING
     public int LineBreaksBefore(int position)
     {
         if (position <= 0)
@@ -296,9 +296,9 @@ internal sealed class RopeNode
     /// Offset of the first character after line break number
     /// <paramref name="breakIndex"/>, counting from zero.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=B6614B
-    // Broiler-Falsified-If: for a CRLF split across two leaves it returns the offset between the CR and the LF instead of the offset after the LF
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=B6614B
+    // Hairs-Falsified-If: for a CRLF split across two leaves it returns the offset between the CR and the LF instead of the offset after the LF
+    // Hairs-Human:        PENDING
     public int PositionAfterLineBreak(int breakIndex)
     {
         if (IsLeaf)
@@ -311,9 +311,9 @@ internal sealed class RopeNode
         return Left.Length + Right!.PositionAfterLineBreak(breakIndex - leftBreaks);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=CD87D7
-    // Broiler-Falsified-If: a CR followed by an LF inside one leaf is counted as two breaks, so the position returned for the next break lands between them
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=CD87D7
+    // Hairs-Falsified-If: a CR followed by an LF inside one leaf is counted as two breaks, so the position returned for the next break lands between them
+    // Hairs-Human:        PENDING
     private static int PositionAfterLineBreakInLeaf(ReadOnlySpan<char> span, int breakIndex)
     {
         int seen = 0;
@@ -343,9 +343,9 @@ internal sealed class RopeNode
         return span.Length;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=EE7B9F
-    // Broiler-Falsified-If: a text longer than MaxLeafLength characters yields a leaf longer than MaxLeafLength
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=EE7B9F
+    // Hairs-Falsified-If: a text longer than MaxLeafLength characters yields a leaf longer than MaxLeafLength
+    // Hairs-Human:        PENDING
     private static RopeNode Build(string text, int start, int length)
     {
         if (length <= MaxLeafLength)
@@ -361,9 +361,9 @@ internal sealed class RopeNode
     /// <see cref="Concat"/>; without it, repeated appends degenerate into a
     /// list and lookups become linear.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=6C203A
-    // Broiler-Falsified-If: two subtrees whose heights differ by exactly two are joined into a node whose children still differ in height by two
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=6C203A
+    // Hairs-Falsified-If: two subtrees whose heights differ by exactly two are joined into a node whose children still differ in height by two
+    // Hairs-Human:        PENDING
     private static RopeNode Join(RopeNode left, RopeNode right)
     {
         if (left.Height > right.Height + 1)
@@ -391,9 +391,9 @@ internal sealed class RopeNode
         return new RopeNode(left, right);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=B7B4DD
-    // Broiler-Falsified-If: a CRLF pair is counted as two line breaks, or a lone CR is not counted
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=B7B4DD
+    // Hairs-Falsified-If: a CRLF pair is counted as two line breaks, or a lone CR is not counted
+    // Hairs-Human:        PENDING
     private static int CountLineBreaks(ReadOnlySpan<char> span)
     {
         int breaks = 0;

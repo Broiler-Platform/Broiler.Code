@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   4
 // Annotated:        4/4
 // Exempt:           0
@@ -21,7 +21,7 @@ using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Broiler.Code.Core.Review;
 using Broiler.Code.Core.Shell;
-using Broiler.Code.Language.CSharp.Assurance;
+using Hairs.Language.CSharp;
 using Broiler.Code.Workspaces;
 using Broiler.Code.Workspaces.Storage;
 using Broiler.Graphics;
@@ -47,15 +47,15 @@ namespace Broiler.Code.Windows;
 /// against abstractions so it can be tested with no platform and hosted
 /// anywhere; naming concrete types is what a head is for.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=F954EC
-// Broiler-Falsified-If: a command-line path that names no existing directory is granted as the workspace root instead of the scratch directory
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=F954EC
+// Hairs-Falsified-If: a command-line path that names no existing directory is granted as the workspace root instead of the scratch directory
+// Hairs-Human:        PENDING
 [SupportedOSPlatform("windows7.0")]
 internal static class CodeShellFactory
 {
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=31A916
-    // Broiler-Falsified-If: the editor returned beside the shell is not the control placed in the shell's Editor slot, so focus and caret placement act on a control that is not shown
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=31A916
+    // Hairs-Falsified-If: the editor returned beside the shell is not the control placed in the shell's Editor slot, so focus and caret placement act on a control that is not shown
+    // Hairs-Human:        PENDING
     public static (CodeShell Shell, StandardCodeEditor Editor) Create(BSize size)
     {
         var editor = new StandardCodeEditor { PreferredSize = size };
@@ -118,9 +118,9 @@ internal static class CodeShellFactory
     /// buffer the user can type into, and asks where to put it only when they
     /// save.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=8A2A76
-    // Broiler-Falsified-If: a command-line path that names no existing directory is granted as the workspace root instead of the scratch directory
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=8A2A76
+    // Hairs-Falsified-If: a command-line path that names no existing directory is granted as the workspace root instead of the scratch directory
+    // Hairs-Human:        PENDING
     public static async ValueTask<CodeWorkspace> OpenWorkspaceAsync(CodeShell shell, string? path)
     {
         string root = path is { Length: > 0 } && Directory.Exists(path)
@@ -137,7 +137,7 @@ internal static class CodeShellFactory
         // reads the annotation blocks alone and declines to recount a file's
         // generated header; with one it knows the file's units, which of them are
         // exempt, and what each one's fingerprint is now. Which ones are exempt
-        // is the component's to say, in the assurance.config.json above a file,
+        // is the component's to say, in the hairs.config.json above a file,
         // so a granted root gets a scanner that reads it there.
         shell.AssuranceScanner = new CSharpAssuranceScanner();
         shell.AssuranceScannerFactory = static granted => granted.GrantedRoots.Count == 0
@@ -164,9 +164,9 @@ internal static class CodeShellFactory
     /// LocalApplicationData rather than the temp directory: a recovery journal
     /// that a cleaner can delete is not a recovery journal.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=A271B1
-    // Broiler-Falsified-If: the scratch root is created somewhere other than LocalApplicationData\Broiler\Code\scratch, such as the temp directory a cleaner can empty
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=A271B1
+    // Hairs-Falsified-If: the scratch root is created somewhere other than LocalApplicationData\Broiler\Code\scratch, such as the temp directory a cleaner can empty
+    // Hairs-Human:        PENDING
     private static string ScratchRoot()
     {
         string root = Path.Combine(

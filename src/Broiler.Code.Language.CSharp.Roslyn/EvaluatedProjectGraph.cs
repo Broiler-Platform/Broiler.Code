@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   17
 // Annotated:        17/17
 // Exempt:           15
@@ -34,9 +34,9 @@ namespace Broiler.Code.Language.CSharp.Roslyn;
 /// crosses a process boundary from a trusted worker, and may cross a network to
 /// a remote one.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=03E10E
-// Broiler-Falsified-If: HasReferences or Describe misreports the graph, for example HasReferences is true while MetadataReferencePaths is empty
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=03E10E
+// Hairs-Falsified-If: HasReferences or Describe misreports the graph, for example HasReferences is true while MetadataReferencePaths is empty
+// Hairs-Human:        PENDING
 public sealed record EvaluatedProjectGraph
 {
     /// <summary>The project this graph describes, workspace-relative.</summary>
@@ -79,14 +79,14 @@ public sealed record EvaluatedProjectGraph
     /// </summary>
     public string? BuildId { get; init; }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=C629E5
-    // Broiler-Falsified-If: HasReferences is true for a graph whose MetadataReferencePaths list is empty
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=C629E5
+    // Hairs-Falsified-If: HasReferences is true for a graph whose MetadataReferencePaths list is empty
+    // Hairs-Human:        PENDING
     public bool HasReferences => MetadataReferencePaths.Count > 0;
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=A1F8C5
-    // Broiler-Falsified-If: the description gives a source count other than CompilePaths.Count or a reference count other than MetadataReferencePaths.Count
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=A1F8C5
+    // Hairs-Falsified-If: the description gives a source count other than CompilePaths.Count or a reference count other than MetadataReferencePaths.Count
+    // Hairs-Human:        PENDING
     public string Describe() =>
         $"{ProjectPath} [{TargetFramework}]: {CompilePaths.Count} sources, " +
         $"{MetadataReferencePaths.Count} references, {PreprocessorSymbols.Count} defines";
@@ -97,8 +97,8 @@ public sealed record EvaluatedProjectGraph
 /// rather than guessing: a compilation assembled from assumptions produces
 /// diagnostics that look authoritative and are not.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=819D09
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=None; Resources=0; Fingerprint=819D09
+// Hairs-Human:        PENDING
 public enum GraphUnavailableReason
 {
     None = 0,
@@ -116,9 +116,9 @@ public enum GraphUnavailableReason
     WorkerUnavailable,
 }
 
-// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=442659
-// Broiler-Falsified-If: the diagnostic built from a reason carries another reason's code or a project path other than the one the record names
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=442659
+// Hairs-Falsified-If: the diagnostic built from a reason carries another reason's code or a project path other than the one the record names
+// Hairs-Human:        PENDING
 public sealed record GraphUnavailable(
     string ProjectPath,
     GraphUnavailableReason Reason,
@@ -129,9 +129,9 @@ public sealed record GraphUnavailable(
     /// "no IntelliSense" with no explanation is the failure mode this exists to
     /// avoid.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=16EF14
-    // Broiler-Falsified-If: a WorkerUnavailable reason is given BRC1000, BRC1001 or BRC1002, the codes reserved for the other reasons
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=16EF14
+    // Hairs-Falsified-If: a WorkerUnavailable reason is given BRC1000, BRC1001 or BRC1002, the codes reserved for the other reasons
+    // Hairs-Human:        PENDING
     public CodeProjectDiagnostic ToDiagnostic() => new(
         Reason switch
         {
@@ -149,23 +149,23 @@ public sealed record GraphUnavailable(
 /// visible in the Problems pane rather than being dropped for having nowhere to
 /// put a squiggle.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3B3594
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3B3594
+// Hairs-Human:        PENDING
 public sealed record CodeProjectDiagnostic(string Code, string ProjectPath, string Message);
 
 /// <summary>Supplies evaluated graphs, from wherever they are produced.</summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=523A3B
-// Broiler-Falsified-If: an implementation returns true with a graph whose TargetFramework differs from the non-null framework that was requested
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=523A3B
+// Hairs-Falsified-If: an implementation returns true with a graph whose TargetFramework differs from the non-null framework that was requested
+// Hairs-Human:        PENDING
 public interface IEvaluatedGraphSource
 {
     /// <summary>
     /// The graph for a project and target framework, or the reason there is
     /// none. Never returns a partially-guessed graph.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=64F59D
-    // Broiler-Falsified-If: an implementation returns false while leaving unavailable null, so the language service fails while building its Unavailable result
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=64F59D
+    // Hairs-Falsified-If: an implementation returns false while leaving unavailable null, so the language service fails while building its Unavailable result
+    // Hairs-Human:        PENDING
     bool TryGetGraph(
         string projectPath,
         string? targetFramework,
@@ -173,9 +173,9 @@ public interface IEvaluatedGraphSource
         out GraphUnavailable? unavailable);
 
     /// <summary>Frameworks a project declares, for the selection the UI offers.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=E93BB3
-    // Broiler-Falsified-If: an implementation lists a framework for which TryGetGraph with that framework then returns false
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=E93BB3
+    // Hairs-Falsified-If: an implementation lists a framework for which TryGetGraph with that framework then returns false
+    // Hairs-Human:        PENDING
     IReadOnlyList<string> GetTargetFrameworks(string projectPath);
 }
 
@@ -186,14 +186,14 @@ public interface IEvaluatedGraphSource
 /// reports why. An IDE that quietly evaluated on open would run the project's
 /// MSBuild logic — arbitrary code — before the user agreed to anything.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=15E1EF
-// Broiler-Falsified-If: the source used before trust answers any project with a graph, so its compile and reference paths are read before the user trusted the workspace
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=15E1EF
+// Hairs-Falsified-If: the source used before trust answers any project with a graph, so its compile and reference paths are read before the user trusted the workspace
+// Hairs-Human:        PENDING
 public sealed class UntrustedGraphSource : IEvaluatedGraphSource
 {
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=E44D11
-    // Broiler-Falsified-If: for some project path TryGetGraph returns true or a non-null graph, or reports a reason other than WorkspaceNotTrusted
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=1; Fingerprint=E44D11
+    // Hairs-Falsified-If: for some project path TryGetGraph returns true or a non-null graph, or reports a reason other than WorkspaceNotTrusted
+    // Hairs-Human:        PENDING
     public bool TryGetGraph(
         string projectPath,
         string? targetFramework,
@@ -209,9 +209,9 @@ public sealed class UntrustedGraphSource : IEvaluatedGraphSource
         return false;
     }
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CBA7B8
-    // Broiler-Falsified-If: a project in an untrusted workspace is listed with a target framework
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=CBA7B8
+    // Hairs-Falsified-If: a project in an untrusted workspace is listed with a target framework
+    // Hairs-Human:        PENDING
     public IReadOnlyList<string> GetTargetFrameworks(string projectPath) => [];
 }
 
@@ -220,17 +220,17 @@ public sealed class UntrustedGraphSource : IEvaluatedGraphSource
 /// holds no evaluation logic of its own — evaluation runs out of process, and
 /// this only remembers what came back.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=66240A
-// Broiler-Falsified-If: a query naming one target framework is answered with the graph cached for another framework of the same project
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=5; Fingerprint=66240A
+// Hairs-Falsified-If: a query naming one target framework is answered with the graph cached for another framework of the same project
+// Hairs-Human:        PENDING
 public sealed class CachedGraphSource : IEvaluatedGraphSource
 {
     private readonly Dictionary<string, List<EvaluatedProjectGraph>> _byProject =
         new(StringComparer.OrdinalIgnoreCase);
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=0C223B
-    // Broiler-Falsified-If: adding a graph for a framework already cached under a different letter case leaves two graphs for that framework
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=0C223B
+    // Hairs-Falsified-If: adding a graph for a framework already cached under a different letter case leaves two graphs for that framework
+    // Hairs-Human:        PENDING
     public void Add(EvaluatedProjectGraph graph)
     {
         ArgumentNullException.ThrowIfNull(graph);
@@ -242,9 +242,9 @@ public sealed class CachedGraphSource : IEvaluatedGraphSource
         graphs.Add(graph);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=17827E
-    // Broiler-Falsified-If: after Add replaces the graph of the first framework added for a project, a query with no framework returns another framework's graph
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=17827E
+    // Hairs-Falsified-If: after Add replaces the graph of the first framework added for a project, a query with no framework returns another framework's graph
+    // Hairs-Human:        PENDING
     public bool TryGetGraph(
         string projectPath,
         string? targetFramework,
@@ -282,9 +282,9 @@ public sealed class CachedGraphSource : IEvaluatedGraphSource
         return true;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=B7F02B
-    // Broiler-Falsified-If: a project with no cached graph returns a non-empty list
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=B7F02B
+    // Hairs-Falsified-If: a project with no cached graph returns a non-empty list
+    // Hairs-Human:        PENDING
     public IReadOnlyList<string> GetTargetFrameworks(string projectPath) =>
         _byProject.TryGetValue(projectPath, out List<EvaluatedProjectGraph>? graphs)
             ? [.. graphs.Select(graph => graph.TargetFramework)]

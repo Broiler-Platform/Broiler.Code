@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   17
 // Annotated:        17/17
 // Exempt:           4
@@ -23,9 +23,9 @@ using Broiler.UI.CodeEditor;
 namespace Broiler.Code.Core.Diagnostics;
 
 /// <summary>A row in the Problems pane.</summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=C4806C
-// Broiler-Falsified-If: an entry at line 0 reports IsProjectLevel true, so replacing its document's entries leaves it behind
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=C4806C
+// Hairs-Falsified-If: an entry at line 0 reports IsProjectLevel true, so replacing its document's entries leaves it behind
+// Hairs-Human:        PENDING
 public sealed record ProblemEntry(
     DiagnosticOrigin Origin,
     CodeDiagnosticSeverity Severity,
@@ -42,15 +42,15 @@ public sealed record ProblemEntry(
     /// It stays in the list rather than being dropped for having nowhere to put
     /// a squiggle, which is how "the SDK is missing" becomes invisible.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=462301
-    // Broiler-Falsified-If: an entry with Line 0 is reported as project-level
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=462301
+    // Hairs-Falsified-If: an entry with Line 0 is reported as project-level
+    // Hairs-Human:        PENDING
     public bool IsProjectLevel => Line < 0;
 
     /// <summary>What a screen reader reads for the row.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=DFD928
-    // Broiler-Falsified-If: a located entry is described with its zero-based line and column rather than one-based ones
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=DFD928
+    // Hairs-Falsified-If: a located entry is described with its zero-based line and column rather than one-based ones
+    // Hairs-Human:        PENDING
     public string AccessibleDescription
     {
         get
@@ -71,9 +71,9 @@ public sealed record ProblemEntry(
     }
 }
 
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=858700
-// Broiler-Falsified-If: with ShowWarnings false, a Warning entry is still matched
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=858700
+// Hairs-Falsified-If: with ShowWarnings false, a Warning entry is still matched
+// Hairs-Human:        PENDING
 public sealed record ProblemFilter(
     bool ShowErrors = true,
     bool ShowWarnings = true,
@@ -81,9 +81,9 @@ public sealed record ProblemFilter(
     string? DocumentPath = null,
     string? SearchText = null)
 {
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=2439C9
-    // Broiler-Falsified-If: an entry whose code but not message contains the search text is filtered out
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=2; Fingerprint=2439C9
+    // Hairs-Falsified-If: an entry whose code but not message contains the search text is filtered out
+    // Hairs-Human:        PENDING
     public bool Matches(ProblemEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -116,21 +116,21 @@ public sealed record ProblemFilter(
     }
 }
 
-// Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=1AB487
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=1AB487
+// Hairs-Human:        PENDING
 public sealed record ProblemCounts(int Errors, int Warnings, int Information)
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=EF9305
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=EF9305
+    // Hairs-Human:        PENDING
     public int Total => Errors + Warnings + Information;
 
     /// <summary>
     /// The status-bar summary. It states the analysis mode, because zero errors
     /// means something different when nothing has looked for them.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=6B9963
-    // Broiler-Falsified-If: in ClassificationOnly mode, zero errors are described without saying that no analysis has run
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=6B9963
+    // Hairs-Falsified-If: in ClassificationOnly mode, zero errors are described without saying that no analysis has run
+    // Hairs-Human:        PENDING
     public string Describe(CodeAnalysisMode mode)
     {
         string suffix = mode switch
@@ -151,9 +151,9 @@ public sealed record ProblemCounts(int Errors, int Warnings, int Information)
 /// needs to know there are twelve, or the filter silently becomes a claim that
 /// the code is clean.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=F1BAE1
-// Broiler-Falsified-If: replacing one document's entries removes rows that belong to a different document
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=F1BAE1
+// Hairs-Falsified-If: replacing one document's entries removes rows that belong to a different document
+// Hairs-Human:        PENDING
 public sealed class ProblemsModel
 {
     private readonly List<ProblemEntry> _entries = [];
@@ -165,22 +165,22 @@ public sealed class ProblemsModel
     public CodeAnalysisMode Mode { get; set; } = CodeAnalysisMode.ClassificationOnly;
 
     /// <summary>Counts over everything, ignoring the filter. See above.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=867B16
-    // Broiler-Falsified-If: a warning hidden by the current filter is missing from Counts.Warnings
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=867B16
+    // Hairs-Falsified-If: a warning hidden by the current filter is missing from Counts.Warnings
+    // Hairs-Human:        PENDING
     public ProblemCounts Counts => new(
         _entries.Count(e => e.Severity == CodeDiagnosticSeverity.Error),
         _entries.Count(e => e.Severity == CodeDiagnosticSeverity.Warning),
         _entries.Count(e => e.Severity == CodeDiagnosticSeverity.Information));
 
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=10E6E4
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=1; Fingerprint=10E6E4
+    // Hairs-Human:        PENDING
     public void Clear() => _entries.Clear();
 
     /// <summary>Replaces one document's entries, leaving other documents alone.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=CEBF98
-    // Broiler-Falsified-If: a project-level entry whose DocumentPath equals the document being replaced is removed
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=CEBF98
+    // Hairs-Falsified-If: a project-level entry whose DocumentPath equals the document being replaced is removed
+    // Hairs-Human:        PENDING
     public void SetDocumentEntries(string documentPath, IEnumerable<ProblemEntry> entries)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(documentPath);
@@ -192,9 +192,9 @@ public sealed class ProblemsModel
         _entries.AddRange(entries);
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7344CC
-    // Broiler-Falsified-If: setting project entries removes an entry that has a source line
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7344CC
+    // Hairs-Falsified-If: setting project entries removes an entry that has a source line
+    // Hairs-Human:        PENDING
     public void SetProjectEntries(IEnumerable<ProblemEntry> entries)
     {
         ArgumentNullException.ThrowIfNull(entries);
@@ -206,9 +206,9 @@ public sealed class ProblemsModel
     /// The visible rows, most severe first, then by document and position — the
     /// order someone works through a list in.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=A7C998
-    // Broiler-Falsified-If: a visible Warning entry is ordered before a visible Error entry
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=A7C998
+    // Hairs-Falsified-If: a visible Warning entry is ordered before a visible Error entry
+    // Hairs-Human:        PENDING
     public IReadOnlyList<ProblemEntry> GetVisible() =>
     [
         .. _entries
@@ -220,9 +220,9 @@ public sealed class ProblemsModel
     ];
 
     /// <summary>Visible rows grouped by document, for the tree presentation.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=55F1A2
-    // Broiler-Falsified-If: two visible entries whose document paths differ only in case appear under two groups
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=4; Fingerprint=55F1A2
+    // Hairs-Falsified-If: two visible entries whose document paths differ only in case appear under two groups
+    // Hairs-Human:        PENDING
     public IReadOnlyList<(string DocumentPath, IReadOnlyList<ProblemEntry> Entries)> GetGroupedByDocument() =>
     [
         .. GetVisible()
@@ -236,9 +236,9 @@ public sealed class ProblemsModel
     /// the snapshot they describe. Resolving against the current snapshot
     /// instead would place a build diagnostic at a position that has moved.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7B7A3E
-    // Broiler-Falsified-If: a diagnostic whose start lies beyond the snapshot's length makes ToEntries throw instead of placing it on the last line
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=3; Fingerprint=7B7A3E
+    // Hairs-Falsified-If: a diagnostic whose start lies beyond the snapshot's length makes ToEntries throw instead of placing it on the last line
+    // Hairs-Human:        PENDING
     public static IEnumerable<ProblemEntry> ToEntries(
         IEnumerable<MergedDiagnostic> diagnostics, ICodeTextSnapshot snapshot)
     {
@@ -263,9 +263,9 @@ public sealed class ProblemsModel
     }
 
     /// <summary>A project-level row, with no position.</summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=E5C363
-    // Broiler-Falsified-If: a project entry is created with a non-negative line and so is not project-level
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=1; Fingerprint=E5C363
+    // Hairs-Falsified-If: a project entry is created with a non-negative line and so is not project-level
+    // Hairs-Human:        PENDING
     public static ProblemEntry ProjectEntry(
         string projectPath, string code, string message,
         CodeDiagnosticSeverity severity = CodeDiagnosticSeverity.Error) =>

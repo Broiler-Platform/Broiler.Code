@@ -21,7 +21,6 @@
   -->
   <ItemGroup>
     <ProjectReference Include="..\Broiler.Code.Workspaces\Broiler.Code.Workspaces.csproj" />
-    <ProjectReference Include="..\Broiler.Code.Review\Broiler.Code.Review.csproj" />
 
     <!--
       For the review pane's note-kind picker. The abstraction only: which control
@@ -56,6 +55,7 @@
     <PackageReference Include="Broiler.UI.TabView" />
     <PackageReference Include="Broiler.UI.Toolbar" />
     <PackageReference Include="Broiler.UI.TreeView" />
+    <PackageReference Include="Hairs" />
   </ItemGroup>
 
 </Project>

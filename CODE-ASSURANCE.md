@@ -1,8 +1,8 @@
 # Broiler.Code Code Assurance
 
 GENERATED - DO NOT EDIT MANUALLY. Regenerate with
-`dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance generate --root Broiler.Code`, which rewrites this file,
-`HUMAN_REVIEW.md`, `assurance.manifest.json` and every generated source header from the
+`dotnet tool run hairs -- assurance generate --root .`, which rewrites this file,
+`HUMAN_REVIEW.md`, `hairs.manifest.json` and every generated source header from the
 product tree.
 
 **No code unit in this component carries a decision on its human line yet.** This report
@@ -13,15 +13,15 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Files scanned | 101 |
+| Files scanned | 54 |
 | Files not covered | 0 |
-| Files carrying an annotation | 101 |
-| Code units | 2093 |
-| Relevant | 1459 |
-| Exempt by predicate | 634 |
-| Annotated | 1459 of 1459 (100%) |
-| Human reviewed | 0 of 1459 (0%) |
-| Unverified | 1459 |
+| Files carrying an annotation | 54 |
+| Code units | 1243 |
+| Relevant | 799 |
+| Exempt by predicate | 444 |
+| Annotated | 799 of 799 (100%) |
+| Human reviewed | 0 of 799 (0%) |
+| Unverified | 799 |
 
 ## Review states
 
@@ -29,18 +29,18 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | NEW | 0 |
 | AI_ASSESSED | 0 |
-| HUMAN_PENDING | 1459 |
+| HUMAN_PENDING | 799 |
 | HUMAN_APPROVED_PENDING_FINGERPRINT | 0 |
 | VERIFIED | 0 |
 | STALE | 0 |
-| EXEMPT | 634 |
+| EXEMPT | 444 |
 
 ## IP risk
 
 | Value | Units |
 |---|---:|
-| None | 547 |
-| Low | 913 |
+| None | 311 |
+| Low | 488 |
 | Medium | 0 |
 | High | 0 |
 | Unknown | 0 |
@@ -50,10 +50,10 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Value | Units |
 |---|---:|
-| None | 59 |
-| Low | 401 |
-| Medium | 360 |
-| High | 625 |
+| None | 45 |
+| Low | 235 |
+| Medium | 249 |
+| High | 255 |
 | Critical | 15 |
 | *not annotated* | 0 |
 
@@ -63,7 +63,7 @@ and the figures below are the measurement of how far from that claim the per-uni
 |---|---:|
 | Maximum | 9 / 10 |
 | Average over annotated units | 2.2 / 10 |
-| Units scored | 1459 |
+| Units scored | 799 |
 
 ## High-security review areas
 
@@ -120,6 +120,13 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Core.Review.ReviewController.RemoveNoteAsync(string, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Review.ReviewController.CommitAsync(FileReview, string, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Review.ReviewController.Target()` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.ReviewController.WorkspaceHairsStorage` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.ReviewController.WorkspaceHairsStorage.ReadTextAsync(string, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.ReviewController.WorkspaceHairsStorage.WriteTextAsync(string, string, Hairs.Storage.TextEncodingInfo, string?, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.ReviewController.WorkspaceHairsStorage.ListAsync(string, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.ReviewController.WorkspaceHairsStorage.StatAsync(string, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.ReviewController.WorkspaceHairsStorage.DeleteAsync(string, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
+- `Broiler.Code.Core.Review.ReviewController.WorkspaceHairsStorage.RenameAsync(string, string, CancellationToken)` in `src/Broiler.Code.Core/Review/ReviewController.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Shell.CodeShell` in `src/Broiler.Code.Core/Shell/CodeShell.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Shell.CodeShell.ReviewStatusItems` in `src/Broiler.Code.Core/Shell/CodeShell.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Shell.CodeShell.ReviewUnitItems` in `src/Broiler.Code.Core/Shell/CodeShell.cs` - Security=High, human line PENDING
@@ -174,74 +181,6 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Core.Templates.CodeTemplateService` in `src/Broiler.Code.Core/Templates/CodeTemplateService.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Templates.CodeTemplateService.WriteAsync(TemplateResult, CancellationToken)` in `src/Broiler.Code.Core/Templates/CodeTemplateService.cs` - Security=High, human line PENDING
 - `Broiler.Code.Core.Templates.CodeTemplateService.AddProjectReferenceAsync(string, string, CancellationToken)` in `src/Broiler.Code.Core/Templates/CodeTemplateService.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.Markers` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.CSharpAssuranceFileScanner(IEnumerable<string>?, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.ScanFile(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.IsCommentLike(SyntaxTrivia)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.LinesOf(SourceText, SyntaxTrivia)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.OpensWithMarker(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.LineOf(SyntaxTree, TextSpan)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceFileScanner.IsBlank(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceFileScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.DefaultSymbols` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.DefaultParseOptions` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.CSharpAssuranceScanner()` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.CSharpAssuranceScanner(IEnumerable<string>?, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.DefaultPreprocessorSymbols` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Scan(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.OptionsFor(IEnumerable<string>)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.CodeUnits(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Units(SyntaxTree, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Describe(SyntaxTree, MemberDeclarationSyntax, AssuranceExemptionPredicate, AssuranceNamedValues)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.TopLevel(SyntaxTree, IReadOnlyList<GlobalStatementSyntax>)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Fingerprint(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.TokenStream(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.FingerprintOfFile(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Hash(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.StreamOf(IEnumerable<SyntaxToken>, bool)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.HiddenCode(SyntaxTriviaList)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Normalized(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Tokens(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.HeaderTokens(TypeDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsCodeUnit(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ExemptionFor(MemberDeclarationSyntax, bool, bool)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsNamedValue(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsStatedByLiterals(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsLiteral(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.SystemTypeName(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.DottedName(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsFixedValue(FieldDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsInert(ExpressionSyntax?)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ThrowsInertly(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsTrivialProperty(BasePropertyDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsCorrespondingMemberAccess(ExpressionSyntax, string?)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsFieldAssignmentFromValue(ExpressionSyntax, string?)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.SimpleNameOf(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.AssignsParametersOnly(ConstructorDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.AssignedMemberName(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Corresponds(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsSingleMemberAccess(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsDelegationToOwnMember(ExpressionSyntax, SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsForwardedParameter(ExpressionSyntax, SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsConstant(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsThrowNew(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.IsOverrideOrOperator(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.OnlyDelegates(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ArrowBody(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.SingleReturnedExpression(MemberDeclarationSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.SuppliesAnImplementation(MemberDeclarationSyntax, bool)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.Unwrap(ExpressionSyntax)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpAssuranceScanner.ContainingTypes(SyntaxNode)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.MaxConfigurationBytes` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.CSharpComponentAssuranceScanner(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.Scan(string, string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.ConfigurationFor(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.ScannerFor(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsRoot(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsUnderRoot(string)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Language.CSharp.Assurance.CSharpComponentAssuranceScanner.IsLink(FileSystemInfo)` in `src/Broiler.Code.Language.CSharp.Assurance/CSharpComponentAssuranceScanner.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService.Analyze(ICodeTextSnapshot, string, string, string?, IReadOnlyDictionary<string, string>?, CancellationToken)` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, human line PENDING
 - `Broiler.Code.Language.CSharp.Roslyn.CSharpLanguageService.ResolveReferences(EvaluatedProjectGraph, CancellationToken)` in `src/Broiler.Code.Language.CSharp.Roslyn/CSharpLanguageService.cs` - Security=High, human line PENDING
@@ -292,315 +231,6 @@ and the figures below are the measurement of how far from that claim the per-uni
 - `Broiler.Code.Linux.LinuxFileDialogs.FindHelper()` in `src/Broiler.Code.Linux/LinuxFileDialogs.cs` - Security=High, human line PENDING
 - `Broiler.Code.Linux.Program` in `src/Broiler.Code.Linux/Program.cs` - Security=High, human line PENDING
 - `Broiler.Code.Linux.Program.Main(string[])` in `src/Broiler.Code.Linux/Program.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Done` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Refused` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.UsageError` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Run(IReadOnlyList<string>, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.ScannerFor(AssuranceComponentConfig?)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.List(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Insert(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.LoadConfig(string)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.RootOf(Options)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.PrepareOut(string?)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.WriteOut(string, string, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Generate(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Check(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Status(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.OwnedConfig(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.ReadableConfig(string, Options, string)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.WorkflowCommand(AssuranceViolation, string?)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.EscapeData(string)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.EscapeProperty(string)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceGateCommands.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceJson` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceJson.AssessmentFields` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceJson.ReadAssessments(string)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceJson.ReadEntry(JsonElement, int)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand` in `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.Prune(Options, TextWriter, TextWriter)` in `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceCommand.ReadBack(ComponentSourceFile, AssuranceSourceText, string, CSharpAssuranceFileScanner)` in `src/Broiler.Code.Review.Cli/Assurance/AssurancePruneCommand.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText.Utf8Bom` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText.Utf16LittleEndianBom` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText.Utf16BigEndianBom` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText.StrictUtf8` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText.TryRead(string, out AssuranceSourceText?, out string?)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.AssuranceSourceText.TryWrite(string, string, out string?)` in `src/Broiler.Code.Review.Cli/Assurance/AssuranceSourceText.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentCorpus` in `src/Broiler.Code.Review.Cli/Assurance/ComponentCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentCorpus.Load(string, AssuranceComponentConfig)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentCorpus.CheckWritable(string, string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentCorpus.SeparateRecords(string, AssuranceArtefactPaths)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentCorpus.AdrRecords(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentCorpus.TryWrite(AssuranceArtefact, out string?)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.BuildOutput` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Discover(string, AssuranceComponentConfig?)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Restrict(ComponentSourceSet, string, IEnumerable<string>, out IReadOnlyList<ComponentUnknownPath>)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Find(ComponentSourceSet, string, string, out ComponentUnknownPath?)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Normalize(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.AssemblyNameOf(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.CheckClosedAssemblies(AssuranceComponentConfig, IEnumerable<ComponentProject>)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Walk(string, string, HashSet<string>, bool)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Unenterable(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.IsNestedCheckout(string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.IsLink(string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.CompileItems(string, string, ComponentProject)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.ProjectFiles(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.DirectoryBuildFiles(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Resolve(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.IsUnder(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Load(string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.GuessProjects(string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.LooksLikeProduct(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.Assurance.ComponentSources.Relative(string, string)` in `src/Broiler.Code.Review.Cli/Assurance/ComponentSources.cs` - Security=High, human line PENDING
-- `<top-level statements>` in `src/Broiler.Code.Review.Cli/Program.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.ReviewReport` in `src/Broiler.Code.Review.Cli/ReviewReport.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.ReviewReport.EvaluateAsync(string, IReadOnlyList<string>, CancellationToken)` in `src/Broiler.Code.Review.Cli/ReviewReport.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.ReviewReport.Regressions(IReadOnlyList<ReviewedFile>)` in `src/Broiler.Code.Review.Cli/ReviewReport.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.InventoryOptions` in `src/Broiler.Code.Review.Cli/SourceInventory.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.SourceInventory` in `src/Broiler.Code.Review.Cli/SourceInventory.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.SourceInventory.Enumerate(string, InventoryOptions?)` in `src/Broiler.Code.Review.Cli/SourceInventory.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.SourceInventory.IdentityOf(string)` in `src/Broiler.Code.Review.Cli/SourceInventory.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.SourceInventory.ComponentDepth(string)` in `src/Broiler.Code.Review.Cli/SourceInventory.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.SourceInventory.Walk(string, string, InventoryOptions, List<string>)` in `src/Broiler.Code.Review.Cli/SourceInventory.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Cli.SourceInventory.IsGenerated(string)` in `src/Broiler.Code.Review.Cli/SourceInventory.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.Previous` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.RecordedFingerprint` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.ExemptReason` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.HumanIsPending` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.HumanIsStale` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.Reviewer` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.HumanFingerprint` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.HumanAssessment` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.TryParse(AssuranceLines, int, out AssuranceAnnotation?)` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.TryParseStrict(AssuranceLines, int, out AssuranceAnnotation?, out string?)` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.Field(string)` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.Body(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceAnnotation.ParseFields(string)` in `src/Broiler.Code.Review/Assurance/AssuranceAnnotation.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner.SpdxCopyrightPrefix` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner.GeneratedMarker` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner.Banner` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner.BannerRule` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner.SpdxLicensePrefix` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner.SpdxPrefix` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceBanner.RowLabels` in `src/Broiler.Code.Review/Assurance/AssuranceBanner.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceCandidates` in `src/Broiler.Code.Review/Assurance/AssuranceCandidates.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceCandidates.None` in `src/Broiler.Code.Review/Assurance/AssuranceCandidates.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceCandidates.Classify(AssuranceLines, AssuranceScannedFile)` in `src/Broiler.Code.Review/Assurance/AssuranceCandidates.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceCandidates.ReasonFor(AssuranceFileUnit, AssuranceCandidate, AssuranceScannedFile, bool)` in `src/Broiler.Code.Review/Assurance/AssuranceCandidates.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.Run(AssurancePlan, AssuranceComponentConfig, AssuranceCheckOptions)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.MissingCriteria(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.MissingCriteriaOf(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.CriteriaBelowHighOf(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.Orphans(AssurancePlannedFile)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.SpecViolations(IEnumerable<AssuranceCorpusUnit>, IReadOnlySet<string>, string)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.FingerprintViolations(IEnumerable<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.InventedApprovals(AssurancePlan)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.StaleArtefacts(AssurancePlan, bool)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.ReviewClaims(AssurancePlan, bool)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceChecks.Unresolved(AssurancePlan)` in `src/Broiler.Code.Review/Assurance/AssuranceChecks.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceArtefactPaths` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.FileName` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.CurrentSchema` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.Parse(string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.ProjectList(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.Exclusions(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.Overrides(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.SpdxOf(JsonElement, string, bool)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.ArtefactPaths(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.CommentLines(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.Symbols(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.Glob(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.StringList(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.RelativePath(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.CheckRelative(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.SingleLine(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.CheckSingleLine(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.RequiredString(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceComponentConfig.RequiredBool(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceComponentConfig.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceCorpusUnit` in `src/Broiler.Code.Review/Assurance/AssuranceCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceCorpusUnit.IsRelevant` in `src/Broiler.Code.Review/Assurance/AssuranceCorpus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.AssuranceDocument(AssuranceLines, IReadOnlyList<AssuranceUnit>, int, IAssuranceUnitScanner?, string)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.Read(string, IAssuranceUnitScanner?, string)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.ApprovalBody(AssuranceUnit, string)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.Approve(AssuranceUnit, string)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.Withdraw(AssuranceUnit)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.Rewrite(AssuranceUnit, AssuranceAnnotation, string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.RecountBanner()` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.Summarize()` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.ReproducesBanner(AssuranceSummary)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.FromScanner(AssuranceLines, IAssuranceUnitScanner, string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.FromAnnotations(AssuranceLines)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceDocument.AnnotationAbove(AssuranceLines, int)` in `src/Broiler.Code.Review/Assurance/AssuranceDocument.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceArtefact` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceArtefact.IsCurrent` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePlan` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePlan.Changes` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.GeneratedNotice` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.Plan(AssuranceCorpus, IAssuranceFileScanner, AssuranceComponentConfig)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.IsGenerated(string)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.Artefact(AssuranceCorpus, string, AssuranceArtefactKind, string)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.PlanFile(AssuranceSource, IAssuranceFileScanner, AssuranceComponentConfig, List<AssuranceViolation>)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.Refresh(string, IReadOnlyList<AssuranceCorpusUnit>, List<AssuranceViolation>)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.RefreshedFields(AssuranceAnnotation, string)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.Units(AssuranceSource, AssuranceLines, AssuranceScannedFile)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGenerator.ChangedCode(AssuranceScannedFile, AssuranceScannedFile, AssuranceLines)` in `src/Broiler.Code.Review/Assurance/AssuranceGenerator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGlob` in `src/Broiler.Code.Review/Assurance/AssuranceGlob.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGlob.TryParse(string?, out AssuranceGlob?, out string?)` in `src/Broiler.Code.Review/Assurance/AssuranceGlob.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGlob.IsMatch(string)` in `src/Broiler.Code.Review/Assurance/AssuranceGlob.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceGlob.ToRegex(string)` in `src/Broiler.Code.Review/Assurance/AssuranceGlob.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.NormalizedRowLabels` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.StrictVocabulary` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.NarrowOpenings` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.IsSummaryLine(string, AssuranceForgeryVocabulary)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.BannerCount(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.DuplicateBanners(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.IsSummaryComment(string, AssuranceForgeryVocabulary)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.ForgedSummary(string, string, IReadOnlyList<AssuranceCommentLine>, AssuranceForgeryVocabulary)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.CommentContent(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.WordsOf(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.GeneratedHeaderLines(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.Strip(AssuranceLines, IReadOnlyList<string>, AssuranceForgeryVocabulary, string, out IReadOnlyList<string>)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.IsHeaderShaped(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHeader.LeadingRunIsGeneratedCopy(AssuranceLines)` in `src/Broiler.Code.Review/Assurance/AssuranceHeader.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine.PreviousMarker` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine.FingerprintMarker` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine.Refreshed(AssuranceAnnotation, string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine.IsDefined(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine.ReviewerNames(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine.RefuseInventedApproval(string, string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceHumanLine.BodiesIn(string)` in `src/Broiler.Code.Review/Assurance/AssuranceHumanLine.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Validate(AssuranceAssessment)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Render(AssuranceAssessment, string)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Apply(string, string, IAssuranceFileScanner, IReadOnlyList<AssuranceAssessment>, bool, string?)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Resolve(IReadOnlyList<AssuranceCandidate>, AssuranceAssessment)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Verify(string, string, string, IAssuranceFileScanner, AssuranceScannedFile, IReadOnlyList<AssuranceCandidate>, Dictionary<int, IReadOnlyList<string>>)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.Closed(string, string?, string[], List<string>)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceInsertion.IsOneLine(string)` in `src/Broiler.Code.Review/Assurance/AssuranceInsertion.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceLines` in `src/Broiler.Code.Review/Assurance/AssuranceLines.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceLines.AssuranceLines(string)` in `src/Broiler.Code.Review/Assurance/AssuranceLines.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceLines.Render()` in `src/Broiler.Code.Review/Assurance/AssuranceLines.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.FilesArrayOpening` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.ArraysOf(string)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.Violations(string, IEnumerable<AssuranceManifestFile>, IEnumerable<AssuranceCorpusUnit>, string, string?)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.Entry(AssuranceCorpusUnit)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.ShapeViolations(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.FileViolations(string, IEnumerable<AssuranceManifestFile>, string)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.ReadUnits(string, string, List<string>)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.ReadFiles(string, string, List<string>)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceManifest.Text(JsonElement, string)` in `src/Broiler.Code.Review/Assurance/AssuranceManifest.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePruning` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePruning.Apply(string, string, IAssuranceFileScanner)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePruning.CodeDifference(AssuranceScannedFile, AssuranceScannedFile)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePruning.RemovalFor(AssuranceCandidate, AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePruning.Verify(string, string, string, IAssuranceFileScanner, AssuranceScannedFile, IReadOnlyList<AssuranceCandidate>, IReadOnlyDictionary<int, (int First, int Count, AssurancePruneKind Kind)>, IReadOnlyList<(int Line, string Text, string Separator)>)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssurancePruning.SameAssessment(AssuranceAnnotation, AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssurancePruning.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.Negations` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.ClauseSeparators` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.Violations(string, IReadOnlyList<string>, IReadOnlyList<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.WholeWord(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.IsSupported(string, int, string, IReadOnlyList<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.IsWordBefore(string, string, int)` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.Supported(string, IReadOnlyList<AssuranceCorpusUnit>)` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceReviewClaims.FirstNumberAfter(string, int)` in `src/Broiler.Code.Review/Assurance/AssuranceReviewClaims.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaimTerms` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.SecurityRequiringACriterion` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.SecurityWritingNoCriterion` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.CriterionProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.ExemptionReasonProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.SpecProblems(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaimsIn(string)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.VocabularyProblems(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.RequiresFalsificationCriterion(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.CarriesCriterionBelowHigh(AssuranceAnnotation)` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.FieldOnACriterion()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceRules.ReviewClaim()` in `src/Broiler.Code.Review/Assurance/AssuranceRules.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.IAssuranceFileScanner` in `src/Broiler.Code.Review/Assurance/AssuranceScannedFile.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.IAssuranceFileScanner.ScanFile(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceScannedFile.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.IAssuranceUnitScanner` in `src/Broiler.Code.Review/Assurance/AssuranceUnit.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.IAssuranceUnitScanner.Scan(string, string)` in `src/Broiler.Code.Review/Assurance/AssuranceUnit.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceUnitState` in `src/Broiler.Code.Review/Assurance/AssuranceUnitState.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceStateMachine` in `src/Broiler.Code.Review/Assurance/AssuranceUnitState.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceStateMachine.Resolve(AssuranceAnnotation?, bool, string?)` in `src/Broiler.Code.Review/Assurance/AssuranceUnitState.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceStateMachine.BlocksRelease(AssuranceUnitState)` in `src/Broiler.Code.Review/Assurance/AssuranceUnitState.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.AiMarker` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.FalsifiedIfMarker` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.HumanMarker` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.Pending` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.Stale` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ToBeFilled` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.FingerprintWidth` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.FingerprintField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ExemptField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ConceptualStabilityField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.ChangeLikelihoodField` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.HumanFieldMarkers` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.IsWellFormedFingerprint(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.MaxAliasLength` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.PlaceholderWords` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.IsAlias(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.IsWritableReviewer(string?)` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.Assurance.AssuranceVocabulary.AllHex(string)` in `src/Broiler.Code.Review/Assurance/AssuranceVocabulary.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.FileReview` in `src/Broiler.Code.Review/FileReview.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.FileReview.WithDecision(ReviewStatus, string, string, DateTimeOffset, string?)` in `src/Broiler.Code.Review/FileReview.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.NoteAnchoring` in `src/Broiler.Code.Review/NoteAnchoring.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.NoteAnchoring.Place(FileReview, string)` in `src/Broiler.Code.Review/NoteAnchoring.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.NoteAnchoring.Place(ReviewNote, string[])` in `src/Broiler.Code.Review/NoteAnchoring.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.NoteAnchoring.MatchesAt(string[], string[], int)` in `src/Broiler.Code.Review/NoteAnchoring.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewContentHash` in `src/Broiler.Code.Review/ReviewContentHash.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewContentHash.Algorithm` in `src/Broiler.Code.Review/ReviewContentHash.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewContentHash.ByteOrderMark` in `src/Broiler.Code.Review/ReviewContentHash.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewContentHash.Compute(string)` in `src/Broiler.Code.Review/ReviewContentHash.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewContentHash.Matches(string?, string)` in `src/Broiler.Code.Review/ReviewContentHash.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewContentHash.IsKnownAlgorithm(string?)` in `src/Broiler.Code.Review/ReviewContentHash.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewContentHash.Normalize(string)` in `src/Broiler.Code.Review/ReviewContentHash.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewCoverageTotals` in `src/Broiler.Code.Review/ReviewCoverage.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewCoverageTotals.VerifiedPercent` in `src/Broiler.Code.Review/ReviewCoverage.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewCoverage` in `src/Broiler.Code.Review/ReviewCoverage.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewCoverage.Overall(IEnumerable<ReviewedFile>, string)` in `src/Broiler.Code.Review/ReviewCoverage.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewCoverage.Count(string, IEnumerable<ReviewedFile>)` in `src/Broiler.Code.Review/ReviewCoverage.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.Write(FileReview)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.Read(string, string)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.ReadNote(JsonObject, string)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.ToWire(ReviewStatus)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.FromWire(string?)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.GetString(JsonObject, string)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.GetInt(JsonObject, string)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewJson.GetTimestamp(JsonObject, string)` in `src/Broiler.Code.Review/ReviewJson.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStateEvaluator` in `src/Broiler.Code.Review/ReviewStateEvaluator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStateEvaluator.Evaluate(FileReview?, string?)` in `src/Broiler.Code.Review/ReviewStateEvaluator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStateEvaluator.FreshnessOf(FileReview, string?)` in `src/Broiler.Code.Review/ReviewStateEvaluator.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStatus` in `src/Broiler.Code.Review/ReviewStatus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewFreshness` in `src/Broiler.Code.Review/ReviewStatus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewState` in `src/Broiler.Code.Review/ReviewStatus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewState.None` in `src/Broiler.Code.Review/ReviewStatus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewState.IsVerified` in `src/Broiler.Code.Review/ReviewStatus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewState.IsStaleApproval` in `src/Broiler.Code.Review/ReviewStatus.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.ReviewDirectory` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.RecordSuffix` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.RecordPathFor(string)` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.SourcePathFor(string)` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.IsRecordPath(string)` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.ReadAsync(string, CancellationToken)` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.WriteAsync(FileReview, CancellationToken)` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.ReadAllAsync(CancellationToken)` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
-- `Broiler.Code.Review.ReviewStore.CollectAsync(string, Dictionary<string, FileReview>, List<StorageFailure>, CancellationToken)` in `src/Broiler.Code.Review/ReviewStore.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.CodeHost` in `src/Broiler.Code.Windows/CodeHost.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.CodeHost.Run(CodeWindow, string?)` in `src/Broiler.Code.Windows/CodeHost.cs` - Security=High, human line PENDING
 - `Broiler.Code.Windows.CodeUiHost` in `src/Broiler.Code.Windows/CodeHost.cs` - Security=Critical, human line PENDING
@@ -712,18 +342,18 @@ and the figures below are the measurement of how far from that claim the per-uni
 
 | Metric | Value |
 |---|---:|
-| Units carrying a criterion | 1173 |
-| Units required to carry one | 640 |
+| Units carrying a criterion | 626 |
+| Units required to carry one | 270 |
 | Required and missing | 0 |
 
-A `Broiler-Falsified-If:` line states, at the declaration, the observation that would make
+A `// Hairs-Falsified-If:` line states, at the declaration, the observation that would make
 the unit wrong. `Security=High` says a unit is risky, which is a set and not a test; the
 criterion is the test. It is required where `Security` is `High` or `Critical`, permitted
-elsewhere, and `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code` names every unit that owes one and carries none.
+elsewhere, and `dotnet tool run hairs -- assurance check --root .` names every unit that owes one and carries none.
 
 The line is a comment, so it is outside every fingerprint by construction: rewording a
 criterion moves no recorded value here, in a file header or in
-`assurance.manifest.json`, and invalidates nothing. That is the intended reading - a
+`hairs.manifest.json`, and invalidates nothing. That is the intended reading - a
 criterion is an instruction to whoever reads the unit, not part of what a review is bound to.
 
 ## Exemption
@@ -733,14 +363,14 @@ that the rule is reviewable in one place rather than in several hundred.
 
 | Case | Units |
 |---|---:|
-| TrivialPropertyOrAccessor | 127 |
-| ParameterAssigningConstructor | 9 |
-| TrivialExpressionBodiedMember | 12 |
-| CompilerSuppliedRecordOrEnumMember | 145 |
+| TrivialPropertyOrAccessor | 99 |
+| ParameterAssigningConstructor | 5 |
+| TrivialExpressionBodiedMember | 11 |
+| CompilerSuppliedRecordOrEnumMember | 64 |
 | DelegatingOverrideOrOperator | 2 |
 | InsideAssemblyMarker | 0 |
-| FieldDeclaringStorage | 202 |
-| EnumMemberOfADeclaredVocabulary | 137 |
+| FieldDeclaringStorage | 183 |
+| EnumMemberOfADeclaredVocabulary | 80 |
 | DeclaredInSource | 0 |
 
 ## Per-unit exemptions
@@ -763,15 +393,15 @@ through a `<Compile Include>` it states, is left out of the record.
 
 ## Change detection
 
-`assurance.manifest.json` lists **every** code unit in the 9 covered assemblies -
-2093 of them, exempt and relevant alike - with the fingerprint of its declaration.
+`hairs.manifest.json` lists **every** code unit in the 6 covered assemblies -
+1243 of them, exempt and relevant alike - with the fingerprint of its declaration.
 This manifest is a change-detection record, not a review. A unit listed there is watched, not reviewed:
 the entry records what the declaration's tokens hashed to when the generator last ran, and
 nothing else. What the manifest adds is that a unit the exemption predicate treats as
 trivial is no longer invisible: a semantic change to one moves a value in a generated file
-the check compares byte for byte. `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code` holds the manifest to the tree.
+the check compares byte for byte. `dotnet tool run hairs -- assurance check --root .` holds the manifest to the tree.
 
-Beside the units it lists **every covered file** - 101 of them - with a
+Beside the units it lists **every covered file** - 54 of them - with a
 fingerprint over the complete token stream of its compilation unit. A unit entry exists only
 for a declaration kind the scanner enumerates, and an enumeration is a whitelist: an
 `[assembly: ...]` attribute is a member of nothing and can be in no unit at all.
@@ -781,15 +411,15 @@ no file fingerprint - which is what lets one generation be a fixed point.
 
 ## Verification
 
-The generator and the check are one computation: `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code` works out what the
+The generator and the check are one computation: `dotnet tool run hairs -- assurance check --root .` works out what the
 generator would write and compares it with the tree byte for byte, so a record edited by
 hand, or left behind by code that moved, is reported rather than trusted.
 
 | Mode | Command | Effect |
 |---|---|---|
-| Generate | `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance generate --root Broiler.Code` | Fills every `Fingerprint=TBF`, refreshes a decision the code has outrun into `STALE; Previous=...`, rewrites the generated headers, `HUMAN_REVIEW.md`, `assurance.manifest.json` and this file. |
-| Check | `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code` | Reports every generated artefact that is not byte-identical to what the generator would produce, every relevant unit with no annotation, every annotation this system cannot read, every fingerprint out of date and every unit at the top of the security vocabulary without a criterion. |
-| Release | `dotnet run --project Broiler.Code/src/Broiler.Code.Review.Cli -c Release -- assurance check --root Broiler.Code --release` | The check, and additionally every relevant unit left in a state that blocks a release. |
+| Generate | `dotnet tool run hairs -- assurance generate --root .` | Fills every `Fingerprint=TBF`, refreshes a decision the code has outrun into `STALE; Previous=...`, rewrites the generated headers, `HUMAN_REVIEW.md`, `hairs.manifest.json` and this file. |
+| Check | `dotnet tool run hairs -- assurance check --root .` | Reports every generated artefact that is not byte-identical to what the generator would produce, every relevant unit with no annotation, every annotation this system cannot read, every fingerprint out of date and every unit at the top of the security vocabulary without a criterion. |
+| Release | `dotnet tool run hairs -- assurance check --root . --release` | The check, and additionally every relevant unit left in a state that blocks a release. |
 
 The fingerprint is six hex characters - 24 bits - of SHA-256 over the declaration's token
 texts, joined by single spaces. Trivia is excluded because a token's text is its own

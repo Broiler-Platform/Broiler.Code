@@ -11,7 +11,6 @@
 #   <artifacts-dir>/broiler-code-win-x64-framework-dependent-<version>/Broiler.Code.Windows.exe, *.dll, ...
 #   <artifacts-dir>/broiler-code-linux-x64-self-contained-<version>/Broiler.Code.Linux
 #   <artifacts-dir>/broiler-code-linux-x64-framework-dependent-<version>/Broiler.Code.Linux, *.dll, ...
-#   <artifacts-dir>/broiler-sdk-<version>/Broiler.SDK.<version>.nupkg
 #
 # Each directory is zipped into one release asset, Broiler.Code-<version>-<rid>-<variant>.zip.
 # The executable is recorded as rwxr-xr-x and everything else as rw-r--r--: the workflow
@@ -64,9 +63,6 @@ assets=(
   "$(asset linux-x64 framework-dependent Broiler.Code.Linux)"
 )
 
-sdk="$artifacts/broiler-sdk-$version/Broiler.SDK.$version.nupkg"
-[ -f "$sdk" ] || { echo "missing $sdk" >&2; exit 1; }
-assets+=("$sdk")
 
 cat > "$out/notes.md" <<NOTES
 Broiler Code **$version**, a preview build for evaluation and testing, not for
@@ -86,23 +82,6 @@ assembly: nothing to install, nothing else to copy. A **framework-dependent** zi
 smaller and runs on the .NET 10 runtime already installed on the machine. The executables
 are not code-signed, so Windows SmartScreen may ask before the first start.
 
-## Development tools
-
-Download \`Broiler.SDK.$version.nupkg\` to a local directory, then install it with
-the .NET 10 SDK:
-
-\`\`\`sh
-dotnet tool install --global Broiler.SDK --version $version --source <download-directory>
-broiler-review --help
-\`\`\`
-
-Includes human-review coverage, stale-review checks and C# assurance commands.
-After creating this draft, the Publish workflow uploads the same tested package
-to nuget.org. Once NuGet validation completes, install directly from the feed:
-
-\`\`\`sh
-dotnet tool install --global Broiler.SDK --version $version --source https://api.nuget.org/v3/index.json
-\`\`\`
 NOTES
 
 gh release create "$tag" "${assets[@]}" \

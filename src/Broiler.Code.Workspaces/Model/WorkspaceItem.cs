@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   10
 // Annotated:        10/10
 // Exempt:           41
@@ -20,8 +20,8 @@ using System.Collections.Generic;
 
 namespace Broiler.Code.Workspaces.Model;
 
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=080B2C
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=080B2C
+// Hairs-Human:        PENDING
 public enum WorkspaceItemKind
 {
     /// <summary>Compiled source.</summary>
@@ -48,8 +48,8 @@ public enum WorkspaceItemKind
 /// what a file already had; it does not impose a convention on a file it did
 /// not create.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A8E85A
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A8E85A
+// Hairs-Human:        PENDING
 public enum LineEndingPolicy
 {
     /// <summary>Keep whatever the file used when it was read.</summary>
@@ -64,13 +64,13 @@ public enum LineEndingPolicy
 /// Silently rewriting a UTF-8 file without its BOM, or a Latin-1 file as UTF-8,
 /// is a data-losing change disguised as a save.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1D75CA
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=1D75CA
+// Hairs-Human:        PENDING
 public readonly record struct TextEncodingInfo(string WebName, bool HasByteOrderMark)
 {
-    // Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4153BE
-    // Broiler-Falsified-If: the default encoding names something other than UTF-8 or claims a byte-order mark
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=4153BE
+    // Hairs-Falsified-If: the default encoding names something other than UTF-8 or claims a byte-order mark
+    // Hairs-Human:        PENDING
     public static TextEncodingInfo Utf8NoBom => new("utf-8", false);
 }
 
@@ -78,9 +78,9 @@ public readonly record struct TextEncodingInfo(string WebName, bool HasByteOrder
 /// One item in the workspace. Immutable: a change produces a new instance, and
 /// the workspace snapshot that holds it is replaced wholesale.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=708AF6
-// Broiler-Falsified-If: the name of an item under a subdirectory still contains a directory segment
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=2; Fingerprint=708AF6
+// Hairs-Falsified-If: the name of an item under a subdirectory still contains a directory segment
+// Hairs-Human:        PENDING
 public sealed record WorkspaceItem
 {
     public required WorkspaceItemId Id { get; init; }
@@ -150,9 +150,9 @@ public sealed record WorkspaceItem
     /// </summary>
     public bool IsUntitled { get; init; }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=7E2041
-    // Broiler-Falsified-If: the name of an item under a subdirectory still contains a directory segment
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=2; Fingerprint=7E2041
+    // Hairs-Falsified-If: the name of an item under a subdirectory still contains a directory segment
+    // Hairs-Human:        PENDING
     public string Name
     {
         get
@@ -167,9 +167,9 @@ public sealed record WorkspaceItem
 /// A source document's open state: the buffer, its dirty overlay, and the
 /// per-document view state that has to survive a tab switch.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=793EAA
-// Broiler-Falsified-If: IsDirty reports false for a document whose buffer holds edits made after its last save
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=0; Fingerprint=793EAA
+// Hairs-Falsified-If: IsDirty reports false for a document whose buffer holds edits made after its last save
+// Hairs-Human:        PENDING
 public sealed class SourceDocument
 {
     internal SourceDocument(WorkspaceItem item, Text.SourceBuffer buffer)
@@ -196,8 +196,8 @@ public sealed class SourceDocument
 }
 
 /// <summary>Per-document view state, preserved across tab switches.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=B5E87D
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=B5E87D
+// Hairs-Human:        PENDING
 public readonly record struct DocumentViewState(
     int SelectionAnchor,
     int SelectionFocus,
@@ -211,8 +211,8 @@ public readonly record struct DocumentViewState(
 /// A project as declared, before any trusted evaluation. Everything here was
 /// read from the project file; nothing was resolved by running MSBuild.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A1DF9D
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=A1DF9D
+// Hairs-Human:        PENDING
 public sealed record CodeProject
 {
     public required WorkspaceItemId Id { get; init; }
@@ -239,8 +239,8 @@ public sealed record CodeProject
 }
 
 /// <summary>A solution as declared, with its folder structure preserved.</summary>
-// Broiler-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3D02B2
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=None; Security=Low; Resources=0; Fingerprint=3D02B2
+// Hairs-Human:        PENDING
 public sealed record CodeSolution
 {
     public required WorkspaceItemId Id { get; init; }

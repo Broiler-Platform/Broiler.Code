@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   7
 // Annotated:        7/7
 // Exempt:           0
@@ -36,15 +36,15 @@ namespace Broiler.Code.Core.Shell;
 /// logic and nothing tested it — which is how it came to open a workspace whose
 /// editor had no document.
 /// </summary>
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=460147
-// Broiler-Falsified-If: a directory entry listed under the grant that leads back to one of its ancestors makes the startup walk recurse without end
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=460147
+// Hairs-Falsified-If: a directory entry listed under the grant that leads back to one of its ancestors makes the startup walk recurse without end
+// Hairs-Human:        PENDING
 public static class WorkspaceBootstrap
 {
     /// <summary>Directories never worth walking; they hold build output, not sources.</summary>
-    // Broiler-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=67AEF2
-    // Broiler-Falsified-If: a bin, obj, .git, .vs or node_modules directory is missing from the list, so the files under it are registered as workspace sources
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=None; Security=Medium; Resources=1; Fingerprint=67AEF2
+    // Hairs-Falsified-If: a bin, obj, .git, .vs or node_modules directory is missing from the list, so the files under it are registered as workspace sources
+    // Hairs-Human:        PENDING
     private static readonly string[] Ignored = ["bin", "obj", ".git", ".vs", "node_modules"];
 
     /// <summary>
@@ -54,9 +54,9 @@ public static class WorkspaceBootstrap
     /// the editor ends up with a buffer, because an editor without one refuses
     /// every keystroke.
     /// </summary>
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=DDEF13
-    // Broiler-Falsified-If: a solution in the grant that fails to load leaves the shell without an attached workspace instead of opening the folder as loose sources
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=DDEF13
+    // Hairs-Falsified-If: a solution in the grant that fails to load leaves the shell without an attached workspace instead of opening the folder as loose sources
+    // Hairs-Human:        PENDING
     public static async ValueTask<CodeWorkspace> OpenAsync(
         CodeShell shell,
         IWorkspaceStorage storage,
@@ -105,9 +105,9 @@ public static class WorkspaceBootstrap
         return workspace;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=ACA135
-    // Broiler-Falsified-If: a directory whose name ends in .slnx or .sln is returned as the solution to load
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=3; Fingerprint=ACA135
+    // Hairs-Falsified-If: a directory whose name ends in .slnx or .sln is returned as the solution to load
+    // Hairs-Human:        PENDING
     private static async ValueTask<string?> FindSolutionAsync(
         IWorkspaceStorage storage, CancellationToken cancellationToken)
     {
@@ -133,9 +133,9 @@ public static class WorkspaceBootstrap
         return null;
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=22DE66
-    // Broiler-Falsified-If: a directory entry that leads back to one of its ancestors makes the walk recurse without end
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=6; Fingerprint=22DE66
+    // Hairs-Falsified-If: a directory entry that leads back to one of its ancestors makes the walk recurse without end
+    // Hairs-Human:        PENDING
     private static async ValueTask AddSourcesAsync(
         CodeWorkspace workspace,
         IWorkspaceStorage storage,
@@ -167,9 +167,9 @@ public static class WorkspaceBootstrap
         }
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=08B380
-    // Broiler-Falsified-If: a directory whose last segment is bin, obj, .git, .vs or node_modules in any letter case is still walked
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Medium; Resources=1; Fingerprint=08B380
+    // Hairs-Falsified-If: a directory whose last segment is bin, obj, .git, .vs or node_modules in any letter case is still walked
+    // Hairs-Human:        PENDING
     private static bool IsIgnored(string relativeDirectory)
     {
         int slash = relativeDirectory.LastIndexOf('/');
@@ -178,9 +178,9 @@ public static class WorkspaceBootstrap
             string.Equals(name, ignored, StringComparison.OrdinalIgnoreCase));
     }
 
-    // Broiler-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=559F93
-    // Broiler-Falsified-If: an untitled buffer is chosen as the first document to open
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=Low; Resources=3; Fingerprint=559F93
+    // Hairs-Falsified-If: an untitled buffer is chosen as the first document to open
+    // Hairs-Human:        PENDING
     private static WorkspaceItemId FirstSource(CodeWorkspace workspace)
     {
         foreach (WorkspaceItem item in workspace.Items)

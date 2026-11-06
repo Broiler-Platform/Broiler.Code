@@ -46,6 +46,7 @@
     <PackageVersion Include="Broiler.UI.TabView.Standard" Version="0.1.0-preview.24" />
     <PackageVersion Include="Broiler.UI.Toolbar.Standard" Version="0.1.0-preview.24" />
     <PackageVersion Include="Broiler.UI.TreeView.Standard" Version="0.1.0-preview.24" />
+    <PackageVersion Include="Hairs" Version="0.1.0-preview.2" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

@@ -5,7 +5,7 @@
 # string literal takes the line endings of the file it is written in. A fixture
 # written as one therefore means something different depending on how the
 # repository was cloned. NoteAnchoringTests compares source lines against anchor
-# text that Broiler.Code.Review normalizes to LF, so five of those tests failed
+# text that Hairs normalizes to LF, so five of those tests failed
 # on every Windows checkout while CI, checking out LF, stayed green — a test that
 # cannot fail on the machine the code is written on is not protecting anything.
 #

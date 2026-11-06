@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Broiler Platform contributors
 // SPDX-License-Identifier: Apache-2.0
 //
-// Broiler Code Assurance
-// ----------------------
+// HAIRS Code Assurance
+// --------------------
 // Relevant units:   2
 // Annotated:        2/2
 // Exempt:           0
@@ -21,15 +21,15 @@ using Broiler.Code.Core.Hosting;
 
 namespace Broiler.Code.Windows;
 
-// Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=A32934
-// Broiler-Falsified-If: an argument beginning with a dash is opened as the workspace directory instead of being treated as an option
-// Broiler-Human:        PENDING
+// Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=A32934
+// Hairs-Falsified-If: an argument beginning with a dash is opened as the workspace directory instead of being treated as an option
+// Hairs-Human:        PENDING
 [SupportedOSPlatform("windows7.0")]
 internal static class Program
 {
-    // Broiler-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=D0FC29
-    // Broiler-Falsified-If: an argument beginning with a dash is opened as the workspace directory instead of being treated as an option
-    // Broiler-Human:        PENDING
+    // Hairs-AI:           Origin=AI; IP=Low; Security=High; Resources=7; Fingerprint=D0FC29
+    // Hairs-Falsified-If: an argument beginning with a dash is opened as the workspace directory instead of being treated as an option
+    // Hairs-Human:        PENDING
     [STAThread]
     private static int Main(string[] args)
     {
